@@ -26,7 +26,7 @@ const TPL={
 const CUSTOMERS=['Chị Lan','Anh Minh','Cô Hạnh','Bạn Tú','Bé Na','Anh Đạt','Chị Mai','Chú Hùng','Bạn Linh','Anh Phúc','Chị Thảo','Bạn Khoa','Cô Ngọc','Anh Long'];
 
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function defProfile(){return{name:'',hobbies:[],hobbyText:'',helmet:HELMETS[0],ai:true}}
+function defProfile(){return{name:'',hobbies:[],hobbyText:'',helmet:HELMETS[0],reviewsOn:true}}
 function pname(){return(g.profile&&g.profile.name.trim())||'Tài xế'}
 function hobbyList(){
   const p=g.profile;const l=p.hobbies.map(id=>(HOBBIES.find(h=>h.id===id)||{}).t).filter(Boolean);
@@ -75,7 +75,7 @@ Bạn đã chấm ${r.stars}/5 sao.
 Viết đúng một câu đánh giá bằng tiếng Việt, tối đa 110 ký tự, giọng tự nhiên như người thật, hợp với số sao đã chấm. Có thể nhắc nhẹ đến sở thích của tài xế nếu hợp. Không emoji, không ngoặc kép. Chỉ trả về câu đánh giá.`;
 }
 async function askClaudeReview(r,ctx,onDone){
-  if(!g.profile.ai||_aiInflight||Date.now()<_aiBusyUntil)return;
+  if(_aiInflight||Date.now()<_aiBusyUntil)return;
   const sample=await getSample();if(!sample)return;
   _aiInflight=true;
   const ac=new AbortController();const to=setTimeout(()=>ac.abort(),15000);
@@ -85,11 +85,12 @@ async function askClaudeReview(r,ctx,onDone){
     if(t&&t.length<=160){r.text=t;r.ai=true;save();onDone&&onDone(r)}
   }catch(e){
     const code=e&&e.code;
-    if(code==='not_granted'){g.profile.ai=false;save();toast('KHÔNG BẬT ĐƯỢC ĐÁNH GIÁ MỚI — DÙNG ĐÁNH GIÁ CÓ SẴN','warn')}
+    if(code==='not_granted'){_aiBusyUntil=Infinity;toast('KHÔNG BẬT ĐƯỢC ĐÁNH GIÁ MỚI — DÙNG ĐÁNH GIÁ CÓ SẴN','warn')}
     else if(code==='rate_limited')_aiBusyUntil=Date.now()+60000;
   }finally{clearTimeout(to);_aiInflight=false}
 }
 function addReview(ok,job){
+  if(!g.profile.reviewsOn)return null;
   const stars=rollRating(ok);
   const r={stars,text:templateReview(stars,job),who:CUSTOMERS[rnd(0,CUSTOMERS.length-1)],job:job.id,day:g.day,month:g.month,ai:false};
   g.reviews.unshift(r);if(g.reviews.length>40)g.reviews.pop();
@@ -111,4 +112,4 @@ function toggleHobby(id){
   save();render();
 }
 function setHelmet(i){g.profile.helmet=HELMETS[i];save();render()}
-function toggleAI(){g.profile.ai=!g.profile.ai;save();render()}
+function toggleReviews(){g.profile.reviewsOn=!g.profile.reviewsOn;save();render()}

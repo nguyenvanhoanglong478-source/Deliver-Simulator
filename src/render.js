@@ -214,11 +214,8 @@ function rProfile(){
   const chips=HOBBIES.map(h=>{const on=p.hobbies.includes(h.id);
     return`<button class="chip${on?' on':''}" aria-pressed="${on}" onclick="toggleHobby('${h.id}')">${h.t}</button>`}).join('');
   const sws=HELMETS.map((c,i)=>`<button class="sw${c===p.helmet?' on':''}" style="--c:${c}" aria-label="Màu mũ ${i+1}" onclick="setHelmet(${i})"></button>`).join('');
-  const avail=aiAvailable();
-  const ai=avail
-    ?`<div class="pxf ai-row"><div class="t">Bật đánh giá<small>Mỗi đơn, khách để lại một câu nhận xét theo cách bạn giao và sở thích của bạn.</small></div>
-        <button class="btn sm ${p.ai?'b-gr':'b-dim'}" onclick="toggleAI()" aria-pressed="${p.ai}">${p.ai?'BẬT':'TẮT'}</button></div>`
-    :'';
+  const ai=`<div class="pxf ai-row"><div class="t">Bật đánh giá<small>Khách để lại số sao và một câu nhận xét sau mỗi đơn.</small></div>
+        <button class="btn sm ${p.reviewsOn?'b-gr':'b-dim'}" onclick="toggleReviews()" aria-pressed="${p.reviewsOn}">${p.reviewsOn?'BẬT':'TẮT'}</button></div>`;
   const revs=g.reviews.length?g.reviews.map(r=>`<div class="pxf2 rev">
       <div class="rev-top"><span class="rev-who">${esc(r.who)}${r.ai?'<span class="ai-tag">CLAUDE</span>':''}</span>${starsFixed(r.stars,16)}</div>
       <div class="rev-txt">${esc(r.text)}</div>
