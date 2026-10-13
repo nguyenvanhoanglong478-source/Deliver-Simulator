@@ -39,7 +39,7 @@ with sync_playwright() as p:
     # 6 pending day end must not persist applied interest
     pg.evaluate("g.savings=2e6;save();doEndDay()"); pg.evaluate("window.dispatchEvent(new Event('pagehide'))")
     sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('pending day-end does not persist interest',sv['savings']==2e6,str(sv['savings']))
-    pg.evaluate("confirmDayEnd()"); sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('confirming day end saves next day',sv['day']==2 and sv['savings']==2e6+10000)
+    pg.evaluate("confirmDayEnd()"); sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('confirming day end saves next day',sv['day']==2 and sv['savings']==2e6+2000)
     # 7 refuel modal open: saved state has not charged money
     pg.evaluate("g.fuel=30;save();doRefuel()");
     pg.evaluate("document.getElementById('rf-slider').value=80;document.getElementById('rf-slider').dispatchEvent(new Event('input'));rfConfirm()")

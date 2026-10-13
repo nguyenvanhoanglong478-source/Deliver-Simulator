@@ -14,7 +14,7 @@ function sceneHTML(cargo){
     <img class="bike" src="${BIKE}" alt="Xe Honda Cub">${cargo?`<div class="cargo">${ic(cargo,32)}</div>`:''}</div>`;
 }
 function reviewHTML(r){
-  return`<div class="who"><span>${esc(r.who)}${r.ai?'<span class="ai-tag">CLAUDE</span>':''}</span>${starsFixed(r.stars,18)}</div>
+  return`<div class="who"><span>${esc(r.who)}</span>${starsFixed(r.stars,18)}</div>
     <div class="txt">${esc(r.text)}</div>`;
 }
 
@@ -227,7 +227,7 @@ function rProfile(){
   const ai=`<div class="pxf ai-row"><div class="t">Bật đánh giá<small>Khách để lại số sao và một câu nhận xét sau mỗi đơn.</small></div>
         <button class="btn sm ${p.reviewsOn?'b-gr':'b-dim'}" onclick="toggleReviews()" aria-pressed="${p.reviewsOn}">${p.reviewsOn?'BẬT':'TẮT'}</button></div>`;
   const revs=g.reviews.length?g.reviews.map(r=>`<div class="pxf2 rev">
-      <div class="rev-top"><span class="rev-who">${esc(r.who)}${r.ai?'<span class="ai-tag">CLAUDE</span>':''}</span>${starsFixed(r.stars,16)}</div>
+      <div class="rev-top"><span class="rev-who">${esc(r.who)}</span>${starsFixed(r.stars,16)}</div>
       <div class="rev-txt">${esc(r.text)}</div>
       <div class="rev-who" style="margin-top:8px">${ic(r.job==='food'?'bowl':'box',16)} Ngày ${r.day}, tháng ${r.month}</div></div>`).join('')
     :`<div class="pxf empty">Chưa có đánh giá nào. Hãy giao đơn đầu tiên!</div>`;

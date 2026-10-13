@@ -4,14 +4,14 @@ const C={
   dayDuration:300,// 5 min
   fuelCost:150e3,fuelTime:10,sleepRate:2,// stamina/sec
   mgTime:20,mgFull:12,mgPartial:7,
-  dailyInterest:0.005,
+  dailyInterest:0.001,
   monthly:[
     {n:'Thuê phòng trọ',c:3e6},{n:'Điện nước',c:5e5},{n:'Ăn uống',c:2e6},
     {n:'Điện thoại',c:2e5},{n:'Bảo hiểm xe',c:3e5},{n:'Trả góp xe',c:15e5},
   ],
   jobs:{
-    food:{id:'food',icon:'bowl',name:'ĐỒ ĂN',earn:'45k-90k',sta:15,fuel:5,min:45e3,max:9e4},
-    goods:{id:'goods',icon:'box',name:'HÀNG HÓA',earn:'90k-200k',sta:20,fuel:9,min:9e4,max:2e5},
+    food:{id:'food',icon:'bowl',name:'ĐỒ ĂN',earn:'30k-60k',sta:15,fuel:5,min:30e3,max:6e4},
+    goods:{id:'goods',icon:'box',name:'HÀNG HÓA',earn:'60k-130k',sta:20,fuel:9,min:6e4,max:13e4},
   },
 };
 const BILLS=C.monthly.reduce((s,b)=>s+b.c,0);
@@ -30,9 +30,9 @@ const UPGS=[
 
 // ===== EVENTS =====
 const EVTS=[
-  {id:'tip',ic:'coin',t:'good',p:.07,ti:'TIP THÊM!',fn:(e)=>{const r=rnd(8e4,45e4);return{cash:r,msg:`Khách vui tính, tip ${fm(r)}`}}},
+  {id:'tip',ic:'coin',t:'good',p:.07,ti:'TIP THÊM!',fn:(e)=>{const r=rnd(4e4,2e5);return{cash:r,msg:`Khách vui tính, tip ${fm(r)}`}}},
   {id:'vip',ic:'star',t:'good',p:.04,ti:'ĐƠN VIP!',fn:(e)=>{return{cash:e,msg:`VIP! Thù lao x2, thêm ${fm(e)}`}}},
-  {id:'bon',ic:'trophy',t:'good',p:.02,ti:'BE THƯỞNG!',fn:(e)=>{const r=rnd(5e5,2e6);return{cash:r,msg:`Be thưởng tài xế: +${fm(r)}`}}},
+  {id:'bon',ic:'trophy',t:'good',p:.02,ti:'BE THƯỞNG!',fn:(e)=>{const r=rnd(3e5,1e6);return{cash:r,msg:`Be thưởng tài xế: +${fm(r)}`}}},
   {id:'brk',ic:'wrench',t:'bad',p:.03,ti:'XE HỎNG!',fn:(e)=>{const r=rnd(4e5,14e5);return{cash:-r,hp:-20,msg:`Sửa xe khẩn: -${fm(r)}`}}},
   {id:'fin',ic:'warn',t:'bad',p:.03,ti:'BỊ PHẠT!',fn:(e)=>{const r=rnd(2e5,6e5);return{cash:-r,msg:`CSGT phạt: -${fm(r)}`}}},
   {id:'crs',ic:'warn',t:'bad',p:.02,ti:'VA CHẠM!',fn:(e)=>{const r=rnd(3e5,9e5);return{cash:-r,hp:-15,msg:`Bồi thường: -${fm(r)}`}}},
@@ -120,13 +120,13 @@ function fuelMax(){return 100}
 function startDayTimer(){
   clearInterval(dayTmr);
   dayTmr=setInterval(()=>{
-    const pause=['minigame','anim-deliver','anim-refuel'];   // sleeping uses up day time
-    if(pause.includes(g.phase)||modal)return;
-    g.dayTimeLeft=Math.max(0,g.dayTimeLeft-1);
+    if(modal)return;   // popups (refuel, day/month end) freeze the clock; deliveries and sleeping use it up
+    const busy=['minigame','anim-deliver','anim-refuel'].includes(g.phase);
+    if(g.dayTimeLeft>0)g.dayTimeLeft--;
     const el=document.getElementById('day-tmr');
     if(el)el.textContent=fmT(g.dayTimeLeft);
-    if(g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
-    if(g.dayTimeLeft<=0){clearInterval(dayTmr);triggerDayEnd();}
+    if(g.dayTimeLeft>0&&g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
+    if(g.dayTimeLeft<=0&&!busy){clearInterval(dayTmr);triggerDayEnd();}   // a delivery in progress finishes first
   },1000);
 }
 function fmT(s){const m=Math.floor(s/60);const sc=s%60;return`${m}:${sc<10?'0':''}${sc}`}

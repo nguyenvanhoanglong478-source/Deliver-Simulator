@@ -37,7 +37,7 @@ with sync_playwright() as p:
     ok('win screen month = current month',pg.evaluate("rEnd(true).includes('>1/24<')"))
     pg.evaluate("resetGame()"); pg.evaluate("startGame(true)")
     # win by interest at day end
-    pg.evaluate("g.savings=99.6e6;doEndDay()"); ok('win by interest',pg.evaluate("g.phase")=='win')
+    pg.evaluate("g.savings=99.95e6;doEndDay()"); ok('win by interest',pg.evaluate("g.phase")=='win')
     pg.evaluate("resetGame();startGame(true)")
     # month end: bills drawn from savings
     pg.evaluate("g.cash=1e6;g.savings=20e6;triggerMonthEnd()")

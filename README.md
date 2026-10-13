@@ -10,7 +10,7 @@ Mở `index.html` bằng trình duyệt. Tiến trình được lưu trong `loca
 
 - Nhận đơn đồ ăn hoặc hàng hóa, hoàn thành mini game bắt gói hàng trong 20 giây.
 - Quản lý thể lực, xăng và độ bền xe. Đổ xăng bằng thanh trượt, tiền tính theo %.
-- Gửi tiền tiết kiệm để nhận lãi mỗi ngày (0,5%).
+- Gửi tiền tiết kiệm để nhận lãi mỗi ngày (0,1%).
 - Mở **Hồ sơ tài xế** (bấm vào avatar) để đổi tên, sở thích, màu mũ, xem số sao và đánh giá của khách.
 - Khi mở game trong Claude (artifact), mỗi đánh giá có thể do Claude viết theo sở thích của bạn. Nơi khác dùng đánh giá có sẵn.
 

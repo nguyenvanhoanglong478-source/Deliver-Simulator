@@ -17,11 +17,16 @@ const HOBBY_LINE={
   thucung:'Con chó nhà mình còn quý bạn shipper này luôn.',
 };
 const TPL={
-  5:['Giao rất nhanh, {j} còn nguyên vẹn. Năm sao!','{name} thân thiện, giao đúng hẹn. Sẽ đặt lại.','{J} đến sớm hơn dự kiến, đóng gói cẩn thận.','Quá tuyệt vời, shipper nhiệt tình và lịch sự.','Nhanh gọn, không có gì để chê. Cảm ơn bạn!','Giao tận tay, nói chuyện dễ thương. Đánh giá cao.'],
-  4:['Giao khá nhanh, {j} ổn. Chỉ hơi trễ một chút.','Tài xế lịch sự, {j} đầy đủ. Bốn sao nhé.','Ổn áp, lần sau mình vẫn chọn bạn này.','Giao đúng gần giờ hẹn, {j} không sao cả.'],
-  3:['Tạm được, {j} đến hơi trễ so với dự kiến.','Bình thường, không tệ mà cũng chưa nổi bật.','Giao hơi lâu, nhưng {j} vẫn nguyên vẹn.','Cũng được, mong lần sau nhanh hơn chút.'],
-  2:['Chờ hơi lâu, {j} đến nơi không còn như ban đầu.','Giao trễ khá nhiều, mình phải gọi hai lần.','Hơi thất vọng, {j} bị móp và đến muộn.'],
-  1:['Quá trễ, {j} nguội ngắt và bị hư. Không hài lòng.','Chờ rất lâu, tài xế không báo gì cả. Một sao.','{J} bị thiếu và hỏng, mình sẽ khiếu nại.'],
+  5:['Giao rất nhanh, {j} còn nguyên vẹn. Năm sao!','{name} thân thiện, giao đúng hẹn. Sẽ đặt lại.','{J} đến sớm hơn dự kiến, đóng gói cẩn thận.','Quá tuyệt vời, shipper nhiệt tình và lịch sự.','Nhanh gọn, không có gì để chê. Cảm ơn bạn!','Giao tận tay, nói chuyện dễ thương. Đánh giá cao.',
+     'Vừa đặt xong đã thấy shipper tới, nhanh thật sự.','{J} còn nóng hổi, cảm ơn bạn nhiều nhé.','Shipper gọi trước khi đến, rất chu đáo.','Chạy xe êm, giao {j} đúng địa chỉ không phải tìm.','Dịch vụ tuyệt, lần sau mình lại chọn bạn này.','Đúng giờ, lịch sự, {j} nguyên vẹn. Rất hài lòng.','Mưa gió mà vẫn giao đúng hẹn, cảm ơn anh shipper.','Nhanh như chớp, mình chưa kịp đói đã tới rồi.','Bao bì sạch sẽ, shipper nói chuyện vui vẻ. 5 sao!','Không chê được điểm nào, xin cảm ơn.'],
+  4:['Giao khá nhanh, {j} ổn. Chỉ hơi trễ một chút.','Tài xế lịch sự, {j} đầy đủ. Bốn sao nhé.','Ổn áp, lần sau mình vẫn chọn bạn này.','Giao đúng gần giờ hẹn, {j} không sao cả.',
+     'Tốt, chỉ tiếc là đến trễ vài phút.','{J} ổn, shipper hơi vội nhưng lịch sự.','Giao hơi chậm xíu nhưng {j} vẫn nguyên.','Khá hài lòng, mong lần sau nhanh hơn một chút.','Shipper dễ thương, {j} đủ. Trừ một sao vì chờ hơi lâu.','Dịch vụ tốt, chỉ cần nhanh hơn là hoàn hảo.','Ổn, không có gì phàn nàn nhiều.','Giao đúng chỗ, hơi trễ so với dự kiến thôi.'],
+  3:['Tạm được, {j} đến hơi trễ so với dự kiến.','Bình thường, không tệ mà cũng chưa nổi bật.','Giao hơi lâu, nhưng {j} vẫn nguyên vẹn.','Cũng được, mong lần sau nhanh hơn chút.',
+     'Chờ gần nửa tiếng, {j} thì không sao.','Shipper hơi khó tìm đường, phải chỉ giúp.','Trung bình, chưa thật sự hài lòng.','{J} hơi móp nhẹ, chấp nhận được.','Giao trễ so với app báo, bù lại shipper lịch sự.','Không tệ, nhưng mình từng được giao nhanh hơn.','Ba sao thôi, mong shipper cải thiện thêm.'],
+  2:['Chờ hơi lâu, {j} đến nơi không còn như ban đầu.','Giao trễ khá nhiều, mình phải gọi hai lần.','Hơi thất vọng, {j} bị móp và đến muộn.',
+     'Trễ lâu quá, {j} nguội hết rồi.','Shipper đi lạc, mình phải ra tận đầu hẻm.','{J} bị đổ ra ngoài một ít, hơi buồn.','Không báo gì mà đến rất muộn.','Mong shipper chú ý hơn, lần này chưa ổn.'],
+  1:['Quá trễ, {j} nguội ngắt và bị hư. Không hài lòng.','Chờ rất lâu, tài xế không báo gì cả. Một sao.','{J} bị thiếu và hỏng, mình sẽ khiếu nại.',
+     'Chờ cả tiếng, {j} hỏng hết. Thất vọng.','Không bao giờ đặt lại, quá tệ.','{J} không còn dùng được, mình yêu cầu hoàn tiền.','Shipper không nghe máy, giao muộn và hư hàng.'],
 };
 const CUSTOMERS=['Chị Lan','Anh Minh','Cô Hạnh','Bạn Tú','Bé Na','Anh Đạt','Chị Mai','Chú Hùng','Bạn Linh','Anh Phúc','Chị Thảo','Bạn Khoa','Cô Ngọc','Anh Long'];
 
