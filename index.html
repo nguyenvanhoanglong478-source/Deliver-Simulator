@@ -580,7 +580,7 @@ let mgTmr,mgSpw,animTmr,dayTmr;
 function init(){
   g={
     cash:C.startCash,savings:0,month:1,day:1,
-    stamina:100,fuel:80,vehicleHp:100,
+    stamina:100,fuel:100,vehicleHp:100,
     stars:5.0,
     dayTimeLeft:C.dayDuration,
     dailyEarned:0,dailySpent:0,
@@ -632,7 +632,7 @@ function fmT(s){const m=Math.floor(s/60);const sc=s%60;return`${m}:${sc<10?'0':'
 // ===== ACTIONS =====
 function startGame(fresh){
   if(!fresh){const s=load();if(s&&s.phase==='game'){g=s;normalizeState();modal=null;startDayTimer();render();toast('GAME CŨ ĐÃ TẢI!');return;}}
-  if(fresh){const old=load();if(old&&old.profile){g.profile=Object.assign(defProfile(),old.profile);}}
+  if(fresh){const old=load(),keep=(old&&old.profile)||g.profile;init();g.profile=Object.assign(defProfile(),keep);}   // every stat back to its starting value, driver profile kept
   g.phase='game';addLog('Bắt đầu hành trình!','info');
   startDayTimer();render();
 }
