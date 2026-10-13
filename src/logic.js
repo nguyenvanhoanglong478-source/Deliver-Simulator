@@ -199,7 +199,7 @@ function startDayTimer(){
     const el=document.getElementById('day-tmr');
     if(el)el.textContent=fmT(g.dayTimeLeft);
     const ck=document.getElementById('clk');
-    if(ck){const pk=isPeak();ck.textContent=fmH()+(pk?' CAO ĐIỂM':'');ck.classList.toggle('peak',pk)}
+    if(ck){const pk=isPeak();ck.textContent=fmH();ck.classList.toggle('peak',pk)}
     if(g.dayTimeLeft>0&&g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
     if(g.dayTimeLeft<=0&&!busy){clearInterval(dayTmr);triggerDayEnd();}   // a delivery in progress finishes first
   },1000);

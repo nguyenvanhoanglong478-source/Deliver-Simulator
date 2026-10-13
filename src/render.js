@@ -68,7 +68,7 @@ function rGame(){
     <button class="hud-av" onclick="goProfile()" aria-label="Mở hồ sơ tài xế">${avatarHTML(g.profile.helmet,40)}</button>
     <div class="hud-who"><div class="hud-name">${esc(pname())}</div>
       <div class="hud-stars">${starsHTML(g.stars,14)}<b>${g.stars.toFixed(1)}</b></div></div>
-    <div class="tags"><span class="tag${isPeak()?' peak':''}" id="clk">${fmH()}${isPeak()?' CAO ĐIỂM':''}</span><span class="tag" id="day-tmr">${fmT(g.dayTimeLeft)}</span><span class="tag gr">T.${g.month}/${C.maxMonths}</span></div>
+    <div class="tags"><span class="tag${isPeak()?' peak':''}" id="clk">${fmH()}</span><span class="tag" id="day-tmr">${fmT(g.dayTimeLeft)}</span><span class="tag gr">T.${g.month}/${C.maxMonths}</span></div>
   </div>
   <div class="game-body">
   <div class="pc-col">
