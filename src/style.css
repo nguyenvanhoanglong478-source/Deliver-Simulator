@@ -70,7 +70,7 @@ img{image-rendering:pixelated}
   background:repeating-linear-gradient(90deg,var(--gold) 0 24px,transparent 24px 48px);animation:scrollx 1.1s linear infinite}
 .scene .bike{position:absolute;left:50%;bottom:20px;width:150px;margin-left:-75px;animation:bob .5s steps(2) infinite;filter:drop-shadow(4px 4px 0 rgba(0,0,0,.6))}
 .scene .cargo{position:absolute;left:50%;bottom:78px;margin-left:12px;animation:bob .5s steps(2) infinite}
-@keyframes scrollx{to{background-position-x:-480px}}
+@keyframes scrollx{to{background-position-x:480px}}   /* scenery flows left to right */
 @keyframes bob{0%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 .logo{text-align:center;padding-block:4px}
 .logo h1{font-family:var(--f-px);font-weight:400;font-size:30px;line-height:1.35;color:var(--gold);
