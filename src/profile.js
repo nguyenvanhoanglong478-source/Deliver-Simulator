@@ -85,7 +85,7 @@ async function askClaudeReview(r,ctx,onDone){
     if(t&&t.length<=160){r.text=t;r.ai=true;save();onDone&&onDone(r)}
   }catch(e){
     const code=e&&e.code;
-    if(code==='not_granted'){g.profile.ai=false;save();toast('KHÔNG CÓ QUYỀN DÙNG CLAUDE — DÙNG ĐÁNH GIÁ CÓ SẴN','warn')}
+    if(code==='not_granted'){g.profile.ai=false;save();toast('KHÔNG BẬT ĐƯỢC ĐÁNH GIÁ MỚI — DÙNG ĐÁNH GIÁ CÓ SẴN','warn')}
     else if(code==='rate_limited')_aiBusyUntil=Date.now()+60000;
   }finally{clearTimeout(to);_aiInflight=false}
 }
