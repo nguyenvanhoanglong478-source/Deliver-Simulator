@@ -74,10 +74,43 @@ function fm(n){
 function ff(n){return(n<0?'-':'')+Math.abs(Math.round(n)).toLocaleString('vi-VN')+' đ'}
 function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 function addLog(m,t='info'){g.log.unshift({m,t});if(g.log.length>20)g.log.pop()}
-function rollEvt(){let r=Math.random(),c=0;for(const e of EVTS){c+=e.p;if(r<c)return e;}return null}
+function evtChance(e){return g.upgrades&&g.upgrades.gps&&(e.id==='jam'||e.id==='cnl')?e.p*.5:e.p}   // GPS: -50% traffic jams & cancelled orders
+function rollEvt(){let r=Math.random(),c=0;for(const e of EVTS){c+=evtChance(e);if(r<c)return e;}return null}
 function clearTmrs(){clearInterval(mgTmr);clearInterval(mgSpw);clearInterval(animTmr);clearInterval(dayTmr)}
-function save(){try{localStorage.setItem('btd_v2',JSON.stringify(g));}catch(e){}}
+// ===== SAVE / LOAD (localStorage key btd_v2, same shape as older saves) =====
+let _saveWarned=false;
+// Only write states that are consistent: never mid-delivery/refuel (money moves at the end), never while a
+// day/month summary is pending (interest is already applied but not yet confirmed), never after the game ended.
+function canPersist(){
+  if(!g||!g.phase)return false;
+  if(['start','win','lose','minigame','anim-deliver','anim-refuel'].includes(g.phase))return false;
+  if(modal&&(modal.type==='dayEnd'||modal.type==='monthEnd'))return false;
+  return true;
+}
+function save(){
+  if(!canPersist())return;
+  try{localStorage.setItem('btd_v2',JSON.stringify(g));}
+  catch(e){if(!_saveWarned){_saveWarned=true;toast('KHÔNG LƯU ĐƯỢC TIẾN TRÌNH TRÊN TRÌNH DUYỆT NÀY','warn');}}
+}
 function load(){try{const s=localStorage.getItem('btd_v2');return s?JSON.parse(s):null;}catch(e){return null}}
+function saneSave(s){
+  return !!s&&typeof s==='object'&&['cash','savings','month','day','stamina','fuel','vehicleHp'].every(k=>Number.isFinite(s[k]));
+}
+// A save can be taken in the shop, the profile screen or mid-sleep; any of those resumes on the main screen.
+function hasSave(){const s=load();return saneSave(s)&&!['start','win','lose'].includes(s.phase)}
+function restore(s){
+  const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,Number.isFinite(v)?v:lo));
+  g=s;normalizeState();
+  g.upgrades=g.upgrades&&typeof g.upgrades==='object'?g.upgrades:{};
+  g.log=Array.isArray(g.log)?g.log:[];
+  g.stamina=clamp(g.stamina,0,100);g.fuel=clamp(g.fuel,0,fuelMax());g.vehicleHp=clamp(g.vehicleHp,0,100);
+  g.month=clamp(g.month,1,C.maxMonths);g.day=clamp(g.day,1,C.daysPerMonth);
+  g.dayTimeLeft=clamp(g.dayTimeLeft,1,C.dayDuration);
+  g.cash=Math.round(g.cash);g.savings=Math.max(0,Math.round(g.savings));
+  ['dailyEarned','dailySpent','earned','delivered','totalDelivered'].forEach(k=>{g[k]=Number.isFinite(g[k])?g[k]:0});
+  g.rainToday=!!g.rainToday;
+  clearTmrs();modal=null;mgData=null;g.activeAnim=null;g.phase='game';
+}
 function jobCost(job){return{sta:Math.max(5,job.sta-(g.upgrades.engine?3:0)),fuel:Math.max(1,job.fuel-(g.upgrades.tires?1:0)-(g.upgrades.tank?2:0))}}
 function canDoJob(job){const c=jobCost(job);return g.stamina>=c.sta&&g.fuel>=c.fuel&&g.vehicleHp>0}
 function earnMult(){return g.vehicleHp>=70?1:g.vehicleHp>=50?.85:g.vehicleHp>=30?.7:.55}
@@ -92,6 +125,7 @@ function startDayTimer(){
     g.dayTimeLeft=Math.max(0,g.dayTimeLeft-1);
     const el=document.getElementById('day-tmr');
     if(el)el.textContent=fmT(g.dayTimeLeft);
+    if(g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
     if(g.dayTimeLeft<=0){clearInterval(dayTmr);triggerDayEnd();}
   },1000);
 }
@@ -99,10 +133,10 @@ function fmT(s){const m=Math.floor(s/60);const sc=s%60;return`${m}:${sc<10?'0':'
 
 // ===== ACTIONS =====
 function startGame(fresh){
-  if(!fresh){const s=load();if(s&&s.phase==='game'){g=s;normalizeState();modal=null;startDayTimer();render();toast('GAME CŨ ĐÃ TẢI!');return;}}
+  if(!fresh){const s=load();if(saneSave(s)&&!['start','win','lose'].includes(s.phase)){restore(s);startDayTimer();render();toast('GAME CŨ ĐÃ TẢI!');return;}}
   if(fresh){const old=load(),keep=(old&&old.profile)||g.profile;init();g.profile=Object.assign(defProfile(),keep);}   // every stat back to its starting value, driver profile kept
   g.phase='game';addLog('Bắt đầu hành trình!','info');
-  startDayTimer();render();
+  startDayTimer();save();render();   // save now so a reload cannot bring the old game back
 }
 
 function doDelivery(id){
@@ -211,7 +245,7 @@ function doSave(a){
   if(amt<=0||amt>g.cash){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
   g.cash-=amt;g.savings+=amt;
   addLog('Gửi tiết kiệm: +'+ff(amt),'save');
-  if(g.savings>=C.winTarget)g.phase='win';
+  if(g.savings>=C.winTarget){finish(true);return;}
   save();render();
 }
 
@@ -229,7 +263,10 @@ function goGame(){if(g.phase==='upgrade'||g.phase==='profile'){g.phase='game';re
 
 function buyUpgrade(id){
   const u=UPGS.find(x=>x.id===id);
-  if(!u||g.cash<u.cost){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
+  if(!u)return;
+  if(g.upgrades[u.id]&&!u.rep){toast('BẠN ĐÃ CÓ NÂNG CẤP NÀY','warn');return;}
+  if(u.rep&&g.vehicleHp>=100){toast('XE CÒN NGUYÊN VẸN, KHÔNG CẦN SỬA','warn');return;}
+  if(g.cash<u.cost){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
   g.cash-=u.cost;g.dailySpent+=u.cost;
   if(id==='fix_s'){g.vehicleHp=Math.min(100,g.vehicleHp+30);}
   else if(id==='fix_f'){g.vehicleHp=100;}
@@ -305,23 +342,27 @@ function showMgResult(){
 }
 
 function afterMinigame(earn,job,rvw){
+  const evt=rollEvt();
+  const res=evt?evt.fn(earn):null;
+  const paid=res&&res.skip?0:earn;          // "khách hủy" means no income for this order
   g.phase='anim-deliver';
-  g.activeAnim={type:'deliver',earn,job};
+  g.activeAnim={type:'deliver',earn:paid,job};
   render(); // Render một lần — CSS bike animation bắt đầu
   // Sau 3s: patch DOM trực tiếp, KHÔNG gọi render() để tránh reset bike animation
   setTimeout(()=>{
     const statusEl=document.getElementById('anim-status');
     const earnEl=document.getElementById('anim-earn-val');
-    if(statusEl){statusEl.textContent='GIAO THÀNH CÔNG!';statusEl.classList.add('done');}
-    if(earnEl){earnEl.textContent=earn>0?'+'+ff(earn):'THẤT BẠI';earnEl.style.display='block';}
+    if(statusEl){
+      statusEl.textContent=res&&res.skip?'KHÁCH HỦY ĐƠN':paid>0?'GIAO THÀNH CÔNG!':'GIAO THẤT BẠI';
+      statusEl.classList.add('done');
+    }
+    if(earnEl){earnEl.textContent=paid>0?'+'+ff(paid):'KHÔNG CÓ THU NHẬP';earnEl.style.display='block';}
     const rv=document.getElementById('rv');
     if(rv&&rvw){rv.dataset.id=String(rvw.t0);rv.innerHTML=reviewHTML(rvw);rv.classList.add('show');}
     setTimeout(()=>{
-      if(earn>0){g.cash+=earn;g.earned+=earn;g.dailyEarned+=earn;}
+      if(paid>0){g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;}
       g.delivered++;g.totalDelivered++;
-      const evt=rollEvt();
       if(evt){
-        const res=evt.fn(earn);
         if(res.hp){
           if(res.cash)res.cash=Math.round(res.cash*(g.upgrades.insure?.4:1));
           g.vehicleHp=Math.max(0,g.vehicleHp+res.hp);
@@ -329,10 +370,10 @@ function afterMinigame(earn,job,rvw){
         if(res.rain)g.rainToday=true;
         if(res.sta)g.stamina=Math.max(0,g.stamina+res.sta);
         if(res.cash){g.cash+=res.cash;if(res.cash>0)g.dailyEarned+=res.cash;else g.dailySpent+=Math.abs(res.cash);}
-        if(!res.skip)addLog(`${evt.ti}: ${res.msg}`,evt.t==='good'?'earn':evt.t==='bad'?'cost':'info');
+        addLog(`${evt.ti}: ${res.msg}`,evt.t==='good'?'earn':evt.t==='bad'?'cost':'info');
         modal={type:'event',evt,res};
       }
-      addLog(`${job.name}: ${earn>0?'+'+ff(earn):'THẤT BẠI'}`,earn>0?'earn':'cost');
+      addLog(`${job.name}: ${paid>0?'+'+ff(paid):'không có thu nhập'}`,paid>0?'earn':'cost');
       g.activeAnim=null;g.phase='game';
       mgData=null;save();
       if(g.vehicleHp<=0)toast('XE HỎNG NẶNG! CẦN SỬA NGAY!','bad');
@@ -342,11 +383,18 @@ function afterMinigame(earn,job,rvw){
 }
 
 // ===== DAY END =====
+function finish(win){
+  clearTmrs();modal=null;g.activeAnim=null;mgData=null;
+  g.phase=win?'win':'lose';
+  try{localStorage.removeItem('btd_v2');}catch(e){}
+  render();
+}
+
 function triggerDayEnd(){
   if(g.phase==='anim-sleep'){clearInterval(animTmr);g.activeAnim=null;g.phase='game';addLog('Hết ngày khi đang nghỉ ngơi','info');}
   const interest=Math.floor(g.savings*C.dailyInterest);
   g.savings+=interest;
-  if(g.savings>=C.winTarget){g.phase='win';render();return;}
+  if(g.savings>=C.winTarget){finish(true);return;}
   modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day};
   render();
 }
@@ -370,11 +418,15 @@ function confirmMonthEnd(){
   g.cash+=bonus;g.cash-=BILLS;
   if(bonus>0)addLog('Thưởng Be: +'+ff(bonus),'earn');
   addLog('Chi phí tháng '+g.month+': -'+ff(BILLS),'cost');
-  if(g.cash<-2e6){g.phase='lose';modal=null;render();return;}
+  if(g.cash<0&&g.savings>0){   // bills come out of savings before the player is declared broke
+    const t=Math.min(g.savings,-g.cash);g.savings-=t;g.cash+=t;
+    addLog('Rút tiết kiệm '+ff(t)+' để trả chi phí tháng','info');
+  }
+  if(g.cash<-2e6){finish(false);return;}
   g.month++;g.day=1;g.earned=0;g.delivered=0;
   g.dailyEarned=0;g.dailySpent=0;g.dayTimeLeft=C.dayDuration;
   modal=null;
-  if(g.month>C.maxMonths&&g.savings<C.winTarget){g.phase='lose';}
+  if(g.month>C.maxMonths){finish(g.savings>=C.winTarget);return;}
   save();startDayTimer();render();
 }
 
@@ -405,3 +457,7 @@ function render(){
   root.innerHTML=h+(modal?rModal():'');
 }
 
+
+// Save when the tab is hidden or closed (canPersist() skips unsafe moments).
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save()});
+window.addEventListener('pagehide',()=>save());

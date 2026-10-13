@@ -108,7 +108,7 @@ img{image-rendering:pixelated}
 .stat-row,.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .stat{padding:12px}
 .stat .l{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:20px;margin-bottom:8px}
-.stat .v{font-family:var(--f-px);font-size:12px;line-height:1.5;word-break:break-all}
+.stat .v{font-family:var(--f-px);font-size:11px;line-height:1.5;overflow-wrap:anywhere}
 .stat .v.gr{color:var(--gr)}.stat .v.gold{color:var(--gold)}.stat .v.red{color:var(--red)}
 .stat .sub{font-size:16px;color:var(--dim);margin-top:4px}
 .stat.warn{animation:warn 1s steps(2) infinite}
@@ -128,6 +128,9 @@ img{image-rendering:pixelated}
 .job .er{font-size:20px;opacity:.8}
 .job .co{font-size:19px;opacity:.85;display:flex;gap:14px;align-items:center}
 .job .co span{display:inline-flex;align-items:center;gap:5px}
+.job-why{display:flex;gap:8px;align-items:flex-start;margin-top:16px;color:var(--or);line-height:1.1}
+.job-why .px-ic{margin-top:2px}
+.save-note{margin-top:14px;font-size:19px}
 .util-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .util{flex-direction:column;gap:6px;min-height:84px;padding:10px 4px}
 .util .lb{font-size:19px}
@@ -168,6 +171,7 @@ img{image-rendering:pixelated}
 .anim-earn{font-family:var(--f-px);font-size:20px;color:var(--gold);text-shadow:3px 3px 0 #000}
 .review{width:100%;padding:14px;text-align:left;display:none}
 .review.show{display:block;animation:pop .25s steps(3)}
+.review.static{animation:none}
 @keyframes pop{from{transform:scale(.9);opacity:0}}
 .review .who{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;color:var(--dim)}
 .review .txt{font-size:22px;line-height:1.2;color:var(--tx)}
@@ -300,7 +304,13 @@ input.txt::placeholder{color:#5b52a0}
   .hud{top:12px}
 }
 @media(max-width:380px){
+  .hud{gap:8px;padding:10px 8px}
+  .hud-name{font-size:20px}
+  .hud-stars b{display:none}
+  .tags{gap:8px}
   .tags .tag{font-size:9px;padding:6px 5px}
+  .stat .v{font-size:10px}
+  .stat .cur{display:none}
   .job .nm{font-size:21px}
 }
 @media(prefers-reduced-motion:reduce){

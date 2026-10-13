@@ -117,7 +117,7 @@ img{image-rendering:pixelated}
 .stat-row,.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .stat{padding:12px}
 .stat .l{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:20px;margin-bottom:8px}
-.stat .v{font-family:var(--f-px);font-size:12px;line-height:1.5;word-break:break-all}
+.stat .v{font-family:var(--f-px);font-size:11px;line-height:1.5;overflow-wrap:anywhere}
 .stat .v.gr{color:var(--gr)}.stat .v.gold{color:var(--gold)}.stat .v.red{color:var(--red)}
 .stat .sub{font-size:16px;color:var(--dim);margin-top:4px}
 .stat.warn{animation:warn 1s steps(2) infinite}
@@ -137,6 +137,9 @@ img{image-rendering:pixelated}
 .job .er{font-size:20px;opacity:.8}
 .job .co{font-size:19px;opacity:.85;display:flex;gap:14px;align-items:center}
 .job .co span{display:inline-flex;align-items:center;gap:5px}
+.job-why{display:flex;gap:8px;align-items:flex-start;margin-top:16px;color:var(--or);line-height:1.1}
+.job-why .px-ic{margin-top:2px}
+.save-note{margin-top:14px;font-size:19px}
 .util-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .util{flex-direction:column;gap:6px;min-height:84px;padding:10px 4px}
 .util .lb{font-size:19px}
@@ -177,6 +180,7 @@ img{image-rendering:pixelated}
 .anim-earn{font-family:var(--f-px);font-size:20px;color:var(--gold);text-shadow:3px 3px 0 #000}
 .review{width:100%;padding:14px;text-align:left;display:none}
 .review.show{display:block;animation:pop .25s steps(3)}
+.review.static{animation:none}
 @keyframes pop{from{transform:scale(.9);opacity:0}}
 .review .who{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;color:var(--dim)}
 .review .txt{font-size:22px;line-height:1.2;color:var(--tx)}
@@ -309,7 +313,13 @@ input.txt::placeholder{color:#5b52a0}
   .hud{top:12px}
 }
 @media(max-width:380px){
+  .hud{gap:8px;padding:10px 8px}
+  .hud-name{font-size:20px}
+  .hud-stars b{display:none}
+  .tags{gap:8px}
   .tags .tag{font-size:9px;padding:6px 5px}
+  .stat .v{font-size:10px}
+  .stat .cur{display:none}
   .job .nm{font-size:21px}
 }
 @media(prefers-reduced-motion:reduce){
@@ -606,10 +616,43 @@ function fm(n){
 function ff(n){return(n<0?'-':'')+Math.abs(Math.round(n)).toLocaleString('vi-VN')+' đ'}
 function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 function addLog(m,t='info'){g.log.unshift({m,t});if(g.log.length>20)g.log.pop()}
-function rollEvt(){let r=Math.random(),c=0;for(const e of EVTS){c+=e.p;if(r<c)return e;}return null}
+function evtChance(e){return g.upgrades&&g.upgrades.gps&&(e.id==='jam'||e.id==='cnl')?e.p*.5:e.p}   // GPS: -50% traffic jams & cancelled orders
+function rollEvt(){let r=Math.random(),c=0;for(const e of EVTS){c+=evtChance(e);if(r<c)return e;}return null}
 function clearTmrs(){clearInterval(mgTmr);clearInterval(mgSpw);clearInterval(animTmr);clearInterval(dayTmr)}
-function save(){try{localStorage.setItem('btd_v2',JSON.stringify(g));}catch(e){}}
+// ===== SAVE / LOAD (localStorage key btd_v2, same shape as older saves) =====
+let _saveWarned=false;
+// Only write states that are consistent: never mid-delivery/refuel (money moves at the end), never while a
+// day/month summary is pending (interest is already applied but not yet confirmed), never after the game ended.
+function canPersist(){
+  if(!g||!g.phase)return false;
+  if(['start','win','lose','minigame','anim-deliver','anim-refuel'].includes(g.phase))return false;
+  if(modal&&(modal.type==='dayEnd'||modal.type==='monthEnd'))return false;
+  return true;
+}
+function save(){
+  if(!canPersist())return;
+  try{localStorage.setItem('btd_v2',JSON.stringify(g));}
+  catch(e){if(!_saveWarned){_saveWarned=true;toast('KHÔNG LƯU ĐƯỢC TIẾN TRÌNH TRÊN TRÌNH DUYỆT NÀY','warn');}}
+}
 function load(){try{const s=localStorage.getItem('btd_v2');return s?JSON.parse(s):null;}catch(e){return null}}
+function saneSave(s){
+  return !!s&&typeof s==='object'&&['cash','savings','month','day','stamina','fuel','vehicleHp'].every(k=>Number.isFinite(s[k]));
+}
+// A save can be taken in the shop, the profile screen or mid-sleep; any of those resumes on the main screen.
+function hasSave(){const s=load();return saneSave(s)&&!['start','win','lose'].includes(s.phase)}
+function restore(s){
+  const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,Number.isFinite(v)?v:lo));
+  g=s;normalizeState();
+  g.upgrades=g.upgrades&&typeof g.upgrades==='object'?g.upgrades:{};
+  g.log=Array.isArray(g.log)?g.log:[];
+  g.stamina=clamp(g.stamina,0,100);g.fuel=clamp(g.fuel,0,fuelMax());g.vehicleHp=clamp(g.vehicleHp,0,100);
+  g.month=clamp(g.month,1,C.maxMonths);g.day=clamp(g.day,1,C.daysPerMonth);
+  g.dayTimeLeft=clamp(g.dayTimeLeft,1,C.dayDuration);
+  g.cash=Math.round(g.cash);g.savings=Math.max(0,Math.round(g.savings));
+  ['dailyEarned','dailySpent','earned','delivered','totalDelivered'].forEach(k=>{g[k]=Number.isFinite(g[k])?g[k]:0});
+  g.rainToday=!!g.rainToday;
+  clearTmrs();modal=null;mgData=null;g.activeAnim=null;g.phase='game';
+}
 function jobCost(job){return{sta:Math.max(5,job.sta-(g.upgrades.engine?3:0)),fuel:Math.max(1,job.fuel-(g.upgrades.tires?1:0)-(g.upgrades.tank?2:0))}}
 function canDoJob(job){const c=jobCost(job);return g.stamina>=c.sta&&g.fuel>=c.fuel&&g.vehicleHp>0}
 function earnMult(){return g.vehicleHp>=70?1:g.vehicleHp>=50?.85:g.vehicleHp>=30?.7:.55}
@@ -624,6 +667,7 @@ function startDayTimer(){
     g.dayTimeLeft=Math.max(0,g.dayTimeLeft-1);
     const el=document.getElementById('day-tmr');
     if(el)el.textContent=fmT(g.dayTimeLeft);
+    if(g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
     if(g.dayTimeLeft<=0){clearInterval(dayTmr);triggerDayEnd();}
   },1000);
 }
@@ -631,10 +675,10 @@ function fmT(s){const m=Math.floor(s/60);const sc=s%60;return`${m}:${sc<10?'0':'
 
 // ===== ACTIONS =====
 function startGame(fresh){
-  if(!fresh){const s=load();if(s&&s.phase==='game'){g=s;normalizeState();modal=null;startDayTimer();render();toast('GAME CŨ ĐÃ TẢI!');return;}}
+  if(!fresh){const s=load();if(saneSave(s)&&!['start','win','lose'].includes(s.phase)){restore(s);startDayTimer();render();toast('GAME CŨ ĐÃ TẢI!');return;}}
   if(fresh){const old=load(),keep=(old&&old.profile)||g.profile;init();g.profile=Object.assign(defProfile(),keep);}   // every stat back to its starting value, driver profile kept
   g.phase='game';addLog('Bắt đầu hành trình!','info');
-  startDayTimer();render();
+  startDayTimer();save();render();   // save now so a reload cannot bring the old game back
 }
 
 function doDelivery(id){
@@ -743,7 +787,7 @@ function doSave(a){
   if(amt<=0||amt>g.cash){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
   g.cash-=amt;g.savings+=amt;
   addLog('Gửi tiết kiệm: +'+ff(amt),'save');
-  if(g.savings>=C.winTarget)g.phase='win';
+  if(g.savings>=C.winTarget){finish(true);return;}
   save();render();
 }
 
@@ -761,7 +805,10 @@ function goGame(){if(g.phase==='upgrade'||g.phase==='profile'){g.phase='game';re
 
 function buyUpgrade(id){
   const u=UPGS.find(x=>x.id===id);
-  if(!u||g.cash<u.cost){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
+  if(!u)return;
+  if(g.upgrades[u.id]&&!u.rep){toast('BẠN ĐÃ CÓ NÂNG CẤP NÀY','warn');return;}
+  if(u.rep&&g.vehicleHp>=100){toast('XE CÒN NGUYÊN VẸN, KHÔNG CẦN SỬA','warn');return;}
+  if(g.cash<u.cost){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
   g.cash-=u.cost;g.dailySpent+=u.cost;
   if(id==='fix_s'){g.vehicleHp=Math.min(100,g.vehicleHp+30);}
   else if(id==='fix_f'){g.vehicleHp=100;}
@@ -837,23 +884,27 @@ function showMgResult(){
 }
 
 function afterMinigame(earn,job,rvw){
+  const evt=rollEvt();
+  const res=evt?evt.fn(earn):null;
+  const paid=res&&res.skip?0:earn;          // "khách hủy" means no income for this order
   g.phase='anim-deliver';
-  g.activeAnim={type:'deliver',earn,job};
+  g.activeAnim={type:'deliver',earn:paid,job};
   render(); // Render một lần — CSS bike animation bắt đầu
   // Sau 3s: patch DOM trực tiếp, KHÔNG gọi render() để tránh reset bike animation
   setTimeout(()=>{
     const statusEl=document.getElementById('anim-status');
     const earnEl=document.getElementById('anim-earn-val');
-    if(statusEl){statusEl.textContent='GIAO THÀNH CÔNG!';statusEl.classList.add('done');}
-    if(earnEl){earnEl.textContent=earn>0?'+'+ff(earn):'THẤT BẠI';earnEl.style.display='block';}
+    if(statusEl){
+      statusEl.textContent=res&&res.skip?'KHÁCH HỦY ĐƠN':paid>0?'GIAO THÀNH CÔNG!':'GIAO THẤT BẠI';
+      statusEl.classList.add('done');
+    }
+    if(earnEl){earnEl.textContent=paid>0?'+'+ff(paid):'KHÔNG CÓ THU NHẬP';earnEl.style.display='block';}
     const rv=document.getElementById('rv');
     if(rv&&rvw){rv.dataset.id=String(rvw.t0);rv.innerHTML=reviewHTML(rvw);rv.classList.add('show');}
     setTimeout(()=>{
-      if(earn>0){g.cash+=earn;g.earned+=earn;g.dailyEarned+=earn;}
+      if(paid>0){g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;}
       g.delivered++;g.totalDelivered++;
-      const evt=rollEvt();
       if(evt){
-        const res=evt.fn(earn);
         if(res.hp){
           if(res.cash)res.cash=Math.round(res.cash*(g.upgrades.insure?.4:1));
           g.vehicleHp=Math.max(0,g.vehicleHp+res.hp);
@@ -861,10 +912,10 @@ function afterMinigame(earn,job,rvw){
         if(res.rain)g.rainToday=true;
         if(res.sta)g.stamina=Math.max(0,g.stamina+res.sta);
         if(res.cash){g.cash+=res.cash;if(res.cash>0)g.dailyEarned+=res.cash;else g.dailySpent+=Math.abs(res.cash);}
-        if(!res.skip)addLog(`${evt.ti}: ${res.msg}`,evt.t==='good'?'earn':evt.t==='bad'?'cost':'info');
+        addLog(`${evt.ti}: ${res.msg}`,evt.t==='good'?'earn':evt.t==='bad'?'cost':'info');
         modal={type:'event',evt,res};
       }
-      addLog(`${job.name}: ${earn>0?'+'+ff(earn):'THẤT BẠI'}`,earn>0?'earn':'cost');
+      addLog(`${job.name}: ${paid>0?'+'+ff(paid):'không có thu nhập'}`,paid>0?'earn':'cost');
       g.activeAnim=null;g.phase='game';
       mgData=null;save();
       if(g.vehicleHp<=0)toast('XE HỎNG NẶNG! CẦN SỬA NGAY!','bad');
@@ -874,11 +925,18 @@ function afterMinigame(earn,job,rvw){
 }
 
 // ===== DAY END =====
+function finish(win){
+  clearTmrs();modal=null;g.activeAnim=null;mgData=null;
+  g.phase=win?'win':'lose';
+  try{localStorage.removeItem('btd_v2');}catch(e){}
+  render();
+}
+
 function triggerDayEnd(){
   if(g.phase==='anim-sleep'){clearInterval(animTmr);g.activeAnim=null;g.phase='game';addLog('Hết ngày khi đang nghỉ ngơi','info');}
   const interest=Math.floor(g.savings*C.dailyInterest);
   g.savings+=interest;
-  if(g.savings>=C.winTarget){g.phase='win';render();return;}
+  if(g.savings>=C.winTarget){finish(true);return;}
   modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day};
   render();
 }
@@ -902,11 +960,15 @@ function confirmMonthEnd(){
   g.cash+=bonus;g.cash-=BILLS;
   if(bonus>0)addLog('Thưởng Be: +'+ff(bonus),'earn');
   addLog('Chi phí tháng '+g.month+': -'+ff(BILLS),'cost');
-  if(g.cash<-2e6){g.phase='lose';modal=null;render();return;}
+  if(g.cash<0&&g.savings>0){   // bills come out of savings before the player is declared broke
+    const t=Math.min(g.savings,-g.cash);g.savings-=t;g.cash+=t;
+    addLog('Rút tiết kiệm '+ff(t)+' để trả chi phí tháng','info');
+  }
+  if(g.cash<-2e6){finish(false);return;}
   g.month++;g.day=1;g.earned=0;g.delivered=0;
   g.dailyEarned=0;g.dailySpent=0;g.dayTimeLeft=C.dayDuration;
   modal=null;
-  if(g.month>C.maxMonths&&g.savings<C.winTarget){g.phase='lose';}
+  if(g.month>C.maxMonths){finish(g.savings>=C.winTarget);return;}
   save();startDayTimer();render();
 }
 
@@ -938,9 +1000,21 @@ function render(){
 }
 
 
+// Save when the tab is hidden or closed (canPersist() skips unsafe moments).
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save()});
+window.addEventListener('pagehide',()=>save());
+
 // ===== RENDER =====
 function money(n){n=Math.round(n);return(n<0?'-':'')+Math.abs(n).toLocaleString('vi-VN')+'<span class="cur">đ</span>'}
 function meterColor(v,lo,mid){return v<lo?'red':v<mid?'or':'gr'}
+function jobWhy(job){
+  const c=jobCost(job);
+  if(g.vehicleHp<=0)return'xe hỏng, cần sửa ở mục Nâng cấp';
+  const lack=[];
+  if(g.fuel<c.fuel)lack.push(`xăng (cần ${c.fuel}%, còn ${g.fuel}%)`);
+  if(g.stamina<c.sta)lack.push(`thể lực (cần ${c.sta}, còn ${g.stamina})`);
+  return lack.length?'thiếu '+lack.join(' và '):'';
+}
 function sceneHTML(cargo){
   return`<div class="scene"><div class="sky-far"></div><div class="sky-near"></div><div class="road"></div>
     <img class="bike" src="${BIKE}" alt="Xe Honda Cub">${cargo?`<div class="cargo">${ic(cargo,32)}</div>`:''}</div>`;
@@ -960,8 +1034,8 @@ function toggleBills(){
   if(h)h.classList.toggle('open',_billsOpen);
 }
 function rStart(){
-  const saved=load();const hs=!!saved;
-  const nm=saved&&saved.profile&&saved.profile.name&&saved.profile.name.trim();
+  const saved=load();const hs=hasSave();
+  const nm=saved&&saved.profile&&typeof saved.profile.name==='string'&&saved.profile.name.trim();
   const br=C.monthly.map(b=>`<div class="bill-row"><span>${b.n}</span><span style="color:var(--red)">${ff(b.c)}</span></div>`).join('');
   return`<div class="start">
     ${sceneHTML('box')}
@@ -1024,7 +1098,7 @@ function rGame(){
       <span>${ic('box',20)}${g.delivered} ĐƠN</span>
       ${g.rainToday?`<span class="rain-tag">${ic('cloud',20)}MƯA</span>`:''}
     </div>
-    ${g.reviews[0]?`<div class="pxf2 review show" style="display:block;cursor:pointer" onclick="goProfile()"><div class="lbl" style="margin-bottom:8px">ĐÁNH GIÁ MỚI NHẤT</div>${reviewHTML(g.reviews[0])}</div>`:''}
+    ${g.reviews[0]?`<div class="pxf2 review show static" style="display:block;cursor:pointer" onclick="goProfile()"><div class="lbl" style="margin-bottom:8px">ĐÁNH GIÁ MỚI NHẤT</div>${reviewHTML(g.reviews[0])}</div>`:''}
   </div>
   <div class="pc-col">
     <div>
@@ -1033,6 +1107,7 @@ function rGame(){
         <button class="btn b-gr job" ${cF?'':'disabled'} onclick="doDelivery('food')">${ic('bowl',36)}<div class="nm">${fj.name}</div><div class="er">${fj.earn}</div><div class="co">${jc(fj)}</div></button>
         <button class="btn b-cy job" ${cG?'':'disabled'} onclick="doDelivery('goods')">${ic('box',36)}<div class="nm">${gj.name}</div><div class="er">${gj.earn}</div><div class="co">${jc(gj)}</div></button>
       </div>
+      ${(!cF||!cG)?`<div class="job-why">${ic('warn',18)}<div>${[!cF?`${fj.name}: ${jobWhy(fj)}`:'',!cG?`${gj.name}: ${jobWhy(gj)}`:''].filter(Boolean).join('<br>')}</div></div>`:''}
     </div>
     <div>
       <div class="sec-t">HÀNH ĐỘNG</div>
@@ -1049,10 +1124,11 @@ function rGame(){
         <button class="btn b-gold sm" onclick="doSave(5e5)" ${g.cash<5e5?'disabled':''}>GỬI 500K</button>
         <button class="btn b-gold sm" onclick="doSave(1e6)" ${g.cash<1e6?'disabled':''}>GỬI 1TR</button>
         <button class="btn b-gold sm" onclick="doSave(5e6)" ${g.cash<5e6?'disabled':''}>GỬI 5TR</button>
-        <button class="btn b-gold sm" onclick="doSave('all')">GỬI TẤT CẢ</button>
+        <button class="btn b-gold sm" onclick="doSave('all')" ${g.cash<=5e5?'disabled':''}>GỬI TẤT CẢ</button>
         <button class="btn b-red sm" onclick="doWd(1e6)" ${g.savings<1e6?'disabled':''}>RÚT 1TR</button>
         <button class="btn b-red sm" onclick="doWd('all')" ${!g.savings?'disabled':''}>RÚT HẾT</button>
       </div>
+      <div class="lbl save-note">"Gửi tất cả" giữ lại 500K tiền mặt.</div>
     </div>
     <div>
       <div class="sec-t">NHẬT KÝ</div>
@@ -1129,7 +1205,7 @@ function rShop(){
       const owned=g.upgrades[u.id];
       const btn=owned&&!u.rep
         ?`<div class="owned">${ic('check',18)}ĐÃ CÓ</div>`
-        :`<button class="btn b-pu" onclick="buyUpgrade('${u.id}')" ${g.cash<u.cost?'disabled':''}>${ff(u.cost)}</button>`;
+        :`<button class="btn b-pu" onclick="buyUpgrade('${u.id}')" ${g.cash<u.cost||(u.rep&&g.vehicleHp>=100)?'disabled':''}>${u.rep&&g.vehicleHp>=100?'XE ĐẦY':ff(u.cost)}</button>`;
       return`<div class="pxf upg-row"><div class="upg-ic">${ic(u.icon,28)}</div>
         <div class="upg-det"><div class="upg-n">${u.name}</div><div class="upg-d">${u.desc}</div></div>
         <div class="upg-act">${btn}</div></div>`;
@@ -1249,7 +1325,7 @@ function rModal(){
       ${billRows}
       <div class="bar" style="margin:14px 4px"><i class="${net>=0?'gr':'red'}" style="width:100%"></i></div>
       <div class="month-row" style="color:var(--tx)"><span>KẾT QUẢ</span><span style="color:${net>=0?'var(--gr)':'var(--red)'}">${net>=0?'+':''}${ff(net)}</span></div>
-      <div class="lbl" style="margin:8px 0 14px">Tiền mặt sau: ${ff(g.cash+bonus-BILLS)}</div>
+      <div class="lbl" style="margin:8px 0 14px">Tiền mặt sau: ${ff(g.cash+bonus-BILLS)}${g.cash+bonus-BILLS<0&&g.savings>0?'<br>Thiếu sẽ tự rút từ tiết kiệm.':''}</div>
       <button class="btn b-gr blk" onclick="confirmMonthEnd()">${month<C.maxMonths?'THÁNG '+(month+1):'KẾT THÚC GAME'}</button>
     </div></div>`;
   }
@@ -1258,7 +1334,7 @@ function rModal(){
 
 // END
 function rEnd(win){
-  const m=g.month-1,lack=Math.max(0,C.winTarget-g.savings);
+  const m=g.month,lack=Math.max(0,C.winTarget-g.savings);
   if(win)return`<div class="end">
     ${ic('trophy',88)}
     <h1 style="color:var(--gold);font-family:var(--f-tx);font-size:44px">CHIẾN THẮNG!</h1>

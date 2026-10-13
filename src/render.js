@@ -1,6 +1,14 @@
 // ===== RENDER =====
 function money(n){n=Math.round(n);return(n<0?'-':'')+Math.abs(n).toLocaleString('vi-VN')+'<span class="cur">đ</span>'}
 function meterColor(v,lo,mid){return v<lo?'red':v<mid?'or':'gr'}
+function jobWhy(job){
+  const c=jobCost(job);
+  if(g.vehicleHp<=0)return'xe hỏng, cần sửa ở mục Nâng cấp';
+  const lack=[];
+  if(g.fuel<c.fuel)lack.push(`xăng (cần ${c.fuel}%, còn ${g.fuel}%)`);
+  if(g.stamina<c.sta)lack.push(`thể lực (cần ${c.sta}, còn ${g.stamina})`);
+  return lack.length?'thiếu '+lack.join(' và '):'';
+}
 function sceneHTML(cargo){
   return`<div class="scene"><div class="sky-far"></div><div class="sky-near"></div><div class="road"></div>
     <img class="bike" src="${BIKE}" alt="Xe Honda Cub">${cargo?`<div class="cargo">${ic(cargo,32)}</div>`:''}</div>`;
@@ -20,8 +28,8 @@ function toggleBills(){
   if(h)h.classList.toggle('open',_billsOpen);
 }
 function rStart(){
-  const saved=load();const hs=!!saved;
-  const nm=saved&&saved.profile&&saved.profile.name&&saved.profile.name.trim();
+  const saved=load();const hs=hasSave();
+  const nm=saved&&saved.profile&&typeof saved.profile.name==='string'&&saved.profile.name.trim();
   const br=C.monthly.map(b=>`<div class="bill-row"><span>${b.n}</span><span style="color:var(--red)">${ff(b.c)}</span></div>`).join('');
   return`<div class="start">
     ${sceneHTML('box')}
@@ -84,7 +92,7 @@ function rGame(){
       <span>${ic('box',20)}${g.delivered} ĐƠN</span>
       ${g.rainToday?`<span class="rain-tag">${ic('cloud',20)}MƯA</span>`:''}
     </div>
-    ${g.reviews[0]?`<div class="pxf2 review show" style="display:block;cursor:pointer" onclick="goProfile()"><div class="lbl" style="margin-bottom:8px">ĐÁNH GIÁ MỚI NHẤT</div>${reviewHTML(g.reviews[0])}</div>`:''}
+    ${g.reviews[0]?`<div class="pxf2 review show static" style="display:block;cursor:pointer" onclick="goProfile()"><div class="lbl" style="margin-bottom:8px">ĐÁNH GIÁ MỚI NHẤT</div>${reviewHTML(g.reviews[0])}</div>`:''}
   </div>
   <div class="pc-col">
     <div>
@@ -93,6 +101,7 @@ function rGame(){
         <button class="btn b-gr job" ${cF?'':'disabled'} onclick="doDelivery('food')">${ic('bowl',36)}<div class="nm">${fj.name}</div><div class="er">${fj.earn}</div><div class="co">${jc(fj)}</div></button>
         <button class="btn b-cy job" ${cG?'':'disabled'} onclick="doDelivery('goods')">${ic('box',36)}<div class="nm">${gj.name}</div><div class="er">${gj.earn}</div><div class="co">${jc(gj)}</div></button>
       </div>
+      ${(!cF||!cG)?`<div class="job-why">${ic('warn',18)}<div>${[!cF?`${fj.name}: ${jobWhy(fj)}`:'',!cG?`${gj.name}: ${jobWhy(gj)}`:''].filter(Boolean).join('<br>')}</div></div>`:''}
     </div>
     <div>
       <div class="sec-t">HÀNH ĐỘNG</div>
@@ -109,10 +118,11 @@ function rGame(){
         <button class="btn b-gold sm" onclick="doSave(5e5)" ${g.cash<5e5?'disabled':''}>GỬI 500K</button>
         <button class="btn b-gold sm" onclick="doSave(1e6)" ${g.cash<1e6?'disabled':''}>GỬI 1TR</button>
         <button class="btn b-gold sm" onclick="doSave(5e6)" ${g.cash<5e6?'disabled':''}>GỬI 5TR</button>
-        <button class="btn b-gold sm" onclick="doSave('all')">GỬI TẤT CẢ</button>
+        <button class="btn b-gold sm" onclick="doSave('all')" ${g.cash<=5e5?'disabled':''}>GỬI TẤT CẢ</button>
         <button class="btn b-red sm" onclick="doWd(1e6)" ${g.savings<1e6?'disabled':''}>RÚT 1TR</button>
         <button class="btn b-red sm" onclick="doWd('all')" ${!g.savings?'disabled':''}>RÚT HẾT</button>
       </div>
+      <div class="lbl save-note">"Gửi tất cả" giữ lại 500K tiền mặt.</div>
     </div>
     <div>
       <div class="sec-t">NHẬT KÝ</div>
@@ -189,7 +199,7 @@ function rShop(){
       const owned=g.upgrades[u.id];
       const btn=owned&&!u.rep
         ?`<div class="owned">${ic('check',18)}ĐÃ CÓ</div>`
-        :`<button class="btn b-pu" onclick="buyUpgrade('${u.id}')" ${g.cash<u.cost?'disabled':''}>${ff(u.cost)}</button>`;
+        :`<button class="btn b-pu" onclick="buyUpgrade('${u.id}')" ${g.cash<u.cost||(u.rep&&g.vehicleHp>=100)?'disabled':''}>${u.rep&&g.vehicleHp>=100?'XE ĐẦY':ff(u.cost)}</button>`;
       return`<div class="pxf upg-row"><div class="upg-ic">${ic(u.icon,28)}</div>
         <div class="upg-det"><div class="upg-n">${u.name}</div><div class="upg-d">${u.desc}</div></div>
         <div class="upg-act">${btn}</div></div>`;
@@ -309,7 +319,7 @@ function rModal(){
       ${billRows}
       <div class="bar" style="margin:14px 4px"><i class="${net>=0?'gr':'red'}" style="width:100%"></i></div>
       <div class="month-row" style="color:var(--tx)"><span>KẾT QUẢ</span><span style="color:${net>=0?'var(--gr)':'var(--red)'}">${net>=0?'+':''}${ff(net)}</span></div>
-      <div class="lbl" style="margin:8px 0 14px">Tiền mặt sau: ${ff(g.cash+bonus-BILLS)}</div>
+      <div class="lbl" style="margin:8px 0 14px">Tiền mặt sau: ${ff(g.cash+bonus-BILLS)}${g.cash+bonus-BILLS<0&&g.savings>0?'<br>Thiếu sẽ tự rút từ tiết kiệm.':''}</div>
       <button class="btn b-gr blk" onclick="confirmMonthEnd()">${month<C.maxMonths?'THÁNG '+(month+1):'KẾT THÚC GAME'}</button>
     </div></div>`;
   }
@@ -318,7 +328,7 @@ function rModal(){
 
 // END
 function rEnd(win){
-  const m=g.month-1,lack=Math.max(0,C.winTarget-g.savings);
+  const m=g.month,lack=Math.max(0,C.winTarget-g.savings);
   if(win)return`<div class="end">
     ${ic('trophy',88)}
     <h1 style="color:var(--gold);font-family:var(--f-tx);font-size:44px">CHIẾN THẮNG!</h1>

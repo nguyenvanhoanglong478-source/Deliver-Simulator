@@ -19,5 +19,6 @@ Mở `index.html` bằng trình duyệt. Tiến trình được lưu trong `loca
 - `index.html`: bản đã đóng gói, một file duy nhất.
 - `src/`: mã nguồn (`style.css`, `icons.js`, `profile.js`, `logic.js`, `render.js`, `bike.png`).
 - `build.py`: ghép `src/` thành `index.html` (`python3 build.py`).
+- `tests/`: kiểm thử bằng trình duyệt (Playwright): `python3 tests/test_gameplay.py`, `python3 tests/test_save_load.py`.
 
 Phông chữ (VT323, Press Start 2P) tải từ Google Fonts; khi không có mạng game dùng phông monospace thay thế.
