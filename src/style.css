@@ -353,3 +353,6 @@ input.txt::placeholder{color:#5b52a0}
   .tags .tag{flex:1;font-size:20px}
   .hud-stars b{display:inline}
 }
+
+.upg-act .btn{white-space:nowrap;font-size:20px;padding:10px 8px}
+.upg-act .cur{margin-left:2px}
