@@ -325,6 +325,32 @@ input.txt::placeholder{color:#5b52a0}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition:none!important}
 }
+
+/* ---------- orders, drive, dodge ---------- */
+.offers{display:flex;flex-direction:column;gap:12px}
+.btn.offer{display:flex;align-items:center;gap:12px;text-align:left;padding:12px 14px;width:100%}
+.offer .of-main{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.offer .nm{font-family:var(--f-px);font-size:11px;line-height:1.4}
+.offer .er{font-size:26px;line-height:1}
+.offer .co{display:flex;flex-direction:column;gap:2px;font-size:20px;align-items:flex-start}
+.offer .co span{display:flex;align-items:center;gap:4px}
+.of-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tg{font-weight:400;font-size:16px;background:rgba(0,0,0,.35);padding:0 6px}
+.tg.rush{background:var(--red);color:#fff}.tg.peak{background:var(--gold);color:#000}
+.offer.rush{outline:4px solid var(--red);outline-offset:-4px}
+.drive-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.drive-note,.peak-note{margin-top:6px}.peak-note{color:var(--gold)}
+.tag.peak{background:var(--gold);color:#000}
+.dg-field{width:100%;position:relative;height:320px;overflow:hidden;touch-action:manipulation;user-select:none;margin:12px 0;background:
+  repeating-linear-gradient(90deg,transparent 0 calc(33.333% - 2px),#3a3180 calc(33.333% - 2px) 33.333%),#0a0814;box-shadow:var(--frame)}
+.dg-ob,.dg-me{position:absolute;width:33.333%;display:flex;justify-content:center;pointer-events:none}
+.dg-me{bottom:6px}
+.dg-ob{transform:translateY(0)}
+.dg-ob.hit{opacity:.3}.dg-me.hit{filter:brightness(2) hue-rotate(300deg)}
+.dg-btns{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dg-btns .btn{font-size:28px;min-height:64px}
+.owned.lock{color:var(--dim)}
+@media (max-width:380px){.offer .nm{font-size:10px}.offer .er{font-size:22px}}
 </style>
 </head>
 <body>
@@ -551,29 +577,36 @@ const C={
   dayDuration:300,// 5 min
   fuelCost:150e3,fuelTime:10,sleepRate:2,// stamina/sec
   mgTime:20,mgFull:12,mgPartial:7,
-  dailyInterest:0.001,
+  dailyInterest:0.002,
   monthly:[
     {n:'Thuê phòng trọ',c:25e5},{n:'Điện nước',c:4e5},{n:'Ăn uống',c:15e5},
     {n:'Điện thoại',c:2e5},{n:'Bảo hiểm xe',c:3e5},{n:'Trả góp xe',c:16e5},
   ],
   jobs:{
-    food:{id:'food',icon:'bowl',name:'ĐỒ ĂN',earn:'36k-72k',sta:15,fuel:5,min:36e3,max:72e3},
-    goods:{id:'goods',icon:'box',name:'HÀNG HÓA',earn:'72k-156k',sta:20,fuel:9,min:72e3,max:156e3},
+    food:{id:'food',icon:'bowl',name:'ĐỒ ĂN',earn:'25k-50k',sta:15,fuel:5,min:25e3,max:5e4},
+    goods:{id:'goods',icon:'box',name:'HÀNG HÓA',earn:'50k-110k',sta:20,fuel:9,min:5e4,max:11e4},
   },
 };
 const BILLS=C.monthly.reduce((s,b)=>s+b.c,0);
 
 // ===== UPGRADES =====
 const UPGS=[
-  {id:'tires',  name:'Lốp cao cấp',      icon:'gear',cost:15e5,desc:'Giảm 1% tiêu hao xăng/đơn',cat:'Phụ tùng',rep:false},
-  {id:'heatbag',name:'Túi giữ nhiệt',    icon:'bowl',cost:8e5, desc:'+20% thu nhập đồ ăn',      cat:'Phụ tùng',rep:false},
-  {id:'gps',    name:'GPS thông minh',   icon:'flag',cost:12e5,desc:'-50% kẹt xe & hủy đơn',   cat:'Phụ tùng',rep:false},
-  {id:'engine', name:'Nâng cấp động cơ', icon:'bolt', cost:5e6, desc:'-3 thể lực/đơn',           cat:'Động cơ', rep:false},
-  {id:'tank',   name:'Bình xăng lớn',    icon:'fuel',cost:2e6, desc:'Tiêu hao xăng -2% mỗi chuyến',       cat:'Động cơ', rep:false},
-  {id:'insure', name:'Bảo hiểm mở rộng', icon:'bank',cost:2e6, desc:'-60% chi phí tai nạn',     cat:'Bảo vệ',  rep:false},
-  {id:'fix_s',  name:'Sửa chữa nhẹ',    icon:'wrench',cost:5e5, desc:'+30% độ bền xe',            cat:'Sửa xe',  rep:true},
-  {id:'fix_f',  name:'Đại tu toàn diện', icon:'gear',cost:2e6, desc:'Phục hồi độ bền xe 100%',          cat:'Sửa xe',  rep:true},
+  {id:'gps',   name:'GPS thông minh',    icon:'flag',  cost:12e5,desc:'-50% kẹt xe & hủy đơn. Phí 150K/tháng',cat:'Phụ tùng',fee:15e4},
+  {id:'insure',name:'Bảo hiểm mở rộng',  icon:'bank',  cost:2e6, desc:'-60% chi phí tai nạn. Phí 300K/tháng',cat:'Phụ tùng',fee:3e5},
+  {id:'heat',  name:'Túi giữ nhiệt',     icon:'bowl',  cost:8e5, desc:'Đồ ăn +25%, hàng hóa -10% (chọn 1 trong 2 túi)',cat:'Túi giao hàng',grp:'bag'},
+  {id:'crate', name:'Thùng hàng lớn',    icon:'box',   cost:12e5,desc:'Hàng hóa +20%, đồ ăn -10% (chọn 1 trong 2 túi)',cat:'Túi giao hàng',grp:'bag'},
+  {id:'eco',   name:'Động cơ tiết kiệm', icon:'fuel',  cost:2e6, desc:'Xăng -35%, mỗi đơn chậm thêm 3 giây (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
+  {id:'turbo', name:'Động cơ mạnh',      icon:'bolt',  cost:5e6, desc:'Thể lực -20%, nhanh hơn 3 giây/đơn, xăng +25% (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
+  {id:'tire2', name:'Lốp chống thủng',   icon:'gear',  cost:3e6, desc:'Tai nạn làm mất ít độ bền hơn 40%',cat:'Mở khóa 25TR',req:25e6},
+  {id:'prio',  name:'Ứng dụng ưu tiên',  icon:'star',  cost:6e6, desc:'Thấy 4 đơn mỗi lượt, nhiều đơn gấp hơn',cat:'Mở khóa 50TR',req:5e7},
+  {id:'vip',   name:'Thẻ đối tác vàng',  icon:'trophy',cost:1e7, desc:'+15% thu nhập mọi đơn',cat:'Mở khóa 75TR',req:75e6},
+  {id:'fix_s', name:'Sửa chữa nhẹ',      icon:'wrench',cost:5e5, desc:'+30% độ bền xe',cat:'Sửa xe',rep:true},
+  {id:'fix_f', name:'Đại tu toàn diện',  icon:'gear',  cost:2e6, desc:'Phục hồi độ bền xe 100%',cat:'Sửa xe',rep:true},
 ];
+const MS=[{at:25e6,reward:1e6},{at:5e7,reward:2e6},{at:75e6,reward:3e6}];   // savings milestones
+const DIST=[{n:'GẦN',earn:.65,sta:.75,fuel:.6,t:0},{n:'VỪA',earn:1,sta:1,fuel:1,t:3},{n:'XA',earn:1.4,sta:1.35,fuel:1.6,t:6}];
+const DRIVE=[{n:'CHẬM',risk:.4,fuel:.85,t:4},{n:'THƯỜNG',risk:1,fuel:1,t:0},{n:'NHANH',risk:1.8,fuel:1.2,t:-2}];
+
 
 // ===== EVENTS =====
 const EVTS=[
@@ -604,7 +637,9 @@ function init(){
     phase:'start',activeAnim:null,
     rainToday:false,
     profile:defProfile(),reviews:[],
+    drive:1,offers:[],ms:[],fin:{earn:0,fuel:0,repair:0,accident:0,bills:0,upg:0},
   };
+  g.offers=genOffers();
   modal=null;
   clearTmrs();
 }
@@ -621,7 +656,16 @@ function fm(n){
 function ff(n){return(n<0?'-':'')+Math.abs(Math.round(n)).toLocaleString('vi-VN')+' đ'}
 function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 function addLog(m,t='info'){g.log.unshift({m,t});if(g.log.length>20)g.log.pop()}
-function evtChance(e){return g.upgrades&&g.upgrades.gps&&(e.id==='jam'||e.id==='cnl')?e.p*.5:e.p}   // GPS: -50% traffic jams & cancelled orders
+function up(id){return !!(g.upgrades&&g.upgrades[id])}
+// GPS halves jams and cancellations; rush hour doubles jams; a worn bike breaks down more; riding fast raises accident/fine odds.
+function evtChance(e){
+  let p=e.p;
+  if((e.id==='jam'||e.id==='cnl')&&up('gps'))p*=.5;
+  if(e.id==='jam'&&isPeak())p*=2;
+  if(e.id==='brk')p*=1+(100-g.vehicleHp)/50;
+  if(e.id==='brk'||e.id==='crs'||e.id==='fin')p*=DRIVE[g.drive].risk;
+  return p;
+}
 function rollEvt(){let r=Math.random(),c=0;for(const e of EVTS){c+=evtChance(e);if(r<c)return e;}return null}
 function clearTmrs(){clearInterval(mgTmr);clearInterval(mgSpw);clearInterval(animTmr);clearInterval(dayTmr)}
 // ===== SAVE / LOAD (localStorage key btd_v2, same shape as older saves) =====
@@ -656,11 +700,66 @@ function restore(s){
   g.cash=Math.round(g.cash);g.savings=Math.max(0,Math.round(g.savings));
   ['dailyEarned','dailySpent','earned','delivered','totalDelivered'].forEach(k=>{g[k]=Number.isFinite(g[k])?g[k]:0});
   g.rainToday=!!g.rainToday;
+  const od=g.upgrades,nu={};   // older saves: map retired upgrades onto the new ones
+  Object.keys(od).forEach(k=>{const u=UPGS.find(x=>x.id===k);if(u&&!u.rep&&od[k])nu[k]=true});
+  if(od.engine)nu.turbo=true;if(od.heatbag)nu.heat=true;
+  if(od.tires)g.cash+=15e5;if(od.tank)g.cash+=2e6;
+  g.upgrades=nu;
+  g.drive=[0,1,2].includes(g.drive)?g.drive:1;
+  if(!Array.isArray(g.ms))g.ms=MS.filter(m=>g.savings>=m.at).map(m=>m.at);
+  g.fin=Object.assign({earn:0,fuel:0,repair:0,accident:0,bills:0,upg:0},g.fin&&typeof g.fin==='object'?g.fin:{});
+  if(!Array.isArray(g.offers)||!g.offers.length||!g.offers.every(o=>o&&C.jobs[o.type]&&DIST[o.dist]&&Number.isFinite(o.base)))g.offers=genOffers();
   clearTmrs();modal=null;mgData=null;g.activeAnim=null;g.phase='game';
 }
-function jobCost(job){return{sta:Math.max(5,job.sta-(g.upgrades.engine?3:0)),fuel:Math.max(1,job.fuel-(g.upgrades.tires?1:0)-(g.upgrades.tank?2:0))}}
-function canDoJob(job){const c=jobCost(job);return g.stamina>=c.sta&&g.fuel>=c.fuel&&g.vehicleHp>0}
 function earnMult(){return g.vehicleHp>=70?1:g.vehicleHp>=50?.85:g.vehicleHp>=30?.7:.55}
+// ===== ORDERS =====
+function hourOf(){return 6+16*(1-g.dayTimeLeft/C.dayDuration)}   // a game day runs 06:00-22:00
+function isPeak(){const h=hourOf();return(h>=11&&h<13)||(h>=17&&h<19)}
+function fmH(){const h=hourOf(),H=Math.floor(h),M=Math.floor((h-H)*6)*10;return(H<10?'0':'')+H+':'+(M<10?'0':'')+M}
+function genOffer(peak){
+  const type=Math.random()<.5?'food':'goods',job=C.jobs[type];
+  const r=Math.random(),dist=r<.35?0:r<.75?1:2;
+  const rush=Math.random()<(peak?.35:.2)+(up('prio')?.1:0);
+  const mg=Math.random()<.4?'dodge':'catch';
+  const base=rnd(job.min,job.max)*DIST[dist].earn*(rush?1.7:1)*(peak?1.25:1);
+  return{type,dist,rush,mg,peak:!!peak,base:Math.round(base/1000)*1000};
+}
+function genOffers(){const n=up('prio')?4:3,p=isPeak(),r=[];for(let i=0;i<n;i++)r.push(genOffer(p));return r}
+function offerCost(o){
+  const job=C.jobs[o.type],d=DIST[o.dist];
+  const sta=job.sta*d.sta*(up('turbo')?.8:1);
+  const fuel=job.fuel*d.fuel*DRIVE[g.drive].fuel*(up('eco')?.65:up('turbo')?1.25:1);
+  return{sta:Math.max(4,Math.round(sta)),fuel:Math.max(1,Math.round(fuel))};
+}
+function offerTime(o){return Math.max(1,DIST[o.dist].t+DRIVE[g.drive].t+(up('eco')?3:0)-(up('turbo')?3:0))}   // travel seconds
+function offerPay(o){
+  let e=o.base;
+  if(g.rainToday)e*=.6;
+  if(up('heat'))e*=o.type==='food'?1.25:.9;
+  if(up('crate'))e*=o.type==='goods'?1.2:.9;
+  if(up('vip'))e*=1.15;
+  return Math.floor(e*earnMult());
+}
+function canDoOffer(o){const c=offerCost(o);return g.stamina>=c.sta&&g.fuel>=c.fuel&&g.vehicleHp>0}
+function offerWhy(o){
+  const c=offerCost(o);
+  if(g.vehicleHp<=0)return'xe hỏng, cần sửa ở mục Nâng cấp';
+  const lack=[];
+  if(g.fuel<c.fuel)lack.push(`xăng (cần ${c.fuel}%, còn ${g.fuel}%)`);
+  if(g.stamina<c.sta)lack.push(`thể lực (cần ${c.sta}, còn ${g.stamina})`);
+  return lack.length?'thiếu '+lack.join(' và '):'';
+}
+function refreshOffers(){
+  if(modal||g.activeAnim||g.phase!=='game')return;
+  if(g.dayTimeLeft<=10){toast('KHÔNG ĐỦ THỜI GIAN ĐỂ ĐỔI ĐƠN','warn');return}
+  g.dayTimeLeft-=8;g.offers=genOffers();save();render();
+}
+function setDrive(i){
+  if(modal||g.activeAnim||g.phase!=='game'||![0,1,2].includes(i))return;
+  g.drive=i;save();render();
+}
+// Write the state with this order's costs already paid, so a reload mid-delivery cannot refund them.
+function persistNow(patch){try{localStorage.setItem('btd_v2',JSON.stringify(Object.assign({},g,{phase:'game',activeAnim:null},patch||{})))}catch(e){}}
 function fuelMax(){return 100}
 
 // ===== DAY TIMER =====
@@ -672,6 +771,8 @@ function startDayTimer(){
     if(g.dayTimeLeft>0)g.dayTimeLeft--;
     const el=document.getElementById('day-tmr');
     if(el)el.textContent=fmT(g.dayTimeLeft);
+    const ck=document.getElementById('clk');
+    if(ck){const pk=isPeak();ck.textContent=fmH()+(pk?' CAO ĐIỂM':'');ck.classList.toggle('peak',pk)}
     if(g.dayTimeLeft>0&&g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
     if(g.dayTimeLeft<=0&&!busy){clearInterval(dayTmr);triggerDayEnd();}   // a delivery in progress finishes first
   },1000);
@@ -686,19 +787,17 @@ function startGame(fresh){
   startDayTimer();save();render();   // save now so a reload cannot bring the old game back
 }
 
-function doDelivery(id){
+function doDelivery(i){
   if(modal||g.activeAnim||g.phase!=='game')return;
-  const job=C.jobs[id];
-  const jc=jobCost(job);
-  if(!canDoJob(job)){toast(g.vehicleHp<=0?'XE HỎNG QUÁ NẶNG!':g.fuel<jc.fuel?'HẾT XĂNG!':'HẾT THỂ LỰC!','bad');return;}
-  const staCost=jc.sta,fuelCost=jc.fuel;
-  g.stamina=Math.max(0,g.stamina-staCost);
-  g.fuel=Math.max(0,g.fuel-fuelCost);
-  let earn=rnd(job.min,job.max);
-  if(g.rainToday)earn=Math.floor(earn*.6);
-  if(id==='food'&&g.upgrades.heatbag)earn=Math.floor(earn*1.2);
-  earn=Math.floor(earn*earnMult());
-  startMinigame(id,earn);
+  const o=g.offers[i];if(!o)return;
+  const c=offerCost(o);
+  if(!canDoOffer(o)){toast(g.vehicleHp<=0?'XE HỎNG QUÁ NẶNG!':g.fuel<c.fuel?'HẾT XĂNG!':'HẾT THỂ LỰC!','bad');return;}
+  g.stamina=Math.max(0,g.stamina-c.sta);
+  g.fuel=Math.max(0,g.fuel-c.fuel);
+  const earn=offerPay(o);
+  g.offers[i]=genOffer(isPeak());
+  persistNow();
+  startMinigame(o,earn);
 }
 
 function doRefuel(){
@@ -730,7 +829,8 @@ function rfConfirm(){
   if(!i.ok){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
   const startFuel=g.fuel,val=i.t,fillable=i.fill,cost=i.cost;
   modal=null;
-  g.cash-=cost;g.dailySpent+=cost;
+  g.cash-=cost;g.dailySpent+=cost;g.fin.fuel+=cost;
+  persistNow({fuel:val});
   g.activeAnim={type:'refuel',timeLeft:3,total:3,targetFuel:val,startFuel,costPaid:cost};
   g.phase='anim-refuel';
   render();
@@ -782,7 +882,7 @@ function doEndDay(){
 
 function advanceDay(){
   if(g.day<C.daysPerMonth)g.day++;
-  g.dayTimeLeft=C.dayDuration;
+  g.dayTimeLeft=C.dayDuration;g.offers=genOffers();
   startDayTimer();render();
 }
 
@@ -793,7 +893,14 @@ function doSave(a){
   g.cash-=amt;g.savings+=amt;
   addLog('Gửi tiết kiệm: +'+ff(amt),'save');
   if(g.savings>=C.winTarget){finish(true);return;}
+  const ms=checkMilestones();if(ms.length)modal={type:'milestone',list:ms};
   save();render();
+}
+
+function checkMilestones(){
+  const hit=[];
+  MS.forEach(m=>{if(g.savings>=m.at&&!g.ms.includes(m.at)){g.ms.push(m.at);g.cash+=m.reward;addLog('Mốc '+fm(m.at)+': thưởng '+ff(m.reward),'earn');hit.push(m)}});
+  return hit;
 }
 
 function doWd(a){
@@ -811,13 +918,19 @@ function goGame(){if(g.phase==='upgrade'||g.phase==='profile'){g.phase='game';re
 function buyUpgrade(id){
   const u=UPGS.find(x=>x.id===id);
   if(!u)return;
+  if(u.req&&!g.ms.includes(u.req)){toast('CHƯA MỞ KHÓA — CẦN '+fm(u.req)+' TIẾT KIỆM','warn');return;}
   if(g.upgrades[u.id]&&!u.rep){toast('BẠN ĐÃ CÓ NÂNG CẤP NÀY','warn');return;}
   if(u.rep&&g.vehicleHp>=100){toast('XE CÒN NGUYÊN VẸN, KHÔNG CẦN SỬA','warn');return;}
   if(g.cash<u.cost){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
   g.cash-=u.cost;g.dailySpent+=u.cost;
+  if(u.rep)g.fin.repair+=u.cost;else g.fin.upg+=u.cost;
   if(id==='fix_s'){g.vehicleHp=Math.min(100,g.vehicleHp+30);}
   else if(id==='fix_f'){g.vehicleHp=100;}
-  else g.upgrades[id]=true;
+  else{
+    const other=u.grp&&UPGS.find(x=>x.grp===u.grp&&x.id!==u.id&&g.upgrades[x.id]);
+    if(other){delete g.upgrades[other.id];addLog(`Thay ${other.name} bằng ${u.name}`,'info');}
+    g.upgrades[u.id]=true;
+  }
   addLog(`Mua ${u.name}: -${ff(u.cost)}`,'cost');
   save();render();toast('ĐÃ MUA!');
 }
@@ -825,10 +938,13 @@ function buyUpgrade(id){
 // ===== MINI-GAME =====
 let mgData=null;
 
-function startMinigame(jobId,baseEarn){
-  const pkgIcon=jobId==='food'?'':'';
-  mgData={jobId,baseEarn,pkgIcon,caught:0,total:0,timeLeft:C.mgTime,done:false,spots:Array(9).fill(null),startTs:Date.now()};
+function startMinigame(o,baseEarn){
+  const rush=!!o.rush,limit=rush?15:C.mgTime;
+  mgData={jobId:o.type,offer:o,kind:o.mg,baseEarn,limit,full:rush?9:C.mgFull,part:rush?5:C.mgPartial,
+    caught:0,total:0,hits:0,passed:0,obs:[],lane:1,spawnIn:.4,flash:0,lastTs:Date.now(),
+    timeLeft:limit,done:false,spots:Array(9).fill(null),startTs:Date.now()};
   g.phase='minigame';render();
+  if(o.mg==='dodge'){mgTmr=setInterval(dgTick,50);return;}
   mgTmr=setInterval(mgTick,80);
   mgSpw=setInterval(mgSpawn,1200);
   setTimeout(mgSpawn,200);
@@ -837,11 +953,57 @@ function startMinigame(jobId,baseEarn){
 function mgTick(){
   if(!mgData||mgData.done)return;
   const now=Date.now();
-  mgData.timeLeft=Math.max(0,C.mgTime-(now-mgData.startTs)/1000);
+  mgData.timeLeft=Math.max(0,mgData.limit-(now-mgData.startTs)/1000);
   mgData.spots=mgData.spots.map(sp=>sp&&now-sp.ts>1350?null:sp);
   if(mgData.timeLeft<=0){mgData.done=true;clearInterval(mgTmr);clearInterval(mgSpw);showMgResult();return;}
   mgPaint();
 }
+
+// ---- second mini-game: dodge obstacles on a 3-lane road ----
+const DG_ROWS=7,DG_SPEED=4.2;
+function dgTick(){
+  const m=mgData;if(!m||m.done||m.kind!=='dodge')return;
+  const now=Date.now(),dt=Math.min(.2,(now-m.lastTs)/1000);m.lastTs=now;
+  m.timeLeft=Math.max(0,m.limit-(now-m.startTs)/1000);
+  if(m.timeLeft<=0){m.done=true;clearInterval(mgTmr);showMgResult();return;}
+  m.spawnIn-=dt;
+  if(m.spawnIn<=0){
+    m.spawnIn=.6+Math.random()*.35;
+    const a=rnd(0,2);m.obs.push({lane:a,y:-1});
+    if(Math.random()<.25)m.obs.push({lane:(a+rnd(1,2))%3,y:-1});   // never all three lanes at once
+  }
+  m.flash=Math.max(0,m.flash-dt);
+  m.obs.forEach(o=>{
+    o.y+=DG_SPEED*dt;
+    if(!o.hit&&o.lane===m.lane&&o.y>DG_ROWS-1.6&&o.y<DG_ROWS-.2){o.hit=true;m.hits++;m.flash=.35;}
+  });
+  m.obs=m.obs.filter(o=>{if(o.y>=DG_ROWS){if(!o.hit)m.passed++;return false}return true});
+  dgPaint();
+}
+function dgPaint(){
+  const m=mgData,$=id=>document.getElementById(id);
+  if(!m||!$('dg-field'))return;
+  $('mg-timer').textContent=Math.ceil(m.timeLeft)+'s';
+  $('mg-score').textContent='VA '+m.hits+'/3';
+  $('mg-bar').style.width=Math.min(100,(1-m.timeLeft/m.limit)*100)+'%';
+  const ob=ic('warn',32);
+  let h='';
+  m.obs.forEach(o=>{h+=`<div class="dg-ob${o.hit?' hit':''}" style="left:${o.lane*100/3}%;top:${o.y*100/DG_ROWS}%">${ob}</div>`});
+  h+=`<div class="dg-me${m.flash>0?' hit':''}" style="left:${m.lane*100/3}%">${avatarHTML(g.profile.helmet,40)}</div>`;
+  $('dg-field').innerHTML=h;
+}
+function dgMove(d){if(mgData&&mgData.kind==='dodge'&&!mgData.done){mgData.lane=Math.min(2,Math.max(0,mgData.lane+d));dgPaint()}}
+function dgTap(ev){
+  if(!mgData||mgData.kind!=='dodge'||mgData.done)return;
+  const r=ev.currentTarget.getBoundingClientRect();
+  mgData.lane=Math.min(2,Math.max(0,Math.floor((ev.clientX-r.left)/r.width*3)));dgPaint();
+}
+document.addEventListener('keydown',e=>{
+  if(!mgData||mgData.kind!=='dodge')return;
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){e.preventDefault();dgMove(-1)}
+  else if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){e.preventDefault();dgMove(1)}
+});
+
 // Update only what changed, so a tap is never lost to a re-render under the finger.
 function mgPaint(){
   if(!mgData||mgData.done)return;
@@ -849,8 +1011,8 @@ function mgPaint(){
   if(!$('mg-grid'))return;
   const now=Date.now(),pk=mgData.jobId==='food'?'bowl':'box';
   $('mg-timer').textContent=Math.ceil(mgData.timeLeft)+'s';
-  $('mg-score').textContent=mgData.caught+'/'+C.mgFull;
-  $('mg-bar').style.width=Math.min(100,mgData.caught/C.mgFull*100)+'%';
+  $('mg-score').textContent=mgData.caught+'/'+mgData.full;
+  $('mg-bar').style.width=Math.min(100,mgData.caught/mgData.full*100)+'%';
   mgData.spots.forEach((sp,i)=>{
     const el=$('mgc-'+i);if(!el)return;
     const st=!sp?'e':((now-sp.ts)/1350>.65?'u':'h');
@@ -879,9 +1041,9 @@ function showMgResult(){
   const {caught,baseEarn,jobId}=mgData;
   const job=C.jobs[jobId];
   let earn,ok;
-  if(caught>=C.mgFull){earn=baseEarn;ok=2;}
-  else if(caught>=C.mgPartial){earn=Math.floor(baseEarn*.5);ok=1;}
-  else{earn=0;ok=0;}
+  if(mgData.kind==='dodge')ok=mgData.hits<=2?2:mgData.hits<=5?1:0;
+  else ok=caught>=mgData.full?2:caught>=mgData.part?1:0;
+  earn=[0,Math.floor(baseEarn*.5),baseEarn][ok];
   mgData.review=addReview(ok,job);
   mgData.result={earn,ok,job};render();
   const rvw=mgData.review;
@@ -893,6 +1055,8 @@ function afterMinigame(earn,job,rvw){
   const res=evt?evt.fn(earn):null;
   const paid=res&&res.skip?0:earn;          // "khách hủy" means no income for this order
   g.phase='anim-deliver';
+  if(res&&res.hp&&up('tire2'))res.hp=Math.round(res.hp*.6);
+  const travel=Math.max(1,offerTime((mgData&&mgData.offer)||g.offers[0]))*1000;
   g.activeAnim={type:'deliver',earn:paid,job};
   render(); // Render một lần — CSS bike animation bắt đầu
   // Sau 3s: patch DOM trực tiếp, KHÔNG gọi render() để tránh reset bike animation
@@ -907,7 +1071,7 @@ function afterMinigame(earn,job,rvw){
     const rv=document.getElementById('rv');
     if(rv&&rvw){rv.dataset.id=String(rvw.t0);rv.innerHTML=reviewHTML(rvw);rv.classList.add('show');}
     setTimeout(()=>{
-      if(paid>0){g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;}
+      if(paid>0){g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;g.fin.earn+=paid;}
       g.delivered++;g.totalDelivered++;
       if(evt){
         if(res.hp){
@@ -916,7 +1080,7 @@ function afterMinigame(earn,job,rvw){
         }
         if(res.rain)g.rainToday=true;
         if(res.sta)g.stamina=Math.max(0,g.stamina+res.sta);
-        if(res.cash){g.cash+=res.cash;if(res.cash>0)g.dailyEarned+=res.cash;else g.dailySpent+=Math.abs(res.cash);}
+        if(res.cash){g.cash+=res.cash;if(res.cash>0){g.dailyEarned+=res.cash;g.fin.earn+=res.cash}else{g.dailySpent+=Math.abs(res.cash);g.fin.accident+=Math.abs(res.cash)}}
         addLog(`${evt.ti}: ${res.msg}`,evt.t==='good'?'earn':evt.t==='bad'?'cost':'info');
         modal={type:'event',evt,res};
       }
@@ -926,7 +1090,7 @@ function afterMinigame(earn,job,rvw){
       if(g.vehicleHp<=0)toast('XE HỎNG NẶNG! CẦN SỬA NGAY!','bad');
       render();
     },1500);
-  },3000);
+  },travel);
 }
 
 // ===== DAY END =====
@@ -942,7 +1106,8 @@ function triggerDayEnd(){
   const interest=Math.floor(g.savings*C.dailyInterest);
   g.savings+=interest;
   if(g.savings>=C.winTarget){finish(true);return;}
-  modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day};
+  const ms=checkMilestones();
+  modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day,ms};
   render();
 }
 
@@ -952,19 +1117,25 @@ function confirmDayEnd(){
   advanceDay();save();
 }
 
+function monthBonus(del){
+  let b=del>=200?35e5:del>=150?2e6:del>=100?1e6:0;
+  if(del>=50)b+=g.stars>=4.5?1e6:g.stars>=4?5e5:0;   // good ratings pay extra
+  return b;
+}
+function billsTotal(){return BILLS+UPGS.reduce((n,u)=>n+(u.fee&&g.upgrades[u.id]?u.fee:0),0)}
 function triggerMonthEnd(){
   clearInterval(dayTmr);
-  let bonus=0;
-  if(g.delivered>=150)bonus=3e6;else if(g.delivered>=100)bonus=15e5;else if(g.delivered>=50)bonus=5e5;
-  modal={type:'monthEnd',month:g.month,earned:g.earned,bonus,del:g.delivered};
+  const bonus=monthBonus(g.delivered);
+  modal={type:'monthEnd',month:g.month,earned:g.earned,bonus,del:g.delivered,stars:g.stars,bills:billsTotal()};
   render();
 }
 
 function confirmMonthEnd(){
   const {bonus}=modal;
-  g.cash+=bonus;g.cash-=BILLS;
+  const bills=billsTotal();
+  g.cash+=bonus;g.cash-=bills;g.fin.bills+=bills;
   if(bonus>0)addLog('Thưởng Be: +'+ff(bonus),'earn');
-  addLog('Chi phí tháng '+g.month+': -'+ff(BILLS),'cost');
+  addLog('Chi phí tháng '+g.month+': -'+ff(bills),'cost');
   if(g.cash<0&&g.savings>0){   // bills come out of savings before the player is declared broke
     const t=Math.min(g.savings,-g.cash);g.savings-=t;g.cash+=t;
     addLog('Rút tiết kiệm '+ff(t)+' để trả chi phí tháng','info');
@@ -1012,13 +1183,14 @@ window.addEventListener('pagehide',()=>save());
 // ===== RENDER =====
 function money(n){n=Math.round(n);return(n<0?'-':'')+Math.abs(n).toLocaleString('vi-VN')+'<span class="cur">đ</span>'}
 function meterColor(v,lo,mid){return v<lo?'red':v<mid?'or':'gr'}
-function jobWhy(job){
-  const c=jobCost(job);
-  if(g.vehicleHp<=0)return'xe hỏng, cần sửa ở mục Nâng cấp';
-  const lack=[];
-  if(g.fuel<c.fuel)lack.push(`xăng (cần ${c.fuel}%, còn ${g.fuel}%)`);
-  if(g.stamina<c.sta)lack.push(`thể lực (cần ${c.sta}, còn ${g.stamina})`);
-  return lack.length?'thiếu '+lack.join(' và '):'';
+function offerCard(o,i){
+  const c=offerCost(o),d=DIST[o.dist],job=C.jobs[o.type],ok=canDoOffer(o);
+  return`<button class="btn ${o.type==='food'?'b-gr':'b-cy'} offer${o.rush?' rush':''}" ${ok?'':'disabled'} onclick="doDelivery(${i})">
+    <span class="of-ic">${ic(job.icon,32)}</span>
+    <span class="of-main"><span class="nm">${job.name} · ${d.n}</span><span class="er">${money(offerPay(o))}</span>
+      <span class="of-tags">${o.rush?'<b class="tg rush">GẤP</b>':''}${o.peak?'<b class="tg peak">CAO ĐIỂM</b>':''}<b class="tg">${o.mg==='dodge'?'NÉ XE':'BẮT GÓI'}</b></span></span>
+    <span class="co"><span>${ic('bolt',16)}${c.sta}</span><span>${ic('fuel',16)}${c.fuel}%</span><span>${ic('flag',16)}${offerTime(o)}s</span></span>
+  </button>`;
 }
 function sceneHTML(cargo){
   return`<div class="scene"><div class="sky-far"></div><div class="sky-near"></div><div class="road"></div>
@@ -1071,16 +1243,14 @@ function rStart(){
 function rGame(){
   const pct=Math.min(100,g.savings/C.winTarget*100);
   const cashLow=g.cash<8e5,fuelLow=g.fuel<15,hpLow=g.vehicleHp<30;
-  const fj=C.jobs.food,gj=C.jobs.goods;
-  const cF=canDoJob(fj),cG=canDoJob(gj);
-  const jc=j=>{const c=jobCost(j);return`<span>${ic('bolt',16)}${c.sta}</span><span>${ic('fuel',16)}${c.fuel}%</span>`};
+  const blocked=g.offers.filter(o=>!canDoOffer(o));
   const logs=g.log.slice(0,10).map(l=>`<div class="log-i ${l.t}">${l.m}</div>`).join('')||'<div class="log-i">Chưa có hoạt động.</div>';
   return`<div>
   <div class="hud pxf">
     <button class="hud-av" onclick="goProfile()" aria-label="Mở hồ sơ tài xế">${avatarHTML(g.profile.helmet,40)}</button>
     <div class="hud-who"><div class="hud-name">${esc(pname())}</div>
       <div class="hud-stars">${starsHTML(g.stars,14)}<b>${g.stars.toFixed(1)}</b></div></div>
-    <div class="tags"><span class="tag" id="day-tmr">${fmT(g.dayTimeLeft)}</span><span class="tag gr">T.${g.month}/${C.maxMonths}</span></div>
+    <div class="tags"><span class="tag${isPeak()?' peak':''}" id="clk">${fmH()}${isPeak()?' CAO ĐIỂM':''}</span><span class="tag" id="day-tmr">${fmT(g.dayTimeLeft)}</span><span class="tag gr">T.${g.month}/${C.maxMonths}</span></div>
   </div>
   <div class="game-body">
   <div class="pc-col">
@@ -1108,11 +1278,13 @@ function rGame(){
   <div class="pc-col">
     <div>
       <div class="sec-t">${ic('box',22)}NHẬN ĐƠN</div>
-      <div class="job-grid">
-        <button class="btn b-gr job" ${cF?'':'disabled'} onclick="doDelivery('food')">${ic('bowl',36)}<div class="nm">${fj.name}</div><div class="er">${fj.earn}</div><div class="co">${jc(fj)}</div></button>
-        <button class="btn b-cy job" ${cG?'':'disabled'} onclick="doDelivery('goods')">${ic('box',36)}<div class="nm">${gj.name}</div><div class="er">${gj.earn}</div><div class="co">${jc(gj)}</div></button>
-      </div>
-      ${(!cF||!cG)?`<div class="job-why">${ic('warn',18)}<div>${[!cF?`${fj.name}: ${jobWhy(fj)}`:'',!cG?`${gj.name}: ${jobWhy(gj)}`:''].filter(Boolean).join('<br>')}</div></div>`:''}
+      <div class="offers">${g.offers.map(offerCard).join('')}</div>
+      ${blocked.length?`<div class="job-why">${ic('warn',18)}<div>${[...new Set(blocked.map(offerWhy))].join('<br>')}</div></div>`:''}
+      <div class="drive-row"><span class="lbl">TỐC ĐỘ LÁI</span>
+        ${DRIVE.map((d,i)=>`<button class="btn sm ${g.drive===i?'b-gold':'b-dim'}" onclick="setDrive(${i})" aria-pressed="${g.drive===i}">${d.n}</button>`).join('')}
+        <button class="btn sm b-pu" onclick="refreshOffers()">ĐỔI ĐƠN −8s</button></div>
+      <div class="lbl drive-note">${['Chậm: ít tai nạn, xăng -15%, mỗi đơn +4s','Thường: không thay đổi','Nhanh: -2s mỗi đơn, nhưng dễ tai nạn và bị phạt, xăng +20%'][g.drive]}</div>
+      ${isPeak()?`<div class="lbl peak-note">GIỜ CAO ĐIỂM: đơn mới trả +25%, kẹt xe gấp đôi.</div>`:''}
     </div>
     <div>
       <div class="sec-t">HÀNH ĐỘNG</div>
@@ -1151,8 +1323,17 @@ function rMG(){
     const msgs=['THẤT BẠI','GIAO TRỄ','XUẤT SẮC!'],cols=['var(--red)','var(--or)','var(--gr)'];
     return`<div class="mg"><div class="pxf mg-res">
       <h2 style="color:${cols[ok]};font-size:40px">${msgs[ok]}</h2>
-      <p>Bắt được ${mgData.caught}/${C.mgFull} gói hàng<br>${earn>0?'+'+ff(earn):'Không có thu nhập'}</p>
+      <p>${mgData.kind==='dodge'?`Va chạm ${mgData.hits} lần`:`Bắt được ${mgData.caught}/${mgData.full} gói hàng`}<br>${earn>0?'+'+ff(earn):'Không có thu nhập'}</p>
       <p class="blink">Đang giao hàng...</p></div></div>`;
+  }
+  if(mgData.kind==='dodge'){
+    return`<div class="mg">
+    <div class="mg-hdr"><span class="mg-timer" id="mg-timer">${Math.ceil(mgData.timeLeft)}s</span><span class="lbl">NÉ VẬT CẢN!</span><span class="mg-score" id="mg-score">VA 0/3</span></div>
+    <div class="bar"><i id="mg-bar" class="gr" style="width:0%"></i></div>
+    <div class="dg-field" id="dg-field" onpointerdown="dgTap(event)" aria-label="Đường 3 làn"></div>
+    <div class="dg-btns"><button class="btn b-dim" onpointerdown="event.preventDefault();dgMove(-1)" aria-label="Sang trái">◀</button><button class="btn b-dim" onpointerdown="event.preventDefault();dgMove(1)" aria-label="Sang phải">▶</button></div>
+    <div class="mg-hint">Chạm làn hoặc bấm ◀ ▶ (phím mũi tên). Va tối đa 2 lần để nhận đủ tiền.</div>
+  </div>`;
   }
   const cells=Array.from({length:9},(_,i)=>`<button class="mg-cell" id="mgc-${i}" data-s="e" disabled onclick="catchPkg(${i})" aria-label="Bắt gói hàng"></button>`).join('');
   return`<div class="mg">
@@ -1160,7 +1341,7 @@ function rMG(){
     <div class="bar"><i id="mg-bar" class="gr" style="width:0%"></i></div>
     <div class="mg-grid" id="mg-grid">${cells}</div>
     <div class="mg-hint">Chạm vào gói hàng trước khi biến mất!</div>
-    <div class="mg-hint" style="color:var(--or)">Cần ${C.mgFull} gói để nhận đủ tiền</div>
+    <div class="mg-hint" style="color:var(--or)">Cần ${mgData.full} gói để nhận đủ tiền${mgData.offer.rush?' (đơn gấp: 15 giây)':''}</div>
   </div>`;
 }
 
@@ -1207,10 +1388,12 @@ function rShop(){
   const cats=[...new Set(UPGS.map(u=>u.cat))];
   const items=cats.map(cat=>{
     const rows=UPGS.filter(u=>u.cat===cat).map(u=>{
-      const owned=g.upgrades[u.id];
+      const owned=g.upgrades[u.id],locked=u.req&&!g.ms.includes(u.req);
+      const swap=u.grp&&UPGS.some(x=>x.grp===u.grp&&x.id!==u.id&&g.upgrades[x.id]);
       const btn=owned&&!u.rep
         ?`<div class="owned">${ic('check',18)}ĐÃ CÓ</div>`
-        :`<button class="btn b-pu" onclick="buyUpgrade('${u.id}')" ${g.cash<u.cost||(u.rep&&g.vehicleHp>=100)?'disabled':''}>${u.rep&&g.vehicleHp>=100?'XE ĐẦY':ff(u.cost)}</button>`;
+        :locked?`<div class="owned lock">KHÓA</div>`
+        :`<button class="btn b-pu" onclick="buyUpgrade('${u.id}')" ${g.cash<u.cost||(u.rep&&g.vehicleHp>=100)?'disabled':''}>${u.rep&&g.vehicleHp>=100?'XE ĐẦY':(swap?'ĐỔI ':'')+ff(u.cost)}</button>`;
       return`<div class="pxf upg-row"><div class="upg-ic">${ic(u.icon,28)}</div>
         <div class="upg-det"><div class="upg-n">${u.name}</div><div class="upg-d">${u.desc}</div></div>
         <div class="upg-act">${btn}</div></div>`;
@@ -1287,6 +1470,15 @@ function rModal(){
       <button class="btn b-gr blk" onclick="modal=null;render()">TIẾP TỤC</button>
     </div></div>`;
   }
+  if(type==='milestone'){
+    const un=UPGS.filter(u=>modal.list.some(m=>m.at===u.req));
+    return`<div class="overlay"><div class="pxf2 modal">
+      <div class="m-title" style="color:var(--gold)">${ic('trophy',28)} MỐC TIẾT KIỆM!</div>
+      ${modal.list.map(m=>`<div class="m-body">Đạt ${ff(m.at)}<br>Thưởng +${ff(m.reward)}</div>`).join('')}
+      ${un.length?`<div class="m-eff"><div class="eff gr">${ic('star',20)}Mở khóa: ${un.map(u=>u.name).join(', ')}</div></div>`:''}
+      <button class="btn b-gr blk" onclick="modal=null;render()">TIẾP TỤC</button>
+    </div></div>`;
+  }
   if(type==='refuel'){
     const i=rfInfo(),fm=fuelMax();
     return`<div class="rf-overlay"><div class="pxf2 rf-box">
@@ -1313,24 +1505,25 @@ function rModal(){
         <div class="day-row"><span>Kết quả</span><span style="color:${net>=0?'var(--gr)':'var(--red)'}">${net>=0?'+':''}${ff(net)}</span></div>
       </div>
       <div class="interest">${ic('bank',20)} LÃI TIẾT KIỆM ${(C.dailyInterest*100).toFixed(1).replace(/\.0$/,'')}%: +${ff(interest)}<small>Tiết kiệm: ${ff(g.savings)}</small></div>
+      ${(modal.ms||[]).map(m=>`<div class="interest">${ic('trophy',20)} MỐC ${fm(m.at)}: thưởng +${ff(m.reward)}</div>`).join('')}
       <button class="btn b-gr blk" onclick="confirmDayEnd()">${day<C.daysPerMonth?'NGÀY '+(day+1):'KẾT THÁNG'}</button>
     </div></div>`;
   }
   if(type==='monthEnd'){
-    const{month,earned,bonus,del}=modal;const net=earned+bonus-BILLS;
-    const billRows=C.monthly.map(b=>`<div class="month-row"><span>${b.n}</span><span style="color:var(--red)">-${ff(b.c)}</span></div>`).join('');
-    const bl=del>=150?'(KIM CƯƠNG)':del>=100?'(VÀNG)':del>=50?'(BẠC)':'';
+    const{month,earned,bonus,del,bills}=modal;const net=earned+bonus-bills;
+    const billRows=C.monthly.map(b=>`<div class="month-row"><span>${b.n}</span><span style="color:var(--red)">-${ff(b.c)}</span></div>`).join('')+UPGS.filter(u=>u.fee&&g.upgrades[u.id]).map(u=>`<div class="month-row"><span>Phí ${u.name}</span><span style="color:var(--red)">-${ff(u.fee)}</span></div>`).join('');
+    const bl=del>=200?'(KIM CƯƠNG)':del>=150?'(VÀNG)':del>=100?'(BẠC)':'';
     return`<div class="overlay"><div class="pxf2 modal">
       <div class="m-title" style="color:var(--gold)">${ic('cal',28)} THÁNG ${month} KẾT THÚC</div>
       <div class="lbl" style="margin-bottom:8px">${del} đơn ${bl}</div>
       <div class="m-h" style="color:var(--gr)">THU NHẬP</div>
       <div class="month-row"><span>Giao hàng</span><span style="color:var(--gr)">+${ff(earned)}</span></div>
-      ${bonus?`<div class="month-row"><span>Thưởng Be ${bl}</span><span style="color:var(--gr)">+${ff(bonus)}</span></div>`:''}
+      ${bonus?`<div class="month-row"><span>Thưởng Be ${bl} + đánh giá ${modal.stars.toFixed(1)}★</span><span style="color:var(--gr)">+${ff(bonus)}</span></div>`:''}
       <div class="m-h" style="color:var(--red)">CHI PHÍ</div>
       ${billRows}
       <div class="bar" style="margin:14px 4px"><i class="${net>=0?'gr':'red'}" style="width:100%"></i></div>
       <div class="month-row" style="color:var(--tx)"><span>KẾT QUẢ</span><span style="color:${net>=0?'var(--gr)':'var(--red)'}">${net>=0?'+':''}${ff(net)}</span></div>
-      <div class="lbl" style="margin:8px 0 14px">Tiền mặt sau: ${ff(g.cash+bonus-BILLS)}${g.cash+bonus-BILLS<0&&g.savings>0?'<br>Thiếu sẽ tự rút từ tiết kiệm.':''}</div>
+      <div class="lbl" style="margin:8px 0 14px">Tiền mặt sau: ${ff(g.cash+bonus-bills)}${g.cash+bonus-bills<0&&g.savings>0?'<br>Thiếu sẽ tự rút từ tiết kiệm.':''}</div>
       <button class="btn b-gr blk" onclick="confirmMonthEnd()">${month<C.maxMonths?'THÁNG '+(month+1):'KẾT THÚC GAME'}</button>
     </div></div>`;
   }
@@ -1338,6 +1531,10 @@ function rModal(){
 }
 
 // END
+function finRows(){
+  const f=g.fin,r=(n,v,c)=>`<div class="month-row"><span>${n}</span><span style="color:var(--${c})">${c==='gr'?'+':'-'}${ff(v)}</span></div>`;
+  return`<div class="sec-t" style="margin-top:12px">TIỀN ĐI ĐÂU?</div>`+r('Thu từ giao hàng',f.earn,'gr')+r('Xăng',f.fuel,'red')+r('Sửa xe',f.repair,'red')+r('Nâng cấp',f.upg,'red')+r('Tai nạn & phạt',f.accident,'red')+r('Hóa đơn tháng',f.bills,'red');
+}
 function rEnd(win){
   const m=g.month,lack=Math.max(0,C.winTarget-g.savings);
   if(win)return`<div class="end">
@@ -1349,6 +1546,7 @@ function rEnd(win){
       <div class="month-row"><span>Số tháng</span><span>${m}/24</span></div>
       <div class="month-row"><span>Tổng đơn</span><span>${g.totalDelivered}</span></div>
       <div class="month-row"><span>Đánh giá</span><span>${g.stars.toFixed(1)}/5.0</span></div>
+      ${finRows()}
     </div>
     <button class="btn b-gr" onclick="resetGame()">CHƠI LẠI</button>
   </div>`;
@@ -1360,6 +1558,7 @@ function rEnd(win){
       <div class="month-row"><span>Đã tiết kiệm</span><span>${ff(g.savings)}</span></div>
       <div class="month-row"><span>Còn thiếu</span><span style="color:var(--red)">${ff(lack)}</span></div>
       <div class="month-row"><span>Tổng đơn</span><span>${g.totalDelivered}</span></div>
+      ${finRows()}
     </div>
     <button class="btn b-gr" onclick="resetGame()">THỬ LẠI</button>
   </div>`;

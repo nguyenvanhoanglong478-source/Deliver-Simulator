@@ -15,12 +15,12 @@ with sync_playwright() as p:
         pg.reload(); pg.click('text=TIẾP TỤC'); 
     pg.evaluate("startGame(true)")
     # 1 upgrade then reload
-    pg.evaluate("g.cash=9e6;goUpgrade();buyUpgrade('tank')")
+    pg.evaluate("g.cash=9e6;goUpgrade();buyUpgrade('gps')")
     ok('save taken while in shop',json.loads(pg.evaluate("localStorage.getItem('btd_v2')"))['phase']=='upgrade')
-    cont(); ok('continue after upgrade keeps cash/upgrade',pg.evaluate("g.cash==9e6-2e6&&g.upgrades.tank===true&&g.phase=='game'"))
+    cont(); ok('continue after upgrade keeps cash/upgrade',pg.evaluate("g.cash==9e6-12e5&&g.upgrades.gps===true&&g.phase=='game'"))
     # 2 profile
     pg.evaluate("goProfile()"); pg.fill('#prof-name','Marcus'); pg.evaluate("toggleHobby('game')")
-    cont(); ok('continue after editing profile keeps name+hobby',pg.evaluate("g.profile.name=='Marcus'&&g.profile.hobbies[0]=='game'&&g.cash==7e6"))
+    cont(); ok('continue after editing profile keeps name+hobby',pg.evaluate("g.profile.name=='Marcus'&&g.profile.hobbies[0]=='game'&&g.cash==9e6-12e5"))
     # 3 mid-day clock
     pg.evaluate("g.dayTimeLeft=92;"); pg.wait_for_timeout(2300)
     saved=json.loads(pg.evaluate("localStorage.getItem('btd_v2')"))['dayTimeLeft']
@@ -33,18 +33,18 @@ with sync_playwright() as p:
     cont(); ok('reload mid-sleep resumes on main screen',pg.evaluate("g.phase=='game'&&g.activeAnim===null&&g.stamina>=24"))
     # 5 mid-delivery must not persist half-state
     pg.evaluate("g.stamina=100;g.fuel=100;save()")
-    pg.evaluate("doDelivery('goods')"); pg.evaluate("window.dispatchEvent(new Event('pagehide'))")
-    sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('mid-delivery state not written',sv['stamina']==100 and sv['fuel']==100)
+    pg.evaluate("doDelivery(0)"); pg.evaluate("window.dispatchEvent(new Event('pagehide'))")
+    sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('mid-delivery: costs already paid in save (no refund by reload)',sv['stamina']<100 and sv['fuel']<100 and sv['phase']=='game',str((sv['stamina'],sv['fuel'])))
     pg.evaluate("clearTmrs();mgData=null;g.phase='game';g.stamina=100;g.fuel=100;render()")
     # 6 pending day end must not persist applied interest
     pg.evaluate("g.savings=2e6;save();doEndDay()"); pg.evaluate("window.dispatchEvent(new Event('pagehide'))")
     sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('pending day-end does not persist interest',sv['savings']==2e6,str(sv['savings']))
-    pg.evaluate("confirmDayEnd()"); sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('confirming day end saves next day',sv['day']==2 and sv['savings']==2e6+2000)
+    pg.evaluate("confirmDayEnd()"); sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('confirming day end saves next day',sv['day']==2 and sv['savings']==2e6+4000)
     # 7 refuel modal open: saved state has not charged money
     pg.evaluate("g.fuel=30;save();doRefuel()");
     pg.evaluate("document.getElementById('rf-slider').value=80;document.getElementById('rf-slider').dispatchEvent(new Event('input'));rfConfirm()")
     pg.evaluate("window.dispatchEvent(new Event('pagehide'))")
-    sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('mid-refuel: money not charged in save',sv['fuel']==30 and sv['cash']==pg.evaluate("g.cash")+75000,str((sv['fuel'],sv['cash'])))
+    sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('mid-refuel: save already has the fuel and the charge (no free refund)',sv['fuel']==80 and sv['cash']==pg.evaluate("g.cash"),str((sv['fuel'],sv['cash'])))
     pg.wait_for_function("g.phase==='game'",timeout=6000)
     sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('refuel finished: fuel+cash saved',sv['fuel']==80 and sv['cash']==pg.evaluate("g.cash"))
     # 8 legacy / bad saves (set phase=start first so the page's own pagehide save cannot overwrite the fixture)
