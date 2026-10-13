@@ -42,7 +42,7 @@ with sync_playwright() as p:
     # month end: bills drawn from savings
     pg.evaluate("g.cash=1e6;g.savings=20e6;triggerMonthEnd()")
     pg.evaluate("confirmMonthEnd()")
-    ok('bills covered from savings',pg.evaluate("g.cash")>=0 and pg.evaluate("g.savings")==20e6-(7.5e6-1e6) and pg.evaluate("g.month")==2,str(pg.evaluate("[g.cash,g.savings,g.month]")))
+    ok('bills covered from savings',pg.evaluate("g.cash")>=0 and pg.evaluate("g.savings")==20e6-(6.5e6-1e6) and pg.evaluate("g.month")==2,str(pg.evaluate("[g.cash,g.savings,g.month]")))
     ok('month rolled over cleanly',pg.evaluate("g.day==1&&g.delivered==0&&g.phase=='game'"))
     # lose: broke
     pg.evaluate("g.cash=0;g.savings=0;triggerMonthEnd();confirmMonthEnd()")

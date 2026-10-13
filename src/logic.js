@@ -6,12 +6,12 @@ const C={
   mgTime:20,mgFull:12,mgPartial:7,
   dailyInterest:0.001,
   monthly:[
-    {n:'Thuê phòng trọ',c:3e6},{n:'Điện nước',c:5e5},{n:'Ăn uống',c:2e6},
-    {n:'Điện thoại',c:2e5},{n:'Bảo hiểm xe',c:3e5},{n:'Trả góp xe',c:15e5},
+    {n:'Thuê phòng trọ',c:25e5},{n:'Điện nước',c:4e5},{n:'Ăn uống',c:15e5},
+    {n:'Điện thoại',c:2e5},{n:'Bảo hiểm xe',c:3e5},{n:'Trả góp xe',c:16e5},
   ],
   jobs:{
-    food:{id:'food',icon:'bowl',name:'ĐỒ ĂN',earn:'30k-60k',sta:15,fuel:5,min:30e3,max:6e4},
-    goods:{id:'goods',icon:'box',name:'HÀNG HÓA',earn:'60k-130k',sta:20,fuel:9,min:6e4,max:13e4},
+    food:{id:'food',icon:'bowl',name:'ĐỒ ĂN',earn:'36k-72k',sta:15,fuel:5,min:36e3,max:72e3},
+    goods:{id:'goods',icon:'box',name:'HÀNG HÓA',earn:'72k-156k',sta:20,fuel:9,min:72e3,max:156e3},
   },
 };
 const BILLS=C.monthly.reduce((s,b)=>s+b.c,0);
@@ -33,9 +33,9 @@ const EVTS=[
   {id:'tip',ic:'coin',t:'good',p:.07,ti:'TIP THÊM!',fn:(e)=>{const r=rnd(4e4,2e5);return{cash:r,msg:`Khách vui tính, tip ${fm(r)}`}}},
   {id:'vip',ic:'star',t:'good',p:.04,ti:'ĐƠN VIP!',fn:(e)=>{return{cash:e,msg:`VIP! Thù lao x2, thêm ${fm(e)}`}}},
   {id:'bon',ic:'trophy',t:'good',p:.02,ti:'BE THƯỞNG!',fn:(e)=>{const r=rnd(3e5,1e6);return{cash:r,msg:`Be thưởng tài xế: +${fm(r)}`}}},
-  {id:'brk',ic:'wrench',t:'bad',p:.03,ti:'XE HỎNG!',fn:(e)=>{const r=rnd(4e5,14e5);return{cash:-r,hp:-20,msg:`Sửa xe khẩn: -${fm(r)}`}}},
-  {id:'fin',ic:'warn',t:'bad',p:.03,ti:'BỊ PHẠT!',fn:(e)=>{const r=rnd(2e5,6e5);return{cash:-r,msg:`CSGT phạt: -${fm(r)}`}}},
-  {id:'crs',ic:'warn',t:'bad',p:.02,ti:'VA CHẠM!',fn:(e)=>{const r=rnd(3e5,9e5);return{cash:-r,hp:-15,msg:`Bồi thường: -${fm(r)}`}}},
+  {id:'brk',ic:'wrench',t:'bad',p:.03,ti:'XE HỎNG!',fn:(e)=>{const r=rnd(25e4,85e4);return{cash:-r,hp:-20,msg:`Sửa xe khẩn: -${fm(r)}`}}},
+  {id:'fin',ic:'warn',t:'bad',p:.03,ti:'BỊ PHẠT!',fn:(e)=>{const r=rnd(12e4,36e4);return{cash:-r,msg:`CSGT phạt: -${fm(r)}`}}},
+  {id:'crs',ic:'warn',t:'bad',p:.02,ti:'VA CHẠM!',fn:(e)=>{const r=rnd(18e4,54e4);return{cash:-r,hp:-15,msg:`Bồi thường: -${fm(r)}`}}},
   {id:'cnl',ic:'skull',t:'neu',p:.04,ti:'KHÁCH HỦY!',fn:(e)=>{return{cash:0,sta:-10,skip:true,msg:`Khách hủy sau khi đến!`}}},
   {id:'jam',ic:'warn',t:'neu',p:.05,ti:'KẸT XE!',fn:(e)=>{return{cash:0,sta:-15,msg:`Kẹt xe kinh hoàng!`}}},
   {id:'rain',ic:'cloud',t:'bad',p:.01,ti:'MƯA TO!',fn:(e)=>{return{cash:0,rain:true,msg:`Thu nhập giảm 40% hôm nay`}}},
