@@ -23,6 +23,21 @@ with sync_playwright() as p:
     ok('cancel: no income credited',pg.evaluate("g.cash")==c0 and pg.evaluate("g.earned")==0,f"{c0}->{pg.evaluate('g.cash')}")
     ok('cancel: event modal + log',pg.evaluate("modal&&modal.type==='event'&&g.log[0].m.includes('không có thu nhập')"))
     pg.evaluate("modal=null;rollEvt=window.__r;render()")
+    # cancelled order: no review is created or shown
+    pg.evaluate("rollEvt=()=>EVTS.find(e=>e.id==='cnl')")
+    pg.evaluate("g.stamina=100;g.fuel=100;g.offers[0]={type:'food',dist:1,rush:false,mg:'catch',peak:false,base:50000};doDelivery(0)")
+    r0=pg.evaluate("g.reviews.length"); st0=pg.evaluate("g.stars")
+    pg.evaluate("mgData.caught=12;mgData.done=true;clearInterval(mgTmr);clearInterval(mgSpw);showMgResult()")
+    pg.wait_for_function("g.phase==='anim-deliver'",timeout=6000); pg.wait_for_timeout(3600)
+    ok('cancelled order: no review stored, stars unchanged',pg.evaluate("g.reviews.length")==r0 and pg.evaluate("g.stars")==st0)
+    ok('cancelled order: no review card on the delivery screen',pg.evaluate("document.getElementById('rv')&&!document.getElementById('rv').classList.contains('show')&&document.getElementById('rv').innerHTML===''"))
+    pg.wait_for_function("g.phase==='game'",timeout=9000); pg.evaluate("modal=null;render()")
+    # delivered order still gets a review
+    pg.evaluate("rollEvt=()=>null;g.stamina=100;g.fuel=100;g.offers[0]={type:'food',dist:1,rush:false,mg:'catch',peak:false,base:50000};doDelivery(0)")
+    pg.evaluate("mgData.caught=12;mgData.done=true;clearInterval(mgTmr);clearInterval(mgSpw);showMgResult()")
+    pg.wait_for_function("g.phase==='game'",timeout=12000)
+    ok('normal order still gets a review',pg.evaluate("g.reviews.length")==r0+1)
+    pg.evaluate("rollEvt=window.__r")
     # normal pay
     pg.evaluate("rollEvt=()=>null"); c0=pg.evaluate("g.cash"); pg.evaluate("afterMinigame(100000,C.jobs.food,null)")
     pg.wait_for_function("g.phase==='game'",timeout=9000)

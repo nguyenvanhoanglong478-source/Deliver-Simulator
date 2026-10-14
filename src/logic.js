@@ -484,15 +484,16 @@ function showMgResult(){
   if(mgData.kind==='dodge')ok=mgData.hits<=2?2:mgData.hits<=5?1:0;
   else ok=caught>=mgData.full?2:caught>=mgData.part?1:0;
   earn=[0,Math.floor(baseEarn*.5),baseEarn][ok];
-  mgData.review=addReview(ok,job);
+  const evt=rollEvt(),res=evt?evt.fn(earn):null;   // decided up front: a cancelled order gets no customer review
+  mgData.review=res&&res.skip?null:addReview(ok,job);
   mgData.result={earn,ok,job};render();
   const rvw=mgData.review;
-  setTimeout(()=>afterMinigame(earn,job,rvw),1800);
+  setTimeout(()=>afterMinigame(earn,job,rvw,{evt,res}),1800);
 }
 
-function afterMinigame(earn,job,rvw){
-  const evt=rollEvt();
-  const res=evt?evt.fn(earn):null;
+function afterMinigame(earn,job,rvw,pre){
+  const evt=pre?pre.evt:rollEvt();
+  const res=pre?pre.res:(evt?evt.fn(earn):null);
   const paid=res&&res.skip?0:earn;          // "khách hủy" means no income for this order
   g.phase='anim-deliver';
   if(res&&res.hp&&up('tire2'))res.hp=Math.round(res.hp*.6);
