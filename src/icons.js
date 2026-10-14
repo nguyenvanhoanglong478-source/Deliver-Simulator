@@ -375,6 +375,23 @@ const ICONS={
     '................',
     '................',
     '................']},
+  pause:{p:{'a': '#ffd23f', 'b': '#8a6a00'},m:[
+    '................',
+    '................',
+    '................',
+    '..aaaab..aaaab..',
+    '..aaaab..aaaab..',
+    '..aaaab..aaaab..',
+    '..aaaab..aaaab..',
+    '..aaaab..aaaab..',
+    '..aaaab..aaaab..',
+    '..aaaab..aaaab..',
+    '..aaaab..aaaab..',
+    '..aaaab..aaaab..',
+    '..bbbbb..bbbbb..',
+    '................',
+    '................',
+    '................']},
 };
 function ic(name,size){
   const d=ICONS[name];if(!d)return'';size=size||24;

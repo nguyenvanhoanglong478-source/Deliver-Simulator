@@ -1,0 +1,45 @@
+"""Pause button tests. Run: python3 tests/test_pause.py"""
+import os
+URL="file://"+os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),"..","index.html"))
+from playwright.sync_api import sync_playwright
+res=[]
+def ok(n,c,x=''): res.append(('PASS' if c else 'FAIL',n,x))
+with sync_playwright() as p:
+    b=p.chromium.launch(); pg=b.new_page(); errs=[]
+    pg.on('pageerror',lambda e:errs.append(str(e)))
+    pg.goto(URL); pg.evaluate("localStorage.clear()"); pg.reload()
+    pg.evaluate("startGame(true)")
+    ok('button hidden on start screen? (visible in game)',pg.is_visible('#pause-btn'))
+    pg.click('#pause-btn')
+    ok('pause modal open',pg.evaluate("modal&&modal.type==='pause'"))
+    ok('button hidden while paused',not pg.is_visible('#pause-btn'))
+    t=pg.evaluate("g.dayTimeLeft"); pg.wait_for_timeout(2500)
+    ok('day clock frozen',pg.evaluate("g.dayTimeLeft")==t)
+    pg.click("text=ÂM THANH"); ok('settings from pause',pg.evaluate("modal.type==='settings'&&modal.from==='pause'"))
+    pg.click("text=ĐÓNG"); ok('close settings returns to pause',pg.evaluate("modal&&modal.type==='pause'"))
+    pg.click("text=TIẾP TỤC"); ok('resume closes modal',pg.evaluate("modal===null"))
+    pg.wait_for_timeout(2300); ok('clock runs again',pg.evaluate("g.dayTimeLeft")<t)
+    pg.keyboard.press('p'); ok('P key pauses',pg.evaluate("modal&&modal.type==='pause'"))
+    pg.keyboard.press('Escape'); ok('Esc resumes',pg.evaluate("modal===null"))
+    # minigame
+    pg.evaluate("g.stamina=100;g.fuel=100;g.offers[0]={type:'food',dist:1,rush:false,mg:'catch',peak:false,base:50000};doDelivery(0)")
+    pg.wait_for_function("g.phase==='minigame'",timeout=5000)
+    ok('button visible in minigame',pg.is_visible('#pause-btn'))
+    pg.wait_for_timeout(1000); pg.click('#pause-btn')
+    tl=pg.evaluate("mgData.timeLeft"); pg.wait_for_timeout(3000)
+    ok('minigame timer frozen',abs(pg.evaluate("mgData.timeLeft")-tl)<0.01 and not pg.evaluate("mgData.done"))
+    pg.keyboard.press('p'); pg.wait_for_timeout(1000)
+    tl2=pg.evaluate("mgData.timeLeft")
+    ok('minigame resumes without losing the paused time',tl2<tl and tl-tl2<1.6,f"{tl}->{tl2}")
+    # dodge
+    pg.evaluate("clearInterval(mgTmr);clearInterval(mgSpw);mgData=null;g.phase='game';render()")
+    pg.evaluate("g.stamina=100;g.fuel=100;g.offers[0]={type:'goods',dist:1,rush:false,mg:'dodge',peak:false,base:80000};doDelivery(0)")
+    pg.wait_for_function("g.phase==='minigame'",timeout=5000)
+    pg.wait_for_timeout(800); pg.keyboard.press('p'); y=pg.evaluate("JSON.stringify(mgData.obs)"); pg.wait_for_timeout(1500)
+    ok('dodge frozen',pg.evaluate("JSON.stringify(mgData.obs)")==y)
+    pg.keyboard.press('p'); pg.wait_for_timeout(600)
+    ok('dodge resumes',pg.evaluate("JSON.stringify(mgData.obs)")!=y)
+    ok('no page errors',not errs,str(errs))
+    b.close()
+for r in res: print(*r)
+print(sum(r[0]=='PASS' for r in res),'/',len(res))

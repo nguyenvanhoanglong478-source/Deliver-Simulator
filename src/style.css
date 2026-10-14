@@ -146,7 +146,7 @@ img{image-rendering:pixelated}
 .log-i.info{border-color:var(--cy)}
 
 /* ---------- mini-game ---------- */
-.mg{min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:16px;padding-block:20px;max-width:420px;margin-inline:auto}
+.mg{min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:16px;padding-block:20px 72px;max-width:420px;margin-inline:auto}
 .mg-hdr{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .mg-timer{font-family:var(--f-px);font-size:22px;color:var(--red)}
 .mg-score{font-family:var(--f-px);font-size:22px;color:var(--gr)}
@@ -383,3 +383,9 @@ input.txt::placeholder{color:#5b52a0}
 .fgauge-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(#ffc875 0 25%,var(--or) 25% 100%);transition:width 3s linear}
 .fgauge-seg{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 3px),#07050f calc(10% - 3px) 10%)}
 .fgauge-lbl{display:flex;justify-content:space-between;width:100%;max-width:360px;font-family:var(--f-px);font-size:10px;color:var(--dim);margin-top:-6px}
+
+#pause-btn{position:fixed;bottom:16px;left:14px;z-index:60;border:0;padding:6px;line-height:0;cursor:pointer;background:var(--panel2);
+  box-shadow:0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink)}
+#pause-btn[hidden]{display:none}
+#pause-btn:active{transform:translateY(2px)}
+#pause-btn:focus-visible{outline:3px dashed var(--gold);outline-offset:6px}

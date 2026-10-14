@@ -300,6 +300,14 @@ function rModal(){
       <button class="btn b-gr blk" onclick="modal=null;render()">TIẾP TỤC</button>
     </div></div>`;
   }
+  if(type==='pause'){
+    return`<div class="overlay"><div class="pxf2 modal set-box">
+      <div class="m-title" style="color:var(--gold)">${ic('pause',28)} TẠM DỪNG</div>
+      <div class="lbl" style="text-align:center">Thời gian đang dừng.</div>
+      <button class="btn b-gr blk" onclick="resumeGame()">TIẾP TỤC</button>
+      <button class="btn b-dim blk" style="margin-top:8px" onclick="openSettings()">ÂM THANH</button>
+    </div></div>`;
+  }
   if(type==='settings'){
     return`<div class="overlay" onclick="if(event.target===this)closeSettings()"><div class="pxf2 modal set-box">
       <div class="m-title" style="color:var(--cy)">${ic(AUD.on?'sound':'mute',28)} ÂM THANH</div>

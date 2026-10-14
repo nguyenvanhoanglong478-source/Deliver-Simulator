@@ -41,8 +41,8 @@ function musicEnded(){if(AUD.key&&AUD.key[0]==='t')skipTrack(1)}   // playlist: 
 ['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{if(musicTarget()&&(!AUD.el||AUD.el.paused))musicSync()},{passive:true}));
 document.addEventListener('visibilitychange',musicSync);
 
-function openSettings(){if(modal&&modal.type!=='settings')return;modal={type:'settings'};render()}
-function closeSettings(){if(modal&&modal.type==='settings'){modal=null;render()}}
+function openSettings(){if(modal&&modal.type!=='settings'&&modal.type!=='pause')return;const fp=modal&&modal.type==='pause';modal={type:'settings',from:fp?'pause':null};render()}
+function closeSettings(){if(modal&&modal.type==='settings'){modal=modal.from==='pause'?{type:'pause'}:null;render()}}
 function toggleMusic(){AUD.on=!AUD.on;audSave();musicSync();render()}
 function skipTrack(d){
   AUD.track=(AUD.track+d+TRACKS.length)%TRACKS.length;audSave();
@@ -62,4 +62,5 @@ function sndBtnSync(){
   b.hidden=!show;
   b.innerHTML=ic(AUD.on&&AUD.vol>0?'sound':'mute',24);
   b.setAttribute('aria-label','Cài đặt âm thanh');
+  pauseBtnSync();
 }

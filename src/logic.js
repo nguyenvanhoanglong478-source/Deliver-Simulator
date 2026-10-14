@@ -621,3 +621,40 @@ function render(){
 // Save when the tab is hidden or closed (canPersist() skips unsafe moments).
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save()});
 window.addEventListener('pagehide',()=>save());
+
+// ===== PAUSE =====
+let pauseAt=0;
+function canPause(){
+  if(!g||modal)return false;
+  if(g.phase==='game')return true;
+  return g.phase==='minigame'&&!!mgData&&!mgData.done;
+}
+function pauseGame(){
+  if(!canPause())return;
+  if(g.phase==='minigame'){clearInterval(mgTmr);clearInterval(mgSpw);pauseAt=Date.now()}
+  modal={type:'pause'};render();
+}
+function resumeGame(){
+  if(!modal||(modal.type!=='pause'&&!(modal.type==='settings'&&modal.from==='pause')))return;
+  modal=null;
+  if(g.phase==='minigame'&&mgData&&!mgData.done&&pauseAt){
+    const d=Date.now()-pauseAt;pauseAt=0;
+    mgData.startTs+=d;mgData.lastTs+=d;
+    mgData.spots=mgData.spots.map(sp=>sp?{ts:sp.ts+d}:sp);
+    if(mgData.kind==='dodge')mgTmr=setInterval(dgTick,50);
+    else{mgTmr=setInterval(mgTick,80);mgSpw=setInterval(mgSpawn,1200)}
+  }
+  render();
+}
+function pauseBtnSync(){
+  const b=document.getElementById('pause-btn');if(!b)return;
+  b.hidden=!canPause();
+  b.innerHTML=ic('pause',24);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='p'||e.key==='P'||e.key==='Escape'){
+    if(modal&&modal.type==='pause')resumeGame();
+    else if(modal&&modal.type==='settings'&&modal.from==='pause')closeSettings();
+    else if(canPause())pauseGame();
+  }
+});

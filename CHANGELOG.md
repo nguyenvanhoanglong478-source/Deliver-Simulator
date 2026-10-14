@@ -21,3 +21,8 @@
 - Số trận: 24 tháng x 30 ngày; ngày game 300 giây thật (06:00-22:00).
 - Khóa lưu: `btd_v2` (game), `btd_audio` (nhạc: bật/tắt, âm lượng, bài).
 - Chạy test: `python3 tests/test_gameplay.py`, `test_save_load.py`, `test_features.py`, `test_audio.py` (chạy riêng từng file).
+
+## Pause button
+- Floating pause button (bottom-left) on the main game screen and during mini-games; also P / Esc.
+- Freezes the day clock and the mini-game timers (timestamps are shifted on resume, so no time is lost); settings are reachable from the pause dialog.
+- tests/test_pause.py (16 checks).
