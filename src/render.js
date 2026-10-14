@@ -1,3 +1,4 @@
+let foldOpen={sav:false,log:false};
 const TUT=[
  {ic:'flag',t:'MỤC TIÊU',b:'Tiết kiệm 100 triệu trong 24 tháng. Cuối mỗi tháng có hóa đơn 6,5 triệu phải trả, nên đừng tiêu hết tiền mặt.'},
  {ic:'box',t:'NHẬN ĐƠN',b:'Chọn một trong các đơn hàng rồi chơi minigame: bắt gói hoặc né vật cản. Bắt đủ gói thì nhận đủ tiền. Đơn xa trả cao nhưng tốn thể lực, xăng và thời gian.'},
@@ -13,7 +14,7 @@ function offerCard(o,i){
   return`<button class="btn ${o.type==='food'?'b-gr':'b-cy'} offer${o.rush?' rush':''}" ${ok?'':'disabled'} onclick="doDelivery(${i})">
     <span class="of-ic">${ic(job.icon,32)}</span>
     <span class="of-main"><span class="nm">${job.name} · ${d.n}</span><span class="er">${money(offerPay(o))}</span>
-      <span class="of-tags">${o.rush?'<b class="tg rush">GẤP</b>':''}${o.peak?'<b class="tg peak">CAO ĐIỂM</b>':''}<b class="tg">${o.mg==='dodge'?'NÉ XE':'BẮT GÓI'}</b></span></span>
+      <span class="of-tags">${o.rush?'<b class="tg rush">GẤP</b>':''}${o.peak?'<b class="tg peak">CAO ĐIỂM</b>':''}<b class="tg">${o.mg==='dodge'?'NÉ XE':o.mg==='route'?'TÌM ĐƯỜNG':'BẮT GÓI'}</b></span></span>
     <span class="co"><span>${ic('bolt',16)}${c.sta}</span><span>${ic('fuel',16)}${c.fuel}%</span><span>${ic('flag',16)}${offerTime(o)}s</span></span>
   </button>`;
 }
@@ -85,14 +86,14 @@ function rGame(){
         <div class="bar thin" style="margin-top:12px"><i class="gold" style="width:${pct}%"></i></div>
         <div class="sub">${pct.toFixed(1)}% / 100TR</div></div>
     </div>
-    <div class="pair">
-      <div class="pxf meter"><div class="meter-top"><span>${ic('bolt',20)}THỂ LỰC</span><b>${g.stamina}</b></div>
+    <div class="meters">
+      <div class="pxf meter" aria-label="Thể lực"><div class="meter-top"><span>${ic('bolt',20)}<em>THỂ LỰC</em></span><b>${g.stamina}</b></div>
         <div class="bar"><i class="${meterColor(g.stamina,25,50)}" style="width:${g.stamina}%"></i></div></div>
-      <div class="pxf meter"><div class="meter-top"><span>${ic('fuel',20)}XĂNG</span><b>${g.fuel}%</b></div>
+      <div class="pxf meter" aria-label="Xăng"><div class="meter-top"><span>${ic('fuel',20)}<em>XĂNG</em></span><b>${g.fuel}%</b></div>
         <div class="bar"><i class="${meterColor(g.fuel,15,40)}" style="width:${g.fuel/fuelMax()*100}%"></i></div></div>
+      <div class="pxf meter hp" aria-label="Độ bền xe"><div class="meter-top"><span>${ic('gear',20)}<em>ĐỘ BỀN XE</em></span><b${hpLow?' style="color:var(--red)"':''}>${g.vehicleHp}%</b></div>
+        <div class="bar"><i class="${g.vehicleHp>=60?'gr':g.vehicleHp>=30?'or':'red'}" style="width:${g.vehicleHp}%"></i></div></div>
     </div>
-    <div class="pxf meter"><div class="meter-top"><span>${ic('gear',20)}ĐỘ BỀN XE</span><b${hpLow?' style="color:var(--red)"':''}>${g.vehicleHp}%</b></div>
-      <div class="bar"><i class="${g.vehicleHp>=60?'gr':g.vehicleHp>=30?'or':'red'}" style="width:${g.vehicleHp}%"></i></div></div>
     <div class="pxf strip">
       <span>${ic('cal',20)}NGÀY ${g.day}/${C.daysPerMonth}</span>
       <span>${ic('box',20)}${g.delivered} ĐƠN</span>
@@ -120,8 +121,8 @@ function rGame(){
       </div>
       <button class="btn b-cy blk endday" onclick="askEndDay()">${ic('flag',24)}KẾT THÚC NGÀY ${g.day}</button>
     </div>
-    <div>
-      <div class="sec-t">${ic('bank',22)}TIẾT KIỆM</div>
+    <details class="fold" ${foldOpen.sav||innerWidth>=860?'open':''} ontoggle="foldOpen.sav=this.open">
+      <summary class="sec-t">${ic('bank',22)}TIẾT KIỆM <span class="fold-hint">(${money(g.savings)})</span></summary>
       <div class="save-grid">
         <button class="btn b-gold sm" onclick="doSave(5e5)" ${g.cash<5e5?'disabled':''}>GỬI 500K</button>
         <button class="btn b-gold sm" onclick="doSave(1e6)" ${g.cash<1e6?'disabled':''}>GỬI 1TR</button>
@@ -131,11 +132,11 @@ function rGame(){
         <button class="btn b-red sm" onclick="doWd('all')" ${!g.savings?'disabled':''}>RÚT HẾT</button>
       </div>
       <div class="lbl save-note">"Gửi tất cả" giữ lại 500K tiền mặt.${g.cash<5e5?'<br>Chưa đủ tiền mặt để gửi (cần ít nhất 500K).':''}${!g.savings?'<br>Chưa có tiết kiệm để rút.':g.savings<1e6?'<br>Cần ít nhất 1TR tiết kiệm để rút từng phần.':''}</div>
-    </div>
-    <div>
-      <div class="sec-t">NHẬT KÝ</div>
+    </details>
+    <details class="fold" ${foldOpen.log||innerWidth>=860?'open':''} ontoggle="foldOpen.log=this.open">
+      <summary class="sec-t">NHẬT KÝ</summary>
       <div class="log">${logs}</div>
-    </div>
+    </details>
   </div>
   </div></div>`;
 }
@@ -148,8 +149,16 @@ function rMG(){
     const msgs=['THẤT BẠI','GIAO TRỄ','XUẤT SẮC!'],cols=['var(--red)','var(--or)','var(--gr)'];
     return`<div class="mg"><div class="pxf mg-res">
       <h2 style="color:${cols[ok]};font-size:40px">${msgs[ok]}</h2>
-      <p>${mgData.kind==='dodge'?`Va chạm ${mgData.hits} lần`:`Bắt được ${mgData.caught}/${mgData.full} gói hàng`}<br>${earn>0?'+'+ff(earn):'Không có thu nhập'}</p>
+      <p>${mgData.kind==='route'?(mgData.rtOk?`Đến nơi, kẹt xe ${mgData.jams} lần`:'Hết giờ trước khi đến nơi'):mgData.kind==='dodge'?`Va chạm ${mgData.hits} lần`:`Bắt được ${mgData.caught}/${mgData.full} gói hàng`}<br>${earn>0?'+'+ff(earn):'Không có thu nhập'}</p>
       <p class="blink">Đang giao hàng...</p></div></div>`;
+  }
+  if(mgData.kind==='route'){
+    return`<div class="mg">
+    <div class="mg-hdr"><span class="mg-timer" id="mg-timer">${Math.ceil(mgData.timeLeft)}s</span><span class="lbl">TÌM ĐƯỜNG!</span><span class="mg-score" id="mg-score">KẸT ${mgData.jams}</span></div>
+    <div class="rt-field" id="rt-field" onpointerdown="rtTap(event)" aria-label="Bản đồ đường phố">${rtHTML()}</div>
+    <div class="dg-btns rt-btns"><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(-1)" aria-label="Rẽ trái">◀</button><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(0)" aria-label="Đi thẳng">▲</button><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(1)" aria-label="Rẽ phải">▶</button></div>
+    <div class="mg-hint">◀ ▲ ▶ hoặc chạm ô để đi lên. ${up('gps')?'GPS: thấy trước kẹt xe.':'Chỉ thấy kẹt xe ở hàng trước mặt.'} Tránh ${ic('wrench',16)}; kẹt xe mất 1,5s.</div>
+  </div>`;
   }
   if(mgData.kind==='dodge'){
     return`<div class="mg">

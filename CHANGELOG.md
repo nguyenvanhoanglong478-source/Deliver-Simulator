@@ -35,3 +35,9 @@
 - Reasons shown when saving / withdrawing is unavailable; confirmation before ending a day with more than 90 s left.
 - Day clock follows real elapsed time (a throttled timer cannot slow it); switching to another tab pauses the game.
 - tests/test_ux.py (15 checks); other tests now preset `btd_tut` so the tutorial does not block them.
+
+## Route Rush + compact layouts
+- Third mini-game, Route Rush: 5x6 street map, move up one row per step (◀ ▲ ▶, arrow keys or tap), roadworks block, jams cost 1.5 s, GPS reveals jams, peak hours add jams. Maps are generated solvable with no dead ends (tested on 2000 maps). Works with pause.
+- Shop rows: icon | name + price button | description (about half the height).
+- Main screen on phones: three meters in one row, tighter cards, savings and log are collapsible sections (open on desktop).
+- tests/test_route.py (17 checks).

@@ -147,7 +147,7 @@ function genOffer(peak){
   const type=Math.random()<.5?'food':'goods',job=C.jobs[type];
   const r=Math.random(),dist=r<.35?0:r<.75?1:2;
   const rush=Math.random()<(peak?.35:.2)+(up('prio')?.1:0);
-  const mg=Math.random()<.4?'dodge':'catch';
+  const mr=Math.random(),mg=mr<.4?'catch':mr<.7?'dodge':'route';
   const base=rnd(job.min,job.max)*DIST[dist].earn*(rush?1.7:1)*(peak?1.25:1);
   return{type,dist,rush,mg,peak:!!peak,base:Math.round(base/1000)*1000};
 }
@@ -404,7 +404,9 @@ function startMinigame(o,baseEarn){
   mgData={jobId:o.type,offer:o,kind:o.mg,baseEarn,limit,full:rush?9:C.mgFull,part:rush?5:C.mgPartial,
     caught:0,total:0,hits:0,passed:0,obs:[],lane:1,spawnIn:.4,flash:0,lastTs:Date.now(),
     timeLeft:limit,done:false,spots:Array(9).fill(null),startTs:Date.now()};
+  if(o.mg==='route')Object.assign(mgData,{grid:genRoute(),pos:{r:0,c:2},jams:0,rtOk:0});
   g.phase='minigame';render();
+  if(o.mg==='route'){mgTmr=setInterval(rtTick,100);return;}
   if(o.mg==='dodge'){mgTmr=setInterval(dgTick,50);return;}
   mgTmr=setInterval(mgTick,80);
   mgSpw=setInterval(mgSpawn,1200);
@@ -419,6 +421,94 @@ function mgTick(){
   if(mgData.timeLeft<=0){mgData.done=true;clearInterval(mgTmr);clearInterval(mgSpw);showMgResult();return;}
   mgPaint();
 }
+
+// ---- third mini-game: Route Rush, pick a way through the streets to the customer ----
+const RT_R=6,RT_C=5;
+// grid[r][c]: 'ok' | 'jam' | 'blk'. Row 0 is the start, the last row holds the customer ('goal' column only).
+function genRoute(){
+  const peak=isPeak(),pj=peak?.34:.2,gc=rnd(0,RT_C-1),G=[];
+  for(let r=0;r<RT_R;r++){
+    const row=[];
+    for(let c=0;c<RT_C;c++){
+      if(r===0)row.push('ok');
+      else if(r===RT_R-1)row.push(c===gc?'goal':'blk');
+      else{const x=Math.random();row.push(x<.18?'blk':x<.18+pj?'jam':'ok')}
+    }
+    G.push(row);
+  }
+  G[0][2]='ok';
+  // no dead ends: a cell with no open way forward becomes roadwork, so it can never be entered by mistake
+  for(let r=RT_R-2;r>=1;r--)for(let c=0;c<RT_C;c++){
+    if(G[r][c]==='blk')continue;
+    if(![c-1,c,c+1].filter(x=>x>=0&&x<RT_C).some(x=>G[r+1][x]!=='blk'))G[r][c]='blk';
+  }
+  if(![1,2,3].some(x=>G[1][x]!=='blk')||!rtReach(G))return genRoute();   // start boxed in: roll a new map
+  return G;
+}
+function rtReach(G){
+  let cur=new Set([2]);
+  for(let r=1;r<RT_R;r++){const nx=new Set();cur.forEach(c=>{[c-1,c,c+1].forEach(x=>{if(x>=0&&x<RT_C&&G[r][x]!=='blk')nx.add(x)})});cur=nx;if(!cur.size)return false}
+  return true;
+}
+function rtMove(d){
+  const m=mgData;if(!m||m.kind!=='route'||m.done)return;
+  const{r,c}=m.pos,nr=r+1,nc=c+d;
+  if(nc<0||nc>=RT_C)return;
+  const t=m.grid[nr][nc];
+  if(t==='blk'){m.shake=nc;rtPaint();setTimeout(()=>{if(m)m.shake=null;rtPaint()},250);return}
+  m.pos={r:nr,c:nc};
+  if(t==='jam'){m.jams++;m.startTs-=1500;m.jamFlash=nc}   // stuck in traffic: 1.5 s gone
+  if(t==='goal'){
+    m.done=true;clearInterval(mgTmr);
+    m.timeLeft=Math.max(0,m.limit-(Date.now()-m.startTs)/1000);
+    m.rtOk=m.timeLeft>=m.limit*.3?2:1;
+    rtPaint();setTimeout(showMgResult,350);return;
+  }
+  rtPaint();
+}
+function rtTap(ev){
+  const m=mgData;if(!m||m.kind!=='route'||m.done)return;
+  const r=ev.currentTarget.getBoundingClientRect(),c=Math.floor((ev.clientX-r.left)/r.width*RT_C);
+  const d=Math.max(-1,Math.min(1,c-m.pos.c));rtMove(d);
+}
+function rtTick(){
+  const m=mgData;if(!m||m.done||m.kind!=='route')return;
+  m.timeLeft=Math.max(0,m.limit-(Date.now()-m.startTs)/1000);
+  if(m.timeLeft<=0){m.done=true;m.rtOk=0;clearInterval(mgTmr);showMgResult();return}
+  const t=document.getElementById('mg-timer');if(t)t.textContent=Math.ceil(m.timeLeft)+'s';
+}
+function rtHTML(){
+  const m=mgData,G=m.grid,out=[];
+  const gps=up('gps');
+  for(let r=RT_R-1;r>=0;r--){          // the goal row is drawn on top
+    for(let c=0;c<RT_C;c++){
+      const t=G[r][c],here=m.pos.r===r&&m.pos.c===c;
+      const near=r===m.pos.r+1&&Math.abs(c-m.pos.c)<=1;
+      const showJam=t==='jam'&&(gps||near||r<=m.pos.r);
+      let cls='rt-c',inner='';
+      if(t==='blk'){cls+=' blk';inner=r===RT_R-1?'':ic('wrench',24)}
+      else if(t==='goal'){cls+=' goal';inner=ic('flag',28)}
+      else if(t==='jam'&&showJam){cls+=' jam';inner=ic('warn',24)}
+      else if(t==='jam'){cls+=' unk'}
+      if(near&&t!=='blk')cls+=' near';
+      if(m.shake===c&&r===m.pos.r+1)cls+=' shake';
+      if(here)inner=`<img class="rt-me" src="${BIKE}" alt="xe">`;
+      out.push(`<div class="${cls}">${inner}</div>`);
+    }
+  }
+  return out.join('');
+}
+function rtPaint(){
+  const f=document.getElementById('rt-field');if(!f||!mgData||mgData.kind!=='route')return;
+  f.innerHTML=rtHTML();
+  const s=document.getElementById('mg-score');if(s)s.textContent='KẸT '+mgData.jams;
+}
+document.addEventListener('keydown',e=>{
+  if(!mgData||mgData.kind!=='route')return;
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){e.preventDefault();rtMove(-1)}
+  else if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){e.preventDefault();rtMove(1)}
+  else if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){e.preventDefault();rtMove(0)}
+});
 
 // ---- second mini-game: dodge obstacles on a 3-lane road ----
 const DG_ROWS=7,DG_SPEED=4.2;
@@ -503,6 +593,7 @@ function showMgResult(){
   const job=C.jobs[jobId];
   let earn,ok;
   if(mgData.kind==='dodge')ok=mgData.hits<=2?2:mgData.hits<=5?1:0;
+  else if(mgData.kind==='route')ok=mgData.rtOk;
   else ok=caught>=mgData.full?2:caught>=mgData.part?1:0;
   earn=[0,Math.floor(baseEarn*.5),baseEarn][ok];
   const evt=rollEvt(),res=evt?evt.fn(earn):null;   // decided up front: a cancelled order gets no customer review
@@ -663,6 +754,7 @@ function resumeGame(){
     mgData.startTs+=d;mgData.lastTs+=d;
     mgData.spots=mgData.spots.map(sp=>sp?{ts:sp.ts+d}:sp);
     if(mgData.kind==='dodge')mgTmr=setInterval(dgTick,50);
+    else if(mgData.kind==='route')mgTmr=setInterval(rtTick,100);
     else{mgTmr=setInterval(mgTick,80);mgSpw=setInterval(mgSpawn,1200)}
   }
   render();

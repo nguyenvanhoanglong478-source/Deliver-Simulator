@@ -9,7 +9,7 @@ A retro 8-bit motorbike delivery-driver simulation that runs entirely in the bro
 Open `index.html` in a browser. Progress is saved in `localStorage`.
 
 - **Orders:** each turn offers 3 orders (food or goods, near / medium / far, optionally rush). Far orders pay more but cost stamina, fuel and time. Re-rolling the offers costs 8 seconds.
-- **Mini-games:** catch falling packages (20 s) or dodge obstacles on a 3-lane road (tap a lane, use the ◀ ▶ buttons, or the arrow keys). Rush orders give only 15 s.
+- **Mini-games:** catch falling packages (20 s), dodge obstacles on a 3-lane road (tap a lane, use ◀ ▶ or the arrow keys), or play **Route Rush**: pick a path up a 5×6 street map to the customer, avoiding roadworks and traffic jams (a jam costs 1.5 s; with the GPS upgrade jams are visible ahead of time, and peak hours have more of them). Rush orders get less time.
 - **Driving speed:** slow (fewer accidents, extra time), normal, or fast (quicker, but riskier and more likely to be fined). Older bikes break down more often.
 - **Day cycle:** a game day runs from 06:00 to 22:00 (300 real seconds). Peak hours (11-13h and 17-19h) pay more but traffic jams are twice as likely.
 - **Upgrades with trade-offs:** the two delivery bags and the two engines are mutually exclusive; GPS and insurance carry monthly fees.
@@ -29,7 +29,7 @@ Open `index.html` in a browser. Progress is saved in `localStorage`.
 - `src/`: source files (`style.css`, `icons.js`, `audio.js`, `profile.js`, `logic.js`, `render.js`, `bike.png`, `music.mp3`, `track1-4.mp3`).
 - `build.py`: assembles `src/` into `index.html` (`python3 build.py`).
 - `tests/`: browser tests using Playwright (`pip install playwright && playwright install chromium`). Run each file separately:
-  `python3 tests/test_gameplay.py`, `test_save_load.py`, `test_features.py`, `test_audio.py`, `test_pause.py`, `test_ux.py`.
+  `python3 tests/test_gameplay.py`, `test_save_load.py`, `test_features.py`, `test_audio.py`, `test_pause.py`, `test_ux.py`, `test_route.py`.
 - `CHANGELOG.md`: history of changes and current settings.
 
 Fonts (VT323, Press Start 2P) are loaded from Google Fonts; offline, the game falls back to a monospace font.

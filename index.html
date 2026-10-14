@@ -398,21 +398,69 @@ input.txt::placeholder{color:#5b52a0}
 #pause-btn:active{transform:translateY(2px)}
 #pause-btn:focus-visible{outline:3px dashed var(--gold);outline-offset:6px}
 
-/* mobile shop: price button under the description, nothing clipped */
+/* shop rows: icon | name + price | description */
+.upg-row{display:grid;grid-template-columns:44px 1fr auto;grid-template-areas:"ic n act" "ic d d";gap:4px 12px;align-items:center}
+.upg-ic{grid-area:ic;align-self:start}
+.upg-det{display:contents}
+.upg-n{grid-area:n;margin:0;font-size:21px;line-height:1.05}
+.upg-d{grid-area:d;color:#b9b2f0;font-size:19px;line-height:1.15}
+.upg-act{grid-area:act;width:auto;flex:none}
+.upg-act .btn{width:auto;min-width:0;font-size:17px;padding:6px 8px;white-space:nowrap}
+.upg-act .owned{padding:6px 8px}
 @media(max-width:520px){
-  .upg-det{flex:1 1 calc(100% - 64px)}
-  .upg-act{width:100%;flex:1 1 100%}
-  .upg-act .btn{white-space:normal}
-  .upg-d{font-size:19px;line-height:1.15}
   .drive-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .drive-row .lbl{grid-column:1/-1}
   .drive-row .b-pu{grid-column:1/-1}
+}
+/* main screen meters: three in a row on phones */
+.meters{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.meters .hp{grid-column:1/-1}
+@media(max-width:859px){
+  .meters{grid-template-columns:repeat(3,1fr);gap:10px}
+  .meters .hp{grid-column:auto}
+  .meters .meter{padding:8px 6px}
+  .meters .meter-top{margin-bottom:6px;font-size:18px}
+  .meters .meter-top em{display:none}
+  .meters .meter-top b{font-size:10px}
+  .stat{padding:8px 10px}
+  .stat .l{font-size:18px;margin-bottom:4px}
+  .stat .sub{font-size:14px;margin-top:2px}
+  .stat .bar{margin-top:6px!important}
+  .strip{padding:8px 10px}
+  .log .log-i:nth-child(n+5){display:none}
+  .stat-row,.pair{gap:10px}
 }
 /* floating buttons follow the content column on wide screens */
 @media(min-width:860px){
   #pause-btn{left:calc(50% - 520px - 56px)}
   #snd-btn{right:calc(50% - 520px - 56px)}
 }
+
+/* Route Rush */
+.rt-field{width:100%;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:8px;background:#0a0814;box-shadow:var(--frame);touch-action:manipulation;user-select:none}
+.rt-c{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#1a1440;position:relative}
+.rt-c.near{box-shadow:inset 0 0 0 3px var(--gold)}
+.rt-c.blk{background:#2a0f1a}
+.rt-c.jam{background:#3a2a00}
+.rt-c.unk{background:#1a1440}
+.rt-c.unk::after{content:'?';color:#6c63b5;font-size:24px}
+.rt-c.goal{background:#12301d;box-shadow:inset 0 0 0 3px var(--gr)}
+.rt-c.shake{animation:rtshake .25s steps(4)}
+.rt-me{width:92%;image-rendering:pixelated}
+@keyframes rtshake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.rt-btns{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:859px){
+  .save-grid .btn{font-size:18px;padding:8px 4px;white-space:nowrap}
+  .save-note{font-size:17px}
+  .util{padding:10px 6px}
+}
+
+.fold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{content:'▼';margin-left:auto;font-size:14px;color:var(--dim)}
+.fold[open]>summary::after{content:'▲'}
+.fold-hint{color:var(--dim);font-size:18px}
+@media(min-width:860px){.fold>summary::after{display:none}.fold>summary{pointer-events:none}}
 </style>
 </head>
 <body>
@@ -1222,7 +1270,7 @@ function genOffer(peak){
   const type=Math.random()<.5?'food':'goods',job=C.jobs[type];
   const r=Math.random(),dist=r<.35?0:r<.75?1:2;
   const rush=Math.random()<(peak?.35:.2)+(up('prio')?.1:0);
-  const mg=Math.random()<.4?'dodge':'catch';
+  const mr=Math.random(),mg=mr<.4?'catch':mr<.7?'dodge':'route';
   const base=rnd(job.min,job.max)*DIST[dist].earn*(rush?1.7:1)*(peak?1.25:1);
   return{type,dist,rush,mg,peak:!!peak,base:Math.round(base/1000)*1000};
 }
@@ -1479,7 +1527,9 @@ function startMinigame(o,baseEarn){
   mgData={jobId:o.type,offer:o,kind:o.mg,baseEarn,limit,full:rush?9:C.mgFull,part:rush?5:C.mgPartial,
     caught:0,total:0,hits:0,passed:0,obs:[],lane:1,spawnIn:.4,flash:0,lastTs:Date.now(),
     timeLeft:limit,done:false,spots:Array(9).fill(null),startTs:Date.now()};
+  if(o.mg==='route')Object.assign(mgData,{grid:genRoute(),pos:{r:0,c:2},jams:0,rtOk:0});
   g.phase='minigame';render();
+  if(o.mg==='route'){mgTmr=setInterval(rtTick,100);return;}
   if(o.mg==='dodge'){mgTmr=setInterval(dgTick,50);return;}
   mgTmr=setInterval(mgTick,80);
   mgSpw=setInterval(mgSpawn,1200);
@@ -1494,6 +1544,94 @@ function mgTick(){
   if(mgData.timeLeft<=0){mgData.done=true;clearInterval(mgTmr);clearInterval(mgSpw);showMgResult();return;}
   mgPaint();
 }
+
+// ---- third mini-game: Route Rush, pick a way through the streets to the customer ----
+const RT_R=6,RT_C=5;
+// grid[r][c]: 'ok' | 'jam' | 'blk'. Row 0 is the start, the last row holds the customer ('goal' column only).
+function genRoute(){
+  const peak=isPeak(),pj=peak?.34:.2,gc=rnd(0,RT_C-1),G=[];
+  for(let r=0;r<RT_R;r++){
+    const row=[];
+    for(let c=0;c<RT_C;c++){
+      if(r===0)row.push('ok');
+      else if(r===RT_R-1)row.push(c===gc?'goal':'blk');
+      else{const x=Math.random();row.push(x<.18?'blk':x<.18+pj?'jam':'ok')}
+    }
+    G.push(row);
+  }
+  G[0][2]='ok';
+  // no dead ends: a cell with no open way forward becomes roadwork, so it can never be entered by mistake
+  for(let r=RT_R-2;r>=1;r--)for(let c=0;c<RT_C;c++){
+    if(G[r][c]==='blk')continue;
+    if(![c-1,c,c+1].filter(x=>x>=0&&x<RT_C).some(x=>G[r+1][x]!=='blk'))G[r][c]='blk';
+  }
+  if(![1,2,3].some(x=>G[1][x]!=='blk')||!rtReach(G))return genRoute();   // start boxed in: roll a new map
+  return G;
+}
+function rtReach(G){
+  let cur=new Set([2]);
+  for(let r=1;r<RT_R;r++){const nx=new Set();cur.forEach(c=>{[c-1,c,c+1].forEach(x=>{if(x>=0&&x<RT_C&&G[r][x]!=='blk')nx.add(x)})});cur=nx;if(!cur.size)return false}
+  return true;
+}
+function rtMove(d){
+  const m=mgData;if(!m||m.kind!=='route'||m.done)return;
+  const{r,c}=m.pos,nr=r+1,nc=c+d;
+  if(nc<0||nc>=RT_C)return;
+  const t=m.grid[nr][nc];
+  if(t==='blk'){m.shake=nc;rtPaint();setTimeout(()=>{if(m)m.shake=null;rtPaint()},250);return}
+  m.pos={r:nr,c:nc};
+  if(t==='jam'){m.jams++;m.startTs-=1500;m.jamFlash=nc}   // stuck in traffic: 1.5 s gone
+  if(t==='goal'){
+    m.done=true;clearInterval(mgTmr);
+    m.timeLeft=Math.max(0,m.limit-(Date.now()-m.startTs)/1000);
+    m.rtOk=m.timeLeft>=m.limit*.3?2:1;
+    rtPaint();setTimeout(showMgResult,350);return;
+  }
+  rtPaint();
+}
+function rtTap(ev){
+  const m=mgData;if(!m||m.kind!=='route'||m.done)return;
+  const r=ev.currentTarget.getBoundingClientRect(),c=Math.floor((ev.clientX-r.left)/r.width*RT_C);
+  const d=Math.max(-1,Math.min(1,c-m.pos.c));rtMove(d);
+}
+function rtTick(){
+  const m=mgData;if(!m||m.done||m.kind!=='route')return;
+  m.timeLeft=Math.max(0,m.limit-(Date.now()-m.startTs)/1000);
+  if(m.timeLeft<=0){m.done=true;m.rtOk=0;clearInterval(mgTmr);showMgResult();return}
+  const t=document.getElementById('mg-timer');if(t)t.textContent=Math.ceil(m.timeLeft)+'s';
+}
+function rtHTML(){
+  const m=mgData,G=m.grid,out=[];
+  const gps=up('gps');
+  for(let r=RT_R-1;r>=0;r--){          // the goal row is drawn on top
+    for(let c=0;c<RT_C;c++){
+      const t=G[r][c],here=m.pos.r===r&&m.pos.c===c;
+      const near=r===m.pos.r+1&&Math.abs(c-m.pos.c)<=1;
+      const showJam=t==='jam'&&(gps||near||r<=m.pos.r);
+      let cls='rt-c',inner='';
+      if(t==='blk'){cls+=' blk';inner=r===RT_R-1?'':ic('wrench',24)}
+      else if(t==='goal'){cls+=' goal';inner=ic('flag',28)}
+      else if(t==='jam'&&showJam){cls+=' jam';inner=ic('warn',24)}
+      else if(t==='jam'){cls+=' unk'}
+      if(near&&t!=='blk')cls+=' near';
+      if(m.shake===c&&r===m.pos.r+1)cls+=' shake';
+      if(here)inner=`<img class="rt-me" src="${BIKE}" alt="xe">`;
+      out.push(`<div class="${cls}">${inner}</div>`);
+    }
+  }
+  return out.join('');
+}
+function rtPaint(){
+  const f=document.getElementById('rt-field');if(!f||!mgData||mgData.kind!=='route')return;
+  f.innerHTML=rtHTML();
+  const s=document.getElementById('mg-score');if(s)s.textContent='KẸT '+mgData.jams;
+}
+document.addEventListener('keydown',e=>{
+  if(!mgData||mgData.kind!=='route')return;
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){e.preventDefault();rtMove(-1)}
+  else if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){e.preventDefault();rtMove(1)}
+  else if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){e.preventDefault();rtMove(0)}
+});
 
 // ---- second mini-game: dodge obstacles on a 3-lane road ----
 const DG_ROWS=7,DG_SPEED=4.2;
@@ -1578,6 +1716,7 @@ function showMgResult(){
   const job=C.jobs[jobId];
   let earn,ok;
   if(mgData.kind==='dodge')ok=mgData.hits<=2?2:mgData.hits<=5?1:0;
+  else if(mgData.kind==='route')ok=mgData.rtOk;
   else ok=caught>=mgData.full?2:caught>=mgData.part?1:0;
   earn=[0,Math.floor(baseEarn*.5),baseEarn][ok];
   const evt=rollEvt(),res=evt?evt.fn(earn):null;   // decided up front: a cancelled order gets no customer review
@@ -1738,6 +1877,7 @@ function resumeGame(){
     mgData.startTs+=d;mgData.lastTs+=d;
     mgData.spots=mgData.spots.map(sp=>sp?{ts:sp.ts+d}:sp);
     if(mgData.kind==='dodge')mgTmr=setInterval(dgTick,50);
+    else if(mgData.kind==='route')mgTmr=setInterval(rtTick,100);
     else{mgTmr=setInterval(mgTick,80);mgSpw=setInterval(mgSpawn,1200)}
   }
   render();
@@ -1757,6 +1897,7 @@ document.addEventListener('keydown',e=>{
 
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&canPause())pauseGame()});   // switching tabs pauses the game
 
+let foldOpen={sav:false,log:false};
 const TUT=[
  {ic:'flag',t:'MỤC TIÊU',b:'Tiết kiệm 100 triệu trong 24 tháng. Cuối mỗi tháng có hóa đơn 6,5 triệu phải trả, nên đừng tiêu hết tiền mặt.'},
  {ic:'box',t:'NHẬN ĐƠN',b:'Chọn một trong các đơn hàng rồi chơi minigame: bắt gói hoặc né vật cản. Bắt đủ gói thì nhận đủ tiền. Đơn xa trả cao nhưng tốn thể lực, xăng và thời gian.'},
@@ -1772,7 +1913,7 @@ function offerCard(o,i){
   return`<button class="btn ${o.type==='food'?'b-gr':'b-cy'} offer${o.rush?' rush':''}" ${ok?'':'disabled'} onclick="doDelivery(${i})">
     <span class="of-ic">${ic(job.icon,32)}</span>
     <span class="of-main"><span class="nm">${job.name} · ${d.n}</span><span class="er">${money(offerPay(o))}</span>
-      <span class="of-tags">${o.rush?'<b class="tg rush">GẤP</b>':''}${o.peak?'<b class="tg peak">CAO ĐIỂM</b>':''}<b class="tg">${o.mg==='dodge'?'NÉ XE':'BẮT GÓI'}</b></span></span>
+      <span class="of-tags">${o.rush?'<b class="tg rush">GẤP</b>':''}${o.peak?'<b class="tg peak">CAO ĐIỂM</b>':''}<b class="tg">${o.mg==='dodge'?'NÉ XE':o.mg==='route'?'TÌM ĐƯỜNG':'BẮT GÓI'}</b></span></span>
     <span class="co"><span>${ic('bolt',16)}${c.sta}</span><span>${ic('fuel',16)}${c.fuel}%</span><span>${ic('flag',16)}${offerTime(o)}s</span></span>
   </button>`;
 }
@@ -1844,14 +1985,14 @@ function rGame(){
         <div class="bar thin" style="margin-top:12px"><i class="gold" style="width:${pct}%"></i></div>
         <div class="sub">${pct.toFixed(1)}% / 100TR</div></div>
     </div>
-    <div class="pair">
-      <div class="pxf meter"><div class="meter-top"><span>${ic('bolt',20)}THỂ LỰC</span><b>${g.stamina}</b></div>
+    <div class="meters">
+      <div class="pxf meter" aria-label="Thể lực"><div class="meter-top"><span>${ic('bolt',20)}<em>THỂ LỰC</em></span><b>${g.stamina}</b></div>
         <div class="bar"><i class="${meterColor(g.stamina,25,50)}" style="width:${g.stamina}%"></i></div></div>
-      <div class="pxf meter"><div class="meter-top"><span>${ic('fuel',20)}XĂNG</span><b>${g.fuel}%</b></div>
+      <div class="pxf meter" aria-label="Xăng"><div class="meter-top"><span>${ic('fuel',20)}<em>XĂNG</em></span><b>${g.fuel}%</b></div>
         <div class="bar"><i class="${meterColor(g.fuel,15,40)}" style="width:${g.fuel/fuelMax()*100}%"></i></div></div>
+      <div class="pxf meter hp" aria-label="Độ bền xe"><div class="meter-top"><span>${ic('gear',20)}<em>ĐỘ BỀN XE</em></span><b${hpLow?' style="color:var(--red)"':''}>${g.vehicleHp}%</b></div>
+        <div class="bar"><i class="${g.vehicleHp>=60?'gr':g.vehicleHp>=30?'or':'red'}" style="width:${g.vehicleHp}%"></i></div></div>
     </div>
-    <div class="pxf meter"><div class="meter-top"><span>${ic('gear',20)}ĐỘ BỀN XE</span><b${hpLow?' style="color:var(--red)"':''}>${g.vehicleHp}%</b></div>
-      <div class="bar"><i class="${g.vehicleHp>=60?'gr':g.vehicleHp>=30?'or':'red'}" style="width:${g.vehicleHp}%"></i></div></div>
     <div class="pxf strip">
       <span>${ic('cal',20)}NGÀY ${g.day}/${C.daysPerMonth}</span>
       <span>${ic('box',20)}${g.delivered} ĐƠN</span>
@@ -1879,8 +2020,8 @@ function rGame(){
       </div>
       <button class="btn b-cy blk endday" onclick="askEndDay()">${ic('flag',24)}KẾT THÚC NGÀY ${g.day}</button>
     </div>
-    <div>
-      <div class="sec-t">${ic('bank',22)}TIẾT KIỆM</div>
+    <details class="fold" ${foldOpen.sav||innerWidth>=860?'open':''} ontoggle="foldOpen.sav=this.open">
+      <summary class="sec-t">${ic('bank',22)}TIẾT KIỆM <span class="fold-hint">(${money(g.savings)})</span></summary>
       <div class="save-grid">
         <button class="btn b-gold sm" onclick="doSave(5e5)" ${g.cash<5e5?'disabled':''}>GỬI 500K</button>
         <button class="btn b-gold sm" onclick="doSave(1e6)" ${g.cash<1e6?'disabled':''}>GỬI 1TR</button>
@@ -1890,11 +2031,11 @@ function rGame(){
         <button class="btn b-red sm" onclick="doWd('all')" ${!g.savings?'disabled':''}>RÚT HẾT</button>
       </div>
       <div class="lbl save-note">"Gửi tất cả" giữ lại 500K tiền mặt.${g.cash<5e5?'<br>Chưa đủ tiền mặt để gửi (cần ít nhất 500K).':''}${!g.savings?'<br>Chưa có tiết kiệm để rút.':g.savings<1e6?'<br>Cần ít nhất 1TR tiết kiệm để rút từng phần.':''}</div>
-    </div>
-    <div>
-      <div class="sec-t">NHẬT KÝ</div>
+    </details>
+    <details class="fold" ${foldOpen.log||innerWidth>=860?'open':''} ontoggle="foldOpen.log=this.open">
+      <summary class="sec-t">NHẬT KÝ</summary>
       <div class="log">${logs}</div>
-    </div>
+    </details>
   </div>
   </div></div>`;
 }
@@ -1907,8 +2048,16 @@ function rMG(){
     const msgs=['THẤT BẠI','GIAO TRỄ','XUẤT SẮC!'],cols=['var(--red)','var(--or)','var(--gr)'];
     return`<div class="mg"><div class="pxf mg-res">
       <h2 style="color:${cols[ok]};font-size:40px">${msgs[ok]}</h2>
-      <p>${mgData.kind==='dodge'?`Va chạm ${mgData.hits} lần`:`Bắt được ${mgData.caught}/${mgData.full} gói hàng`}<br>${earn>0?'+'+ff(earn):'Không có thu nhập'}</p>
+      <p>${mgData.kind==='route'?(mgData.rtOk?`Đến nơi, kẹt xe ${mgData.jams} lần`:'Hết giờ trước khi đến nơi'):mgData.kind==='dodge'?`Va chạm ${mgData.hits} lần`:`Bắt được ${mgData.caught}/${mgData.full} gói hàng`}<br>${earn>0?'+'+ff(earn):'Không có thu nhập'}</p>
       <p class="blink">Đang giao hàng...</p></div></div>`;
+  }
+  if(mgData.kind==='route'){
+    return`<div class="mg">
+    <div class="mg-hdr"><span class="mg-timer" id="mg-timer">${Math.ceil(mgData.timeLeft)}s</span><span class="lbl">TÌM ĐƯỜNG!</span><span class="mg-score" id="mg-score">KẸT ${mgData.jams}</span></div>
+    <div class="rt-field" id="rt-field" onpointerdown="rtTap(event)" aria-label="Bản đồ đường phố">${rtHTML()}</div>
+    <div class="dg-btns rt-btns"><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(-1)" aria-label="Rẽ trái">◀</button><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(0)" aria-label="Đi thẳng">▲</button><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(1)" aria-label="Rẽ phải">▶</button></div>
+    <div class="mg-hint">◀ ▲ ▶ hoặc chạm ô để đi lên. ${up('gps')?'GPS: thấy trước kẹt xe.':'Chỉ thấy kẹt xe ở hàng trước mặt.'} Tránh ${ic('wrench',16)}; kẹt xe mất 1,5s.</div>
+  </div>`;
   }
   if(mgData.kind==='dodge'){
     return`<div class="mg">
