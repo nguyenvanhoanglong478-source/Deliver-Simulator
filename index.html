@@ -1241,6 +1241,7 @@ function startDayTimer(){
 }
 function fmT(s){const m=Math.floor(s/60);const sc=s%60;return`${m}:${sc<10?'0':''}${sc}`}
 
+const HOLD_MS=1500;   // how long a finished refuel / sleep screen stays before returning to the game
 // ===== ACTIONS =====
 function startGame(fresh){
   if(!fresh){const s=load();if(saneSave(s)&&!['start','win','lose'].includes(s.phase)){restore(s);startDayTimer();render();toast('GAME CŨ ĐÃ TẢI!');return;}}
@@ -1304,8 +1305,10 @@ function rfConfirm(){
     if(g.activeAnim.timeLeft<=0){
       clearInterval(animTmr);
       g.fuel=val;
+      const f=document.getElementById('fuel-fill'),p=document.getElementById('fuel-pct');   // make sure the gauge really shows the finished tank
+      if(f)f.style.width=val+'%';if(p)p.textContent=val+'%';
       addLog('Đổ xăng +'+fillable+'%: -'+ff(cost),'cost');
-      g.activeAnim=null;g.phase='game';save();render();
+      setTimeout(()=>{if(g.phase!=='anim-refuel')return;g.activeAnim=null;g.phase='game';save();render();},HOLD_MS);   // let the full tank sit on screen for a moment
     }
   },1000);
 }
@@ -1335,8 +1338,8 @@ function doSleep(){
     if(g.stamina>=100){
       clearInterval(animTmr);
       addLog('Nghỉ ngơi đủ giấc ('+g.stamina+'/100)','info');
-      g.activeAnim=null;g.phase='game';
-      save();render();
+      const sb=document.querySelector('.anim .btn');if(sb)sb.disabled=true;
+      setTimeout(()=>{if(g.phase!=='anim-sleep')return;g.activeAnim=null;g.phase='game';save();render();},HOLD_MS);
     }
   },1000);
 }
