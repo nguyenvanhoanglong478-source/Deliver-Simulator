@@ -261,13 +261,11 @@ function rfConfirm(){
   g.activeAnim={type:'refuel',timeLeft:3,total:3,targetFuel:val,startFuel,costPaid:cost};
   g.phase='anim-refuel';
   render();
+  refuelVisual(startFuel,val,3000);
   animTmr=setInterval(()=>{
     g.activeAnim.timeLeft--;
-    const pct=Math.min(1,(3-g.activeAnim.timeLeft)/3);
-    const curFuel=Math.round(startFuel+(val-startFuel)*pct);
-    const fEl=document.getElementById('fuel-fill'),tEl=document.getElementById('fuel-txt');
-    if(fEl)fEl.style.height=curFuel+'%';
-    if(tEl)tEl.textContent=g.activeAnim.timeLeft>0?g.activeAnim.timeLeft+'s còn lại · '+curFuel+'%':'Hoàn tất!';
+    const tEl=document.getElementById('fuel-txt');
+    if(tEl)tEl.textContent=g.activeAnim.timeLeft>0?g.activeAnim.timeLeft+'s còn lại':'Hoàn tất!';
     if(g.activeAnim.timeLeft<=0){
       clearInterval(animTmr);
       g.fuel=val;
@@ -275,6 +273,18 @@ function rfConfirm(){
       g.activeAnim=null;g.phase='game';save();render();
     }
   },1000);
+}
+
+// Cosmetic only: the gauge fills with a CSS transition and the percentage counts up smoothly; the real fuel is set when the timer ends.
+function refuelVisual(a,b,ms){
+  const t0=performance.now();
+  setTimeout(()=>{const f=document.getElementById('fuel-fill');if(f)f.style.width=b+'%'},40);
+  (function step(now){
+    if(g.phase!=='anim-refuel')return;
+    const k=Math.min(1,Math.max(0,(now-t0)/ms)),el=document.getElementById('fuel-pct');
+    if(el)el.textContent=Math.round(a+(b-a)*k)+'%';
+    if(k<1)requestAnimationFrame(step);
+  })(t0);
 }
 
 function doSleep(){

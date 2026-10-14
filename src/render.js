@@ -177,13 +177,25 @@ function rDeliverAnim(){
 }
 function rRefuelAnim(){
   if(!g.activeAnim)return'';
-  const{timeLeft,startFuel,targetFuel}=g.activeAnim;
-  return`<div class="anim">
+  const{timeLeft,startFuel,targetFuel,costPaid}=g.activeAnim;
+  const s=startFuel===undefined?g.fuel:startFuel,t=targetFuel||100;
+  const hose='M104 80 C 130 36, 232 36, 262 86';
+  const drops=[0,.3,.6,.9].map(d=>`<rect width="6" height="6" x="-3" y="-3" fill="#ffd43b"><animateMotion path="${hose}" dur="1.2s" begin="${d}s" repeatCount="indefinite"/></rect>`).join('');
+  return`<div class="anim rf-anim">
     <div class="anim-t">ĐANG ĐỔ XĂNG</div>
-    <div class="pump">${ic('fuel',96)}</div>
-    <div class="tank"><div id="fuel-fill" class="tank-fill" style="height:${startFuel||g.fuel}%"></div></div>
-    <div id="fuel-txt" class="refuel-txt">${timeLeft}s còn lại · ${startFuel||g.fuel}%</div>
-    <div class="lbl">Mục tiêu: ${targetFuel||100}%</div>
+    <div class="scene rf-scene"><div class="sky-far still"></div><div class="sky-near still"></div><div class="road"></div>
+      <svg class="rf-svg" viewBox="0 0 360 190" shape-rendering="crispEdges" aria-hidden="true">
+        <g transform="translate(22,52)">${ic('fuel',104)}</g>
+        <image href="${BIKE}" x="172" y="48" width="172" height="115" class="rf-bike"/>
+        <path d="${hose}" fill="none" stroke="#0a0814" stroke-width="8"/>
+        <path d="${hose}" fill="none" stroke="#ff9d2e" stroke-width="4" stroke-dasharray="8 8" class="rf-flow"/>
+        ${drops}
+      </svg></div>
+    <div class="rf-pct"><b id="fuel-pct">${s}%</b><span>→ ${t}%</span></div>
+    <div class="fgauge"><div id="fuel-fill" class="fgauge-fill" style="width:${s}%"></div><div class="fgauge-seg"></div></div>
+    <div class="fgauge-lbl"><span>E</span><span>F</span></div>
+    <div id="fuel-txt" class="refuel-txt">${timeLeft}s còn lại</div>
+    <div class="lbl">Chi phí: ${ff(costPaid||0)}</div>
   </div>`;
 }
 function rSleepAnim(){
