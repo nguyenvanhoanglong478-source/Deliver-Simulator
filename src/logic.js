@@ -600,6 +600,7 @@ function render(){
   else if(g.phase==='lose')h=rEnd(false);
   else h=rGame();
   root.innerHTML=h+(modal?rModal():'');
+  sndBtnSync();musicSync();
 }
 
 

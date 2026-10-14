@@ -288,6 +288,17 @@ function rModal(){
       <button class="btn b-gr blk" onclick="modal=null;render()">TIẾP TỤC</button>
     </div></div>`;
   }
+  if(type==='settings'){
+    return`<div class="overlay" onclick="if(event.target===this)closeSettings()"><div class="pxf2 modal set-box">
+      <div class="m-title" style="color:var(--cy)">${ic(AUD.on?'sound':'mute',28)} ÂM THANH</div>
+      <div class="set-row"><span>Nhạc nền</span>
+        <button class="btn sm ${AUD.on?'b-gr':'b-dim'}" onclick="toggleMusic()" aria-pressed="${AUD.on}">${AUD.on?'BẬT':'TẮT'}</button></div>
+      <div class="set-row"><span>Âm lượng</span><b id="vol-lbl">${Math.round(AUD.vol*100)}%</b></div>
+      <input id="vol-slider" type="range" min="0" max="100" step="5" value="${Math.round(AUD.vol*100)}" oninput="setVolume(this.value)" aria-label="Âm lượng nhạc nền">
+      <div class="lbl">Nhạc phát ở màn hình bắt đầu. Mở cài đặt khi đang chơi sẽ tạm dừng đồng hồ ngày.</div>
+      <button class="btn b-gr blk" onclick="closeSettings()">ĐÓNG</button>
+    </div></div>`;
+  }
   if(type==='milestone'){
     const un=UPGS.filter(u=>modal.list.some(m=>m.at===u.req));
     return`<div class="overlay"><div class="pxf2 modal">
