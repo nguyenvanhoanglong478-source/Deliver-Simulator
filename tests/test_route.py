@@ -1,4 +1,4 @@
-"""Route Rush + compact layout tests. Run: python3 tests/test_route.py"""
+"""Route Rush (memorise the turns, steer through junctions) + compact layout tests. Run: python3 tests/test_route.py"""
 import os
 URL="file://"+os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),"..","index.html"))
 from playwright.sync_api import sync_playwright
@@ -9,49 +9,53 @@ with sync_playwright() as p:
     b=p.chromium.launch(); pg=b.new_page(viewport={'width':360,'height':640}); errs=[]
     pg.on('pageerror',lambda e:errs.append(str(e)))
     pg.goto(URL); pg.evaluate("localStorage.clear();localStorage.setItem('btd_tut','1')"); pg.reload(); pg.evaluate("startGame(true)")
-    # generator: always solvable, no dead ends, 2000 maps
-    bad=pg.evaluate("""()=>{let b=0;for(let i=0;i<2000;i++){const G=genRoute();if(!rtReach(G))b++;
-      for(let r=1;r<RT_R-1;r++)for(let c=0;c<RT_C;c++){if(G[r][c]==='blk')continue;
-        if(![c-1,c,c+1].filter(x=>x>=0&&x<RT_C).some(x=>G[r+1][x]!=='blk'))b++}}return b}""")
-    ok('2000 maps solvable, no dead ends',bad==0,str(bad))
+    ok('turn sequences always mixed (1000)',pg.evaluate("(()=>{for(let i=0;i<1000;i++){const t=genTurns();if(t.length!==RT_N||new Set(t).size<2)return false}return true})()"))
     pg.evaluate(START); pg.wait_for_function("g.phase==='minigame'",timeout=5000)
-    ok('route minigame renders 30 cells',pg.evaluate("document.querySelectorAll('.rt-c').length")==30)
-    ok('pause button does not cover the hint',True)
-    # solve: BFS path then play it
-    path=pg.evaluate("""()=>{const G=mgData.grid;const q=[[0,2,[]]];const seen=new Set();
-      while(q.length){const [r,c,p]=q.shift();if(G[r][c]==='goal')return p;
-        for(const d of [0,-1,1]){const nc=c+d;if(nc<0||nc>=RT_C||r+1>=RT_R||G[r+1][nc]==='blk')continue;const k=(r+1)+','+nc;if(seen.has(k))continue;seen.add(k);q.push([r+1,nc,p.concat([d])])}}return null}""")
-    ok('path exists',path is not None)
-    # blocked move is refused
-    pg.evaluate("mgData.grid[1]=['blk','blk','blk','blk','blk'];"); pg.evaluate("rtMove(0)")
-    ok('blocked cell refuses the move',pg.evaluate("mgData.pos.r")==0)
-    pg.evaluate("mgData.grid[1]=['ok','ok','jam','ok','ok']"); t0=pg.evaluate("mgData.timeLeft")
-    pg.evaluate("rtMove(0)"); pg.wait_for_timeout(200)
-    ok('jam costs 1.5 s and counts',pg.evaluate("mgData.jams")==1 and t0-pg.evaluate("mgData.timeLeft")>1.3,f"{t0}->{pg.evaluate('mgData.timeLeft')}")
-    # finish: put goal straight ahead
-    pg.evaluate("mgData.grid=[['ok','ok','ok','ok','ok'],['ok','ok','ok','ok','ok'],['ok','ok','ok','ok','ok'],['ok','ok','ok','ok','ok'],['ok','ok','ok','ok','ok'],['blk','blk','goal','blk','blk']];mgData.pos={r:3,c:2}")
-    pg.evaluate("rtMove(0)"); pg.evaluate("rtMove(0)")
-    pg.wait_for_function("g.phase==='anim-deliver'||g.phase==='game'",timeout=9000)
-    ok('arriving pays and leaves the minigame',True)
+    ok('starts in preview with all 5 turns shown',pg.evaluate("mgData.rtPhase==='preview'")and pg.evaluate("[...document.querySelectorAll('.rt-slot')].every(e=>'◀▲▶'.includes(e.textContent))"))
+    pg.evaluate("rtMove(0)"); ok('input ignored during preview',pg.evaluate("mgData.idx")==0 and pg.evaluate("mgData.mistakes")==0)
+    t0=pg.evaluate("mgData.timeLeft"); pg.wait_for_timeout(1200); ok('clock not running in preview',pg.evaluate("mgData.timeLeft")==t0)
+    pg.wait_for_function("mgData.rtPhase==='drive'",timeout=5000)
+    ok('turns hidden without GPS in drive',pg.evaluate("[...document.querySelectorAll('.rt-slot')].filter(e=>e.textContent==='?').length")>=4)
+    # right turn advances
+    pg.evaluate("rtMove(mgData.turns[mgData.idx])"); ok('correct turn advances',pg.evaluate("mgData.idx")==1 and pg.evaluate("mgData.mistakes")==0)
+    # wrong turn costs 2 s
+    tl=pg.evaluate("mgData.timeLeft"); pg.evaluate("rtMove(mgData.turns[mgData.idx]===0?1:0)"); pg.wait_for_timeout(120)
+    ok('wrong turn: mistake + 2 s, same junction',pg.evaluate("mgData.mistakes")==1 and pg.evaluate("mgData.idx")==1 and tl-pg.evaluate("mgData.timeLeft")>1.8,f"{tl}->{pg.evaluate('mgData.timeLeft')}")
+    # missing a junction counts as a mistake
+    m0=pg.evaluate("mgData.mistakes"); pg.wait_for_timeout(2500); ok('missed junction counts as mistake',pg.evaluate("mgData.mistakes")>m0)
+    # finish
+    pg.evaluate("while(mgData&&!mgData.done&&mgData.idx<RT_N)rtMove(mgData.turns[mgData.idx])")
+    pg.wait_for_function("mgData.result",timeout=4000)
+    ok('finishing gives a result (>=1 star)',pg.evaluate("mgData.result.ok")>=1)
     pg.wait_for_function("g.phase==='game'",timeout=15000)
-    ok('earned money',pg.evaluate("g.totalDelivered>=1 || g.delivered>=1"))
-    # timeout = fail
+    ok('order delivered',pg.evaluate("g.delivered>=1"))
+    # perfect run = full pay
     pg.evaluate("modal=null;"+START); pg.wait_for_function("g.phase==='minigame'",timeout=5000)
+    pg.wait_for_function("mgData.rtPhase==='drive'",timeout=5000)
+    pg.evaluate("while(mgData&&!mgData.done&&mgData.idx<RT_N)rtMove(mgData.turns[mgData.idx])")
+    pg.wait_for_function("mgData.result",timeout=4000); ok('perfect run: full pay',pg.evaluate("mgData.result.ok")==2)
+    pg.wait_for_function("g.phase==='game'",timeout=15000)
+    # timeout with little progress = fail
+    pg.evaluate("modal=null;"+START); pg.wait_for_function("g.phase==='minigame'",timeout=5000)
+    pg.wait_for_function("mgData.rtPhase==='drive'",timeout=5000)
     pg.evaluate("mgData.startTs-=100000"); pg.wait_for_function("mgData.result",timeout=4000)
-    ok('timeout fails the order',pg.evaluate("mgData.result.ok")==0)
+    ok('timeout with no progress fails',pg.evaluate("mgData.result.ok")==0)
     pg.wait_for_function("g.phase==='game'",timeout=15000)
-    # pause freezes route timer
-    pg.evaluate("modal=null;"+START); pg.wait_for_function("g.phase==='minigame'",timeout=5000)
-    pg.wait_for_timeout(600); pg.keyboard.press('p'); tl=pg.evaluate("mgData.timeLeft"); pg.wait_for_timeout(1800)
-    ok('route timer frozen when paused',abs(pg.evaluate("mgData.timeLeft")-tl)<.3)
-    pg.keyboard.press('p'); pg.wait_for_timeout(1500); ok('route timer resumes',pg.evaluate("mgData.timeLeft")<tl-.8)
-    pg.evaluate("mgData.grid[1]=['ok','ok','ok','ok','ok']"); pg.keyboard.press('ArrowUp'); ok('keyboard moves up',pg.evaluate("mgData.pos.r")==1)
+    # GPS shows next 3
+    pg.evaluate("g.upgrades={gps:true};modal=null;"+START); pg.wait_for_function("g.phase==='minigame'",timeout=5000)
+    pg.wait_for_function("mgData.rtPhase==='drive'",timeout=5000)
+    ok('GPS keeps the next 3 turns visible',pg.evaluate("[...document.querySelectorAll('.rt-slot')].filter(e=>e.textContent!=='?').length")==3)
+    # pause freezes everything
+    pg.keyboard.press('p'); tl=pg.evaluate("mgData.timeLeft"); mi=pg.evaluate("mgData.mistakes"); pg.wait_for_timeout(3000)
+    ok('paused: timer and junction frozen',abs(pg.evaluate("mgData.timeLeft")-tl)<.1 and pg.evaluate("mgData.mistakes")==mi)
+    pg.keyboard.press('p'); pg.wait_for_timeout(300); ok('resume: no instant miss',pg.evaluate("mgData.mistakes")==mi)
+    pg.keyboard.press('ArrowUp'); ok('keyboard works',pg.evaluate("mgData.idx+mgData.mistakes")>=mi+0 and pg.evaluate("mgData.mistakes+mgData.idx")>=1)
     # layout
     pg.evaluate("clearInterval(mgTmr);mgData=null;modal=null"); pg.evaluate("localStorage.clear();localStorage.setItem('btd_tut','1')"); pg.reload(); pg.evaluate("startGame(true)")
-    ok('main screen compact (<1450px)',pg.evaluate("document.documentElement.scrollHeight")<1620,str(pg.evaluate("document.documentElement.scrollHeight")))
+    ok('main screen compact (<1450px)',pg.evaluate("document.documentElement.scrollHeight")<1450,str(pg.evaluate("document.documentElement.scrollHeight")))
     ok('meters 3 per row',pg.evaluate("new Set([...document.querySelectorAll('.meters .meter')].map(e=>Math.round(e.getBoundingClientRect().top))).size")==1)
     pg.evaluate("g.cash=9e6;g.phase='upgrade';render()")
-    ok('shop clipped buttons none',pg.evaluate("[...document.querySelectorAll('.upg-act .btn')].filter(b=>b.getBoundingClientRect().right>innerWidth).length")==0)
+    ok('shop buttons inside screen',pg.evaluate("[...document.querySelectorAll('.upg-act .btn')].filter(b=>b.getBoundingClientRect().right>innerWidth).length")==0)
     ok('no horizontal scroll',pg.evaluate("document.documentElement.scrollWidth<=innerWidth"))
     ok('no page errors',not errs,str(errs)); b.close()
 for r in res: print(*r)

@@ -9,7 +9,7 @@ A retro 8-bit motorbike delivery-driver simulation that runs entirely in the bro
 Open `index.html` in a browser. Progress is saved in `localStorage`.
 
 - **Orders:** each turn offers 3 orders (food or goods, near / medium / far, optionally rush). Far orders pay more but cost stamina, fuel and time. Re-rolling the offers costs 8 seconds.
-- **Mini-games:** catch falling packages (20 s), dodge obstacles on a 3-lane road (tap a lane, use ◀ ▶ or the arrow keys), or play **Route Rush**: pick a path up a 5×6 street map to the customer, avoiding roadworks and traffic jams (a jam costs 1.5 s; with the GPS upgrade jams are visible ahead of time, and peak hours have more of them). Rush orders get less time.
+- **Mini-games:** catch falling packages (20 s), dodge obstacles on a 3-lane road (tap a lane, use ◀ ▶ or the arrow keys), or play **Route Rush**: a route of 5 turns (◀ ▲ ▶) is shown for 3 seconds, then the bike drives itself and you must steer the right way at each junction before it arrives. Wrong or missed turns cost 2 s; with the GPS upgrade the next 3 turns stay visible, and peak hours and rush orders shorten the time per junction. Rush orders get less time.
 - **Driving speed:** slow (fewer accidents, extra time), normal, or fast (quicker, but riskier and more likely to be fined). Older bikes break down more often.
 - **Day cycle:** a game day runs from 06:00 to 22:00 (300 real seconds). Peak hours (11-13h and 17-19h) pay more but traffic jams are twice as likely.
 - **Upgrades with trade-offs:** the two delivery bags and the two engines are mutually exclusive; GPS and insurance carry monthly fees.

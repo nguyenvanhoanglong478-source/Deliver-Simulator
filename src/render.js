@@ -149,15 +149,15 @@ function rMG(){
     const msgs=['THẤT BẠI','GIAO TRỄ','XUẤT SẮC!'],cols=['var(--red)','var(--or)','var(--gr)'];
     return`<div class="mg"><div class="pxf mg-res">
       <h2 style="color:${cols[ok]};font-size:40px">${msgs[ok]}</h2>
-      <p>${mgData.kind==='route'?(mgData.rtOk?`Đến nơi, kẹt xe ${mgData.jams} lần`:'Hết giờ trước khi đến nơi'):mgData.kind==='dodge'?`Va chạm ${mgData.hits} lần`:`Bắt được ${mgData.caught}/${mgData.full} gói hàng`}<br>${earn>0?'+'+ff(earn):'Không có thu nhập'}</p>
+      <p>${mgData.kind==='route'?(mgData.rtOk?`Đến nơi, rẽ sai ${mgData.mistakes} lần`:'Hết giờ, đi lạc mất rồi'):mgData.kind==='dodge'?`Va chạm ${mgData.hits} lần`:`Bắt được ${mgData.caught}/${mgData.full} gói hàng`}<br>${earn>0?'+'+ff(earn):'Không có thu nhập'}</p>
       <p class="blink">Đang giao hàng...</p></div></div>`;
   }
   if(mgData.kind==='route'){
     return`<div class="mg">
-    <div class="mg-hdr"><span class="mg-timer" id="mg-timer">${Math.ceil(mgData.timeLeft)}s</span><span class="lbl">TÌM ĐƯỜNG!</span><span class="mg-score" id="mg-score">KẸT ${mgData.jams}</span></div>
-    <div class="rt-field" id="rt-field" onpointerdown="rtTap(event)" aria-label="Bản đồ đường phố">${rtHTML()}</div>
+    <div class="mg-hdr"><span class="mg-timer" id="mg-timer">${Math.ceil(mgData.timeLeft)}s</span><span class="lbl">DẪN ĐƯỜNG!</span><span class="mg-score" id="mg-score">0/${RT_N}</span></div>
+    <div class="rt-field" id="rt-field" aria-label="Đường đi">${rtHTML()}</div>
     <div class="dg-btns rt-btns"><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(-1)" aria-label="Rẽ trái">◀</button><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(0)" aria-label="Đi thẳng">▲</button><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(1)" aria-label="Rẽ phải">▶</button></div>
-    <div class="mg-hint">◀ ▲ ▶ hoặc chạm ô để đi lên. ${up('gps')?'GPS: thấy trước kẹt xe.':'Chỉ thấy kẹt xe ở hàng trước mặt.'} Tránh ${ic('wrench',16)}; kẹt xe mất 1,5s.</div>
+    <div class="mg-hint">Nhớ thứ tự rẽ, rồi bấm đúng hướng trước khi xe tới ngã tư. ${up('gps')?'GPS: luôn thấy 3 ngã tiếp theo.':'Không có GPS: bạn phải nhớ cả 5 ngã.'} Sai là mất 2s.</div>
   </div>`;
   }
   if(mgData.kind==='dodge'){

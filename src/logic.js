@@ -404,9 +404,9 @@ function startMinigame(o,baseEarn){
   mgData={jobId:o.type,offer:o,kind:o.mg,baseEarn,limit,full:rush?9:C.mgFull,part:rush?5:C.mgPartial,
     caught:0,total:0,hits:0,passed:0,obs:[],lane:1,spawnIn:.4,flash:0,lastTs:Date.now(),
     timeLeft:limit,done:false,spots:Array(9).fill(null),startTs:Date.now()};
-  if(o.mg==='route')Object.assign(mgData,{grid:genRoute(),pos:{r:0,c:2},jams:0,rtOk:0});
+  if(o.mg==='route')rtInit(mgData);
   g.phase='minigame';render();
-  if(o.mg==='route'){mgTmr=setInterval(rtTick,100);return;}
+  if(o.mg==='route'){mgTmr=setInterval(rtTick,50);return;}
   if(o.mg==='dodge'){mgTmr=setInterval(dgTick,50);return;}
   mgTmr=setInterval(mgTick,80);
   mgSpw=setInterval(mgSpawn,1200);
@@ -422,86 +422,63 @@ function mgTick(){
   mgPaint();
 }
 
-// ---- third mini-game: Route Rush, pick a way through the streets to the customer ----
-const RT_R=6,RT_C=5;
-// grid[r][c]: 'ok' | 'jam' | 'blk'. Row 0 is the start, the last row holds the customer ('goal' column only).
-function genRoute(){
-  const peak=isPeak(),pj=peak?.34:.2,gc=rnd(0,RT_C-1),G=[];
-  for(let r=0;r<RT_R;r++){
-    const row=[];
-    for(let c=0;c<RT_C;c++){
-      if(r===0)row.push('ok');
-      else if(r===RT_R-1)row.push(c===gc?'goal':'blk');
-      else{const x=Math.random();row.push(x<.18?'blk':x<.18+pj?'jam':'ok')}
-    }
-    G.push(row);
-  }
-  G[0][2]='ok';
-  // no dead ends: a cell with no open way forward becomes roadwork, so it can never be entered by mistake
-  for(let r=RT_R-2;r>=1;r--)for(let c=0;c<RT_C;c++){
-    if(G[r][c]==='blk')continue;
-    if(![c-1,c,c+1].filter(x=>x>=0&&x<RT_C).some(x=>G[r+1][x]!=='blk'))G[r][c]='blk';
-  }
-  if(![1,2,3].some(x=>G[1][x]!=='blk')||!rtReach(G))return genRoute();   // start boxed in: roll a new map
-  return G;
+// ---- third mini-game: Route Rush. Memorise the turns, then steer the bike through each junction in time ----
+const RT_N=5,RT_PREVIEW=3000,RT_PENALTY=2000;
+const RT_ARR={'-1':'◀','0':'▲','1':'▶'};
+function genTurns(){
+  let t;
+  do{t=Array.from({length:RT_N},()=>rnd(-1,1))}while(new Set(t).size<2);   // never five identical turns
+  return t;
 }
-function rtReach(G){
-  let cur=new Set([2]);
-  for(let r=1;r<RT_R;r++){const nx=new Set();cur.forEach(c=>{[c-1,c,c+1].forEach(x=>{if(x>=0&&x<RT_C&&G[r][x]!=='blk')nx.add(x)})});cur=nx;if(!cur.size)return false}
-  return true;
-}
+function rtApproach(){return mgData.offer.rush?1700:isPeak()?1900:2200}   // ms to reach the junction; peak hour = more traffic = tighter
+function rtInit(m){Object.assign(m,{turns:genTurns(),idx:0,mistakes:0,rtPhase:'preview',previewEnd:Date.now()+RT_PREVIEW,appTs:0,rtOk:0,fb:null,fbUntil:0})}
 function rtMove(d){
-  const m=mgData;if(!m||m.kind!=='route'||m.done)return;
-  const{r,c}=m.pos,nr=r+1,nc=c+d;
-  if(nc<0||nc>=RT_C)return;
-  const t=m.grid[nr][nc];
-  if(t==='blk'){m.shake=nc;rtPaint();setTimeout(()=>{if(m)m.shake=null;rtPaint()},250);return}
-  m.pos={r:nr,c:nc};
-  if(t==='jam'){m.jams++;m.startTs-=1500;m.jamFlash=nc}   // stuck in traffic: 1.5 s gone
-  if(t==='goal'){
-    m.done=true;clearInterval(mgTmr);
-    m.timeLeft=Math.max(0,m.limit-(Date.now()-m.startTs)/1000);
-    m.rtOk=m.timeLeft>=m.limit*.3?2:1;
-    rtPaint();setTimeout(showMgResult,350);return;
-  }
+  const m=mgData;if(!m||m.kind!=='route'||m.done||m.rtPhase!=='drive')return;
+  if(m.turns[m.idx]===d){
+    m.idx++;m.fb='ok';m.fbUntil=Date.now()+350;m.appTs=Date.now();
+    if(m.idx>=RT_N){
+      m.done=true;clearInterval(mgTmr);
+      m.timeLeft=Math.max(0,m.limit-(Date.now()-m.startTs)/1000);
+      m.rtOk=m.mistakes<=1?2:1;
+      rtPaint();setTimeout(showMgResult,450);return;
+    }
+  }else rtMiss();
   rtPaint();
 }
-function rtTap(ev){
-  const m=mgData;if(!m||m.kind!=='route'||m.done)return;
-  const r=ev.currentTarget.getBoundingClientRect(),c=Math.floor((ev.clientX-r.left)/r.width*RT_C);
-  const d=Math.max(-1,Math.min(1,c-m.pos.c));rtMove(d);
+function rtMiss(){   // wrong turn or missed junction: a detour costs time and the junction comes round again
+  const m=mgData;m.mistakes++;m.startTs-=RT_PENALTY;m.fb='bad';m.fbUntil=Date.now()+450;m.appTs=Date.now();
 }
 function rtTick(){
   const m=mgData;if(!m||m.done||m.kind!=='route')return;
-  m.timeLeft=Math.max(0,m.limit-(Date.now()-m.startTs)/1000);
-  if(m.timeLeft<=0){m.done=true;m.rtOk=0;clearInterval(mgTmr);showMgResult();return}
-  const t=document.getElementById('mg-timer');if(t)t.textContent=Math.ceil(m.timeLeft)+'s';
+  const now=Date.now();
+  if(m.rtPhase==='preview'){
+    if(now>=m.previewEnd){m.rtPhase='drive';m.startTs=now;m.appTs=now}
+    rtPaint();return;
+  }
+  m.timeLeft=Math.max(0,m.limit-(now-m.startTs)/1000);
+  if(m.timeLeft<=0){m.done=true;m.rtOk=m.idx>=3?1:0;clearInterval(mgTmr);rtPaint();showMgResult();return}
+  if(now-m.appTs>=rtApproach())rtMiss();
+  rtPaint();
 }
 function rtHTML(){
-  const m=mgData,G=m.grid,out=[];
-  const gps=up('gps');
-  for(let r=RT_R-1;r>=0;r--){          // the goal row is drawn on top
-    for(let c=0;c<RT_C;c++){
-      const t=G[r][c],here=m.pos.r===r&&m.pos.c===c;
-      const near=r===m.pos.r+1&&Math.abs(c-m.pos.c)<=1;
-      const showJam=t==='jam'&&(gps||near||r<=m.pos.r);
-      let cls='rt-c',inner='';
-      if(t==='blk'){cls+=' blk';inner=r===RT_R-1?'':ic('wrench',24)}
-      else if(t==='goal'){cls+=' goal';inner=ic('flag',28)}
-      else if(t==='jam'&&showJam){cls+=' jam';inner=ic('warn',24)}
-      else if(t==='jam'){cls+=' unk'}
-      if(near&&t!=='blk')cls+=' near';
-      if(m.shake===c&&r===m.pos.r+1)cls+=' shake';
-      if(here)inner=`<img class="rt-me" src="${BIKE}" alt="xe">`;
-      out.push(`<div class="${cls}">${inner}</div>`);
-    }
-  }
-  return out.join('');
+  const m=mgData,gps=up('gps'),pre=m.rtPhase==='preview';
+  const slots=m.turns.map((t,i)=>{
+    const done=i<m.idx,cur=i===m.idx&&!pre;
+    const vis=pre||done||(gps&&i<m.idx+3);
+    return`<div class="rt-slot${done?' done':''}${cur?' cur':''}">${vis?RT_ARR[t]:'?'}</div>`;
+  }).join('');
+  const prog=pre?0:Math.min(1,(Date.now()-m.appTs)/rtApproach());
+  const fb=Date.now()<m.fbUntil?m.fb:null;
+  return`<div class="rt-strip">${slots}</div>
+  <div class="rt-road${fb?' '+fb:''}"><div class="rt-fork"><span>◀</span><span>▲</span><span>▶</span></div>
+    <img class="rt-bike" src="${BIKE}" alt="xe" style="bottom:${(prog*72).toFixed(1)}%">
+    <div class="rt-msg">${pre?'GHI NHỚ ĐƯỜNG ĐI! '+Math.max(1,Math.ceil((m.previewEnd-Date.now())/1000))+'s':fb==='bad'?'SAI ĐƯỜNG! -2s':fb==='ok'?'ĐÚNG!':''}</div></div>`;
 }
 function rtPaint(){
   const f=document.getElementById('rt-field');if(!f||!mgData||mgData.kind!=='route')return;
   f.innerHTML=rtHTML();
-  const s=document.getElementById('mg-score');if(s)s.textContent='KẸT '+mgData.jams;
+  const s=document.getElementById('mg-score');if(s)s.textContent=mgData.idx+'/'+RT_N;
+  const t=document.getElementById('mg-timer');if(t)t.textContent=Math.ceil(mgData.timeLeft)+'s';
 }
 document.addEventListener('keydown',e=>{
   if(!mgData||mgData.kind!=='route')return;
@@ -752,9 +729,10 @@ function resumeGame(){
   if(g.phase==='minigame'&&mgData&&!mgData.done&&pauseAt){
     const d=Date.now()-pauseAt;pauseAt=0;
     mgData.startTs+=d;mgData.lastTs+=d;
+    if(mgData.appTs)mgData.appTs+=d;if(mgData.previewEnd)mgData.previewEnd+=d;if(mgData.fbUntil)mgData.fbUntil+=d;
     mgData.spots=mgData.spots.map(sp=>sp?{ts:sp.ts+d}:sp);
     if(mgData.kind==='dodge')mgTmr=setInterval(dgTick,50);
-    else if(mgData.kind==='route')mgTmr=setInterval(rtTick,100);
+    else if(mgData.kind==='route')mgTmr=setInterval(rtTick,50);
     else{mgTmr=setInterval(mgTick,80);mgSpw=setInterval(mgSpawn,1200)}
   }
   render();

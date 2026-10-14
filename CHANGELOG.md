@@ -37,7 +37,7 @@
 - tests/test_ux.py (15 checks); other tests now preset `btd_tut` so the tutorial does not block them.
 
 ## Route Rush + compact layouts
-- Third mini-game, Route Rush: 5x6 street map, move up one row per step (◀ ▲ ▶, arrow keys or tap), roadworks block, jams cost 1.5 s, GPS reveals jams, peak hours add jams. Maps are generated solvable with no dead ends (tested on 2000 maps). Works with pause.
+- Third mini-game, Route Rush (reworked): memorise 5 turns shown for 3 s, then steer through each junction (◀ ▲ ▶, arrow keys) before the bike arrives; wrong or missed turn = -2 s; GPS keeps the next 3 turns visible; peak hours and rush orders shorten the approach. Works with pause. (First version was a 5x6 grid map; replaced.)
 - Shop rows: icon | name + price button | description (about half the height).
 - Main screen on phones: three meters in one row, tighter cards, savings and log are collapsible sections (open on desktop).
-- tests/test_route.py (17 checks).
+- tests/test_route.py (21 checks).
