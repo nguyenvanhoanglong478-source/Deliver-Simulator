@@ -17,7 +17,7 @@ body{font-family:var(--f-tx);font-size:22px;line-height:1.15;color:var(--tx);dis
   background-size:16px 16px;image-rendering:pixelated}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:500;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0,rgba(0,0,0,.16) 1px,transparent 1px,transparent 3px)}
-#root{width:100%;max-width:480px;min-height:100vh;overflow-x:hidden;padding-inline:12px}
+#root{width:100%;max-width:480px;min-height:100vh;overflow-x:hidden;padding-inline:12px;padding-bottom:84px}
 img{image-rendering:pixelated}
 .px-ic{display:inline-block;vertical-align:-3px;flex:none}
 .t-px{font-family:var(--f-px);letter-spacing:0}
@@ -109,7 +109,7 @@ img{image-rendering:pixelated}
 .stat-row,.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .stat{padding:12px}
 .stat .l{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:20px;margin-bottom:8px}
-.stat .v{font-family:var(--f-px);font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+.stat .v{font-family:var(--f-tx);font-size:28px;line-height:1;white-space:nowrap}
 .stat .v.gr{color:var(--gr)}.stat .v.gold{color:var(--gold)}.stat .v.red{color:var(--red)}
 .stat .sub{font-size:16px;color:var(--dim);margin-top:4px}
 .stat.warn{animation:warn 1s steps(2) infinite}
@@ -218,7 +218,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:28px;background:var(--or);
 .bike-warn{color:var(--red);text-align:center}
 .upg-list{display:flex;flex-direction:column;gap:16px}
 .upg-cat{font-size:20px;color:var(--dim);padding-top:8px;border-bottom:4px dotted #3a3180;padding-bottom:4px}
-.upg-row{display:flex;align-items:center;gap:12px;padding:12px}
+.upg-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:12px}
 .upg-ic{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#07050f;flex:none}
 .upg-det{flex:1;min-width:0}
 .upg-n{font-size:22px;color:var(--tx);margin-bottom:4px}
@@ -310,8 +310,7 @@ input.txt::placeholder{color:#5b52a0}
   .hud-stars b{display:none}
   .tags{gap:8px}
   .tags{gap:6px}.tags .tag{font-size:19px;padding:5px 5px;min-width:0}
-  .stat .v{font-size:10px}
-  .stat .cur{display:none}
+  .stat .v{font-size:22px}
   .job .nm{font-size:21px}
 }
 @media(prefers-reduced-motion:reduce){
@@ -389,3 +388,19 @@ input.txt::placeholder{color:#5b52a0}
 #pause-btn[hidden]{display:none}
 #pause-btn:active{transform:translateY(2px)}
 #pause-btn:focus-visible{outline:3px dashed var(--gold);outline-offset:6px}
+
+/* mobile shop: price button under the description, nothing clipped */
+@media(max-width:520px){
+  .upg-det{flex:1 1 calc(100% - 64px)}
+  .upg-act{width:100%;flex:1 1 100%}
+  .upg-act .btn{white-space:normal}
+  .upg-d{font-size:19px;line-height:1.15}
+  .drive-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .drive-row .lbl{grid-column:1/-1}
+  .drive-row .b-pu{grid-column:1/-1}
+}
+/* floating buttons follow the content column on wide screens */
+@media(min-width:860px){
+  #pause-btn{left:calc(50% - 520px - 56px)}
+  #snd-btn{right:calc(50% - 520px - 56px)}
+}

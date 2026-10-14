@@ -1,3 +1,10 @@
+const TUT=[
+ {ic:'flag',t:'MỤC TIÊU',b:'Tiết kiệm 100 triệu trong 24 tháng. Cuối mỗi tháng có hóa đơn 6,5 triệu phải trả, nên đừng tiêu hết tiền mặt.'},
+ {ic:'box',t:'NHẬN ĐƠN',b:'Chọn một trong các đơn hàng rồi chơi minigame: bắt gói hoặc né vật cản. Bắt đủ gói thì nhận đủ tiền. Đơn xa trả cao nhưng tốn thể lực, xăng và thời gian.'},
+ {ic:'fuel',t:'THỂ LỰC VÀ XĂNG',b:'Hết xăng hoặc thể lực thì không giao được. Dùng NẠP XĂNG và NGỦ NGHỈ, nhưng ngủ tốn thời gian trong ngày.'},
+ {ic:'cal',t:'MỘT NGÀY GAME',b:'Mỗi ngày chạy từ 06:00 đến 22:00. Giờ cao điểm (11-13h, 17-19h) đơn trả thêm 25% nhưng dễ kẹt xe. Bấm ⏸ hoặc phím P để tạm dừng.'},
+ {ic:'gear',t:'NÂNG CẤP',b:'Mua phụ tùng, túi giao hàng và động cơ ở mục NÂNG CẤP. Một số món loại trừ nhau, GPS và bảo hiểm tính phí hàng tháng. Gửi tiền tiết kiệm để nhận lãi mỗi ngày.'}
+];
 // ===== RENDER =====
 function money(n){n=Math.round(n);return(n<0?'-':'')+Math.abs(n).toLocaleString('vi-VN')+'<span class="cur">đ</span>'}
 function meterColor(v,lo,mid){return v<lo?'red':v<mid?'or':'gr'}
@@ -50,9 +57,9 @@ function rStart(){
     </div>
     <div class="start-actions">
       ${hs
-        ?`<button class="btn b-gr blk start-main" onclick="startGame(false)">TIẾP TỤC</button>
-          <button class="btn b-dim blk" onclick="startGame(true)">BẮT ĐẦU MỚI</button>`
-        :`<button class="btn b-gr blk start-main blink" onclick="startGame(false)">BẮT ĐẦU!</button>`}
+        ?`<button class="btn b-gr blk start-main" onclick="startClick(false)">TIẾP TỤC</button>
+          <button class="btn b-dim blk" onclick="startClick(true)">BẮT ĐẦU MỚI</button>`
+        :`<button class="btn b-gr blk start-main blink" onclick="startClick(false)">BẮT ĐẦU!</button>`}
     </div>
   </div>`;
 }
@@ -111,7 +118,7 @@ function rGame(){
         <button class="btn b-dim util" onclick="doSleep()">${ic('moon',28)}<span class="lb">NGỦ NGHỈ</span><span class="sb" style="color:var(--cy)">+${C.sleepRate}/giây</span></button>
         <button class="btn b-pu util" onclick="goUpgrade()">${ic('gear',28)}<span class="lb">NÂNG CẤP</span><span class="sb">xe & phụ tùng</span></button>
       </div>
-      <button class="btn b-cy blk endday" onclick="doEndDay()">${ic('flag',24)}KẾT THÚC NGÀY ${g.day}</button>
+      <button class="btn b-cy blk endday" onclick="askEndDay()">${ic('flag',24)}KẾT THÚC NGÀY ${g.day}</button>
     </div>
     <div>
       <div class="sec-t">${ic('bank',22)}TIẾT KIỆM</div>
@@ -123,7 +130,7 @@ function rGame(){
         <button class="btn b-red sm" onclick="doWd(1e6)" ${g.savings<1e6?'disabled':''}>RÚT 1TR</button>
         <button class="btn b-red sm" onclick="doWd('all')" ${!g.savings?'disabled':''}>RÚT HẾT</button>
       </div>
-      <div class="lbl save-note">"Gửi tất cả" giữ lại 500K tiền mặt.</div>
+      <div class="lbl save-note">"Gửi tất cả" giữ lại 500K tiền mặt.${g.cash<5e5?'<br>Chưa đủ tiền mặt để gửi (cần ít nhất 500K).':''}${!g.savings?'<br>Chưa có tiết kiệm để rút.':g.savings<1e6?'<br>Cần ít nhất 1TR tiết kiệm để rút từng phần.':''}</div>
     </div>
     <div>
       <div class="sec-t">NHẬT KÝ</div>
@@ -300,12 +307,33 @@ function rModal(){
       <button class="btn b-gr blk" onclick="modal=null;render()">TIẾP TỤC</button>
     </div></div>`;
   }
+  if(type==='confirmEnd'){
+    return`<div class="overlay"><div class="pxf2 modal">
+      <div class="m-title" style="color:var(--or)">${ic('flag',28)} KẾT THÚC NGÀY?</div>
+      <div class="m-body">Ngày còn ${fmT(g.dayTimeLeft)}. Kết thúc sớm sẽ bỏ lỡ thời gian giao hàng.</div>
+      <div class="rf-btns"><button class="btn b-dim" onclick="modal=null;render()">Ở LẠI</button>
+      <button class="btn b-cy" onclick="modal=null;doEndDay()">KẾT THÚC</button></div>
+    </div></div>`;
+  }
+  if(type==='tut'){
+    const P=TUT[modal.i],last=modal.i===TUT.length-1;
+    return`<div class="overlay"><div class="pxf2 modal">
+      <div class="m-title" style="color:var(--gold)">${ic(P.ic,28)} ${P.t}</div>
+      <div class="m-body">${P.b}</div>
+      <div class="lbl" style="text-align:center">${modal.i+1}/${TUT.length}</div>
+      <div class="rf-btns">
+        ${modal.i>0?`<button class="btn b-dim" onclick="modal.i--;render()">◀</button>`:`<button class="btn b-dim" onclick="${modal.from==='pause'?"modal={type:'pause'};render()":'tutDone()'}">BỎ QUA</button>`}
+        ${last?`<button class="btn b-gr" onclick="${modal.from==='pause'?"modal={type:'pause'};render()":'tutDone()'}">XONG</button>`:`<button class="btn b-gr" onclick="modal.i++;render()">TIẾP ▶</button>`}
+      </div>
+    </div></div>`;
+  }
   if(type==='pause'){
     return`<div class="overlay"><div class="pxf2 modal set-box">
       <div class="m-title" style="color:var(--gold)">${ic('pause',28)} TẠM DỪNG</div>
       <div class="lbl" style="text-align:center">Thời gian đang dừng.</div>
       <button class="btn b-gr blk" onclick="resumeGame()">TIẾP TỤC</button>
       <button class="btn b-dim blk" style="margin-top:8px" onclick="openSettings()">ÂM THANH</button>
+      <button class="btn b-dim blk" style="margin-top:8px" onclick="modal={type:'tut',i:0,from:'pause'};render()">HƯỚNG DẪN</button>
     </div></div>`;
   }
   if(type==='settings'){

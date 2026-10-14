@@ -26,7 +26,7 @@ body{font-family:var(--f-tx);font-size:22px;line-height:1.15;color:var(--tx);dis
   background-size:16px 16px;image-rendering:pixelated}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:500;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0,rgba(0,0,0,.16) 1px,transparent 1px,transparent 3px)}
-#root{width:100%;max-width:480px;min-height:100vh;overflow-x:hidden;padding-inline:12px}
+#root{width:100%;max-width:480px;min-height:100vh;overflow-x:hidden;padding-inline:12px;padding-bottom:84px}
 img{image-rendering:pixelated}
 .px-ic{display:inline-block;vertical-align:-3px;flex:none}
 .t-px{font-family:var(--f-px);letter-spacing:0}
@@ -118,7 +118,7 @@ img{image-rendering:pixelated}
 .stat-row,.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .stat{padding:12px}
 .stat .l{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:20px;margin-bottom:8px}
-.stat .v{font-family:var(--f-px);font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+.stat .v{font-family:var(--f-tx);font-size:28px;line-height:1;white-space:nowrap}
 .stat .v.gr{color:var(--gr)}.stat .v.gold{color:var(--gold)}.stat .v.red{color:var(--red)}
 .stat .sub{font-size:16px;color:var(--dim);margin-top:4px}
 .stat.warn{animation:warn 1s steps(2) infinite}
@@ -227,7 +227,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:28px;background:var(--or);
 .bike-warn{color:var(--red);text-align:center}
 .upg-list{display:flex;flex-direction:column;gap:16px}
 .upg-cat{font-size:20px;color:var(--dim);padding-top:8px;border-bottom:4px dotted #3a3180;padding-bottom:4px}
-.upg-row{display:flex;align-items:center;gap:12px;padding:12px}
+.upg-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:12px}
 .upg-ic{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#07050f;flex:none}
 .upg-det{flex:1;min-width:0}
 .upg-n{font-size:22px;color:var(--tx);margin-bottom:4px}
@@ -319,8 +319,7 @@ input.txt::placeholder{color:#5b52a0}
   .hud-stars b{display:none}
   .tags{gap:8px}
   .tags{gap:6px}.tags .tag{font-size:19px;padding:5px 5px;min-width:0}
-  .stat .v{font-size:10px}
-  .stat .cur{display:none}
+  .stat .v{font-size:22px}
   .job .nm{font-size:21px}
 }
 @media(prefers-reduced-motion:reduce){
@@ -398,6 +397,22 @@ input.txt::placeholder{color:#5b52a0}
 #pause-btn[hidden]{display:none}
 #pause-btn:active{transform:translateY(2px)}
 #pause-btn:focus-visible{outline:3px dashed var(--gold);outline-offset:6px}
+
+/* mobile shop: price button under the description, nothing clipped */
+@media(max-width:520px){
+  .upg-det{flex:1 1 calc(100% - 64px)}
+  .upg-act{width:100%;flex:1 1 100%}
+  .upg-act .btn{white-space:normal}
+  .upg-d{font-size:19px;line-height:1.15}
+  .drive-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .drive-row .lbl{grid-column:1/-1}
+  .drive-row .b-pu{grid-column:1/-1}
+}
+/* floating buttons follow the content column on wide screens */
+@media(min-width:860px){
+  #pause-btn{left:calc(50% - 520px - 56px)}
+  #snd-btn{right:calc(50% - 520px - 56px)}
+}
 </style>
 </head>
 <body>
@@ -1250,19 +1265,29 @@ function persistNow(patch){try{localStorage.setItem('btd_v2',JSON.stringify(Obje
 function fuelMax(){return 100}
 
 // ===== DAY TIMER =====
+let dayLast=0;
 function startDayTimer(){
-  clearInterval(dayTmr);
+  clearInterval(dayTmr);dayLast=Date.now();
+  // ticks by real elapsed time, so a throttled interval cannot slow the day down (catch-up is capped)
   dayTmr=setInterval(()=>{
-    if(modal)return;   // popups (refuel, day/month end) freeze the clock; deliveries and sleeping use it up
-    const busy=['minigame','anim-deliver','anim-refuel'].includes(g.phase);
-    if(g.dayTimeLeft>0)g.dayTimeLeft--;
-    const el=document.getElementById('day-tmr');
-    if(el)el.textContent=fmT(g.dayTimeLeft);
-    const ck=document.getElementById('clk');
-    if(ck){const pk=isPeak();ck.textContent=fmH();ck.classList.toggle('peak',pk)}
-    if(g.dayTimeLeft>0&&g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
-    if(g.dayTimeLeft<=0&&!busy){clearInterval(dayTmr);triggerDayEnd();}   // a delivery in progress finishes first
-  },1000);
+    const now=Date.now();
+    if(modal){dayLast=now;return}   // popups (refuel, pause, day/month end) freeze the clock
+    const n=Math.min(3,Math.floor((now-dayLast)/1000));
+    if(n<1)return;
+    dayLast+=n*1000;if(now-dayLast>1000)dayLast=now;
+    for(let i=0;i<n;i++)if(!dayStep())break;
+  },250);
+}
+function dayStep(){
+  const busy=['minigame','anim-deliver','anim-refuel'].includes(g.phase);
+  if(g.dayTimeLeft>0)g.dayTimeLeft--;
+  const el=document.getElementById('day-tmr');
+  if(el)el.textContent=fmT(g.dayTimeLeft);
+  const ck=document.getElementById('clk');
+  if(ck){const pk=isPeak();ck.textContent=fmH();ck.classList.toggle('peak',pk)}
+  if(g.dayTimeLeft>0&&g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
+  if(g.dayTimeLeft<=0&&!busy){clearInterval(dayTmr);triggerDayEnd();return false}   // a delivery in progress finishes first
+  return true;
 }
 function fmT(s){const m=Math.floor(s/60);const sc=s%60;return`${m}:${sc<10?'0':''}${sc}`}
 
@@ -1374,6 +1399,17 @@ function stopSleep(){
   g.activeAnim=null;g.phase='game';
   save();render();
 }
+function askEndDay(){
+  if(modal||g.activeAnim||g.phase!=='game')return;
+  if(g.dayTimeLeft>90){modal={type:'confirmEnd'};render();return}   // lots of the day left: ask first
+  doEndDay();
+}
+function startClick(fresh){
+  startGame(fresh);
+  let seen=false;try{seen=!!localStorage.getItem('btd_tut')}catch(e){}
+  if(!seen){if(g.phase==='game'&&!modal){modal={type:'tut',i:0};render()}}
+}
+function tutDone(){try{localStorage.setItem('btd_tut','1')}catch(e){}modal=null;render()}
 function doEndDay(){
   if(modal||g.activeAnim||g.phase!=='game')return;
   clearInterval(dayTmr);
@@ -1719,6 +1755,15 @@ document.addEventListener('keydown',e=>{
   }
 });
 
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&canPause())pauseGame()});   // switching tabs pauses the game
+
+const TUT=[
+ {ic:'flag',t:'MỤC TIÊU',b:'Tiết kiệm 100 triệu trong 24 tháng. Cuối mỗi tháng có hóa đơn 6,5 triệu phải trả, nên đừng tiêu hết tiền mặt.'},
+ {ic:'box',t:'NHẬN ĐƠN',b:'Chọn một trong các đơn hàng rồi chơi minigame: bắt gói hoặc né vật cản. Bắt đủ gói thì nhận đủ tiền. Đơn xa trả cao nhưng tốn thể lực, xăng và thời gian.'},
+ {ic:'fuel',t:'THỂ LỰC VÀ XĂNG',b:'Hết xăng hoặc thể lực thì không giao được. Dùng NẠP XĂNG và NGỦ NGHỈ, nhưng ngủ tốn thời gian trong ngày.'},
+ {ic:'cal',t:'MỘT NGÀY GAME',b:'Mỗi ngày chạy từ 06:00 đến 22:00. Giờ cao điểm (11-13h, 17-19h) đơn trả thêm 25% nhưng dễ kẹt xe. Bấm ⏸ hoặc phím P để tạm dừng.'},
+ {ic:'gear',t:'NÂNG CẤP',b:'Mua phụ tùng, túi giao hàng và động cơ ở mục NÂNG CẤP. Một số món loại trừ nhau, GPS và bảo hiểm tính phí hàng tháng. Gửi tiền tiết kiệm để nhận lãi mỗi ngày.'}
+];
 // ===== RENDER =====
 function money(n){n=Math.round(n);return(n<0?'-':'')+Math.abs(n).toLocaleString('vi-VN')+'<span class="cur">đ</span>'}
 function meterColor(v,lo,mid){return v<lo?'red':v<mid?'or':'gr'}
@@ -1771,9 +1816,9 @@ function rStart(){
     </div>
     <div class="start-actions">
       ${hs
-        ?`<button class="btn b-gr blk start-main" onclick="startGame(false)">TIẾP TỤC</button>
-          <button class="btn b-dim blk" onclick="startGame(true)">BẮT ĐẦU MỚI</button>`
-        :`<button class="btn b-gr blk start-main blink" onclick="startGame(false)">BẮT ĐẦU!</button>`}
+        ?`<button class="btn b-gr blk start-main" onclick="startClick(false)">TIẾP TỤC</button>
+          <button class="btn b-dim blk" onclick="startClick(true)">BẮT ĐẦU MỚI</button>`
+        :`<button class="btn b-gr blk start-main blink" onclick="startClick(false)">BẮT ĐẦU!</button>`}
     </div>
   </div>`;
 }
@@ -1832,7 +1877,7 @@ function rGame(){
         <button class="btn b-dim util" onclick="doSleep()">${ic('moon',28)}<span class="lb">NGỦ NGHỈ</span><span class="sb" style="color:var(--cy)">+${C.sleepRate}/giây</span></button>
         <button class="btn b-pu util" onclick="goUpgrade()">${ic('gear',28)}<span class="lb">NÂNG CẤP</span><span class="sb">xe & phụ tùng</span></button>
       </div>
-      <button class="btn b-cy blk endday" onclick="doEndDay()">${ic('flag',24)}KẾT THÚC NGÀY ${g.day}</button>
+      <button class="btn b-cy blk endday" onclick="askEndDay()">${ic('flag',24)}KẾT THÚC NGÀY ${g.day}</button>
     </div>
     <div>
       <div class="sec-t">${ic('bank',22)}TIẾT KIỆM</div>
@@ -1844,7 +1889,7 @@ function rGame(){
         <button class="btn b-red sm" onclick="doWd(1e6)" ${g.savings<1e6?'disabled':''}>RÚT 1TR</button>
         <button class="btn b-red sm" onclick="doWd('all')" ${!g.savings?'disabled':''}>RÚT HẾT</button>
       </div>
-      <div class="lbl save-note">"Gửi tất cả" giữ lại 500K tiền mặt.</div>
+      <div class="lbl save-note">"Gửi tất cả" giữ lại 500K tiền mặt.${g.cash<5e5?'<br>Chưa đủ tiền mặt để gửi (cần ít nhất 500K).':''}${!g.savings?'<br>Chưa có tiết kiệm để rút.':g.savings<1e6?'<br>Cần ít nhất 1TR tiết kiệm để rút từng phần.':''}</div>
     </div>
     <div>
       <div class="sec-t">NHẬT KÝ</div>
@@ -2021,12 +2066,33 @@ function rModal(){
       <button class="btn b-gr blk" onclick="modal=null;render()">TIẾP TỤC</button>
     </div></div>`;
   }
+  if(type==='confirmEnd'){
+    return`<div class="overlay"><div class="pxf2 modal">
+      <div class="m-title" style="color:var(--or)">${ic('flag',28)} KẾT THÚC NGÀY?</div>
+      <div class="m-body">Ngày còn ${fmT(g.dayTimeLeft)}. Kết thúc sớm sẽ bỏ lỡ thời gian giao hàng.</div>
+      <div class="rf-btns"><button class="btn b-dim" onclick="modal=null;render()">Ở LẠI</button>
+      <button class="btn b-cy" onclick="modal=null;doEndDay()">KẾT THÚC</button></div>
+    </div></div>`;
+  }
+  if(type==='tut'){
+    const P=TUT[modal.i],last=modal.i===TUT.length-1;
+    return`<div class="overlay"><div class="pxf2 modal">
+      <div class="m-title" style="color:var(--gold)">${ic(P.ic,28)} ${P.t}</div>
+      <div class="m-body">${P.b}</div>
+      <div class="lbl" style="text-align:center">${modal.i+1}/${TUT.length}</div>
+      <div class="rf-btns">
+        ${modal.i>0?`<button class="btn b-dim" onclick="modal.i--;render()">◀</button>`:`<button class="btn b-dim" onclick="${modal.from==='pause'?"modal={type:'pause'};render()":'tutDone()'}">BỎ QUA</button>`}
+        ${last?`<button class="btn b-gr" onclick="${modal.from==='pause'?"modal={type:'pause'};render()":'tutDone()'}">XONG</button>`:`<button class="btn b-gr" onclick="modal.i++;render()">TIẾP ▶</button>`}
+      </div>
+    </div></div>`;
+  }
   if(type==='pause'){
     return`<div class="overlay"><div class="pxf2 modal set-box">
       <div class="m-title" style="color:var(--gold)">${ic('pause',28)} TẠM DỪNG</div>
       <div class="lbl" style="text-align:center">Thời gian đang dừng.</div>
       <button class="btn b-gr blk" onclick="resumeGame()">TIẾP TỤC</button>
       <button class="btn b-dim blk" style="margin-top:8px" onclick="openSettings()">ÂM THANH</button>
+      <button class="btn b-dim blk" style="margin-top:8px" onclick="modal={type:'tut',i:0,from:'pause'};render()">HƯỚNG DẪN</button>
     </div></div>`;
   }
   if(type==='settings'){

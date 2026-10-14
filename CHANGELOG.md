@@ -26,3 +26,12 @@
 - Floating pause button (bottom-left) on the main game screen and during mini-games; also P / Esc.
 - Freezes the day clock and the mini-game timers (timestamps are shifted on resume, so no time is lost); settings are reachable from the pause dialog.
 - tests/test_pause.py (16 checks).
+
+## UX / layout pass
+- Mobile shop: price button sits under the description (nothing clipped); wider description text.
+- Cash / savings numbers use the larger VT323 font and stay on one line; extra bottom padding so floating buttons never cover content; floating buttons follow the content column on wide screens.
+- Driving-speed row is a tidy 3-button grid on mobile, with "Đổi đơn" below.
+- First-run tutorial (5 cards, remembered in `btd_tut`), also reachable from the pause dialog ("HƯỚNG DẪN").
+- Reasons shown when saving / withdrawing is unavailable; confirmation before ending a day with more than 90 s left.
+- Day clock follows real elapsed time (a throttled timer cannot slow it); switching to another tab pauses the game.
+- tests/test_ux.py (15 checks); other tests now preset `btd_tut` so the tutorial does not block them.

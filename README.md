@@ -17,6 +17,7 @@ Open `index.html` in a browser. Progress is saved in `localStorage`.
 - **Month end:** a bonus based on completed orders and star rating. The end screen shows where your money went.
 - **Resources:** manage stamina, fuel and bike durability. Refuel with a slider; the price depends on the percentage added.
 - **Savings:** deposited money earns 0.2% interest per day.
+- **Tutorial:** a short 5-card guide appears on the first start and from the pause menu. Switching to another browser tab pauses the game automatically.
 - **Pause:** use the ⏸ button (bottom left) or press `P` / `Esc`. The day clock and mini-game timers stop and resume without losing time.
 - **Driver profile:** click the avatar to edit your name, hobbies and hat colour, and to see your star rating and customer reviews. Cancelled orders produce no review.
 - **Reviews:** when the game runs inside Claude (as an artifact), each review can be written by Claude based on your hobbies. Everywhere else, 56 built-in reviews are used.
@@ -28,7 +29,7 @@ Open `index.html` in a browser. Progress is saved in `localStorage`.
 - `src/`: source files (`style.css`, `icons.js`, `audio.js`, `profile.js`, `logic.js`, `render.js`, `bike.png`, `music.mp3`, `track1-4.mp3`).
 - `build.py`: assembles `src/` into `index.html` (`python3 build.py`).
 - `tests/`: browser tests using Playwright (`pip install playwright && playwright install chromium`). Run each file separately:
-  `python3 tests/test_gameplay.py`, `test_save_load.py`, `test_features.py`, `test_audio.py`, `test_pause.py`.
+  `python3 tests/test_gameplay.py`, `test_save_load.py`, `test_features.py`, `test_audio.py`, `test_pause.py`, `test_ux.py`.
 - `CHANGELOG.md`: history of changes and current settings.
 
 Fonts (VT323, Press Start 2P) are loaded from Google Fonts; offline, the game falls back to a monospace font.

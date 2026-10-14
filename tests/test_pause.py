@@ -7,7 +7,7 @@ def ok(n,c,x=''): res.append(('PASS' if c else 'FAIL',n,x))
 with sync_playwright() as p:
     b=p.chromium.launch(); pg=b.new_page(); errs=[]
     pg.on('pageerror',lambda e:errs.append(str(e)))
-    pg.goto(URL); pg.evaluate("localStorage.clear()"); pg.reload()
+    pg.goto(URL); pg.evaluate("localStorage.clear();localStorage.setItem(\x27btd_tut\x27,\x271\x27)"); pg.reload()
     pg.evaluate("startGame(true)")
     ok('button hidden on start screen? (visible in game)',pg.is_visible('#pause-btn'))
     pg.click('#pause-btn')

@@ -7,7 +7,7 @@ def ok(n,c,x=''): res.append(('PASS' if c else 'FAIL',n,x))
 with sync_playwright() as p:
     b=p.chromium.launch(args=['--autoplay-policy=document-user-activation-required']); pg=b.new_page(viewport={'width':390,'height':800}); errs=[]
     pg.on('pageerror',lambda e:errs.append(str(e)))
-    pg.goto(URL); pg.evaluate("localStorage.clear()"); pg.reload(); pg.wait_for_timeout(600)
+    pg.goto(URL); pg.evaluate("localStorage.clear();localStorage.setItem(\x27btd_tut\x27,\x271\x27)"); pg.reload(); pg.wait_for_timeout(600)
     E=pg.evaluate
     ok('sound button visible on start screen',E("!document.getElementById('snd-btn').hidden"))
     ok('music waits for a first tap (autoplay blocked)',E("AUD.el===null||AUD.el.paused"))

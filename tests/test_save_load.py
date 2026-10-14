@@ -10,7 +10,7 @@ with sync_playwright() as p:
     b=p.chromium.launch(); ctx=b.new_context(); pg=ctx.new_page()
     pg.on('pageerror',lambda e:errs.append(str(e)))
     U=URL
-    pg.goto(U); pg.evaluate("localStorage.clear()"); pg.reload()
+    pg.goto(U); pg.evaluate("localStorage.clear();localStorage.setItem(\x27btd_tut\x27,\x271\x27)"); pg.reload()
     def cont(): 
         pg.reload(); pg.click('text=TIẾP TỤC'); 
     pg.evaluate("startGame(true)")

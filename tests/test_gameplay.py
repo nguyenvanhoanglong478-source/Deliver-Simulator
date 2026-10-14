@@ -8,7 +8,7 @@ def ok(n,c,x=''): res.append(('PASS' if c else 'FAIL',n,x))
 with sync_playwright() as p:
     b=p.chromium.launch(); pg=b.new_page(); errs=[]
     pg.on('pageerror',lambda e:errs.append(str(e)))
-    pg.goto(URL); pg.evaluate("localStorage.clear()"); pg.reload()
+    pg.goto(URL); pg.evaluate("localStorage.clear();localStorage.setItem(\x27btd_tut\x27,\x271\x27)"); pg.reload()
     pg.evaluate("startGame(true)")
     # GPS odds
     f="""(gps)=>{g.upgrades=gps?{gps:true}:{};const N=200000,c={jam:0,cnl:0};for(let i=0;i<N;i++){const e=rollEvt();if(e&&c[e.id]!==undefined)c[e.id]++}return [c.jam/N,c.cnl/N]}"""

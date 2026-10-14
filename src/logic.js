@@ -190,19 +190,29 @@ function persistNow(patch){try{localStorage.setItem('btd_v2',JSON.stringify(Obje
 function fuelMax(){return 100}
 
 // ===== DAY TIMER =====
+let dayLast=0;
 function startDayTimer(){
-  clearInterval(dayTmr);
+  clearInterval(dayTmr);dayLast=Date.now();
+  // ticks by real elapsed time, so a throttled interval cannot slow the day down (catch-up is capped)
   dayTmr=setInterval(()=>{
-    if(modal)return;   // popups (refuel, day/month end) freeze the clock; deliveries and sleeping use it up
-    const busy=['minigame','anim-deliver','anim-refuel'].includes(g.phase);
-    if(g.dayTimeLeft>0)g.dayTimeLeft--;
-    const el=document.getElementById('day-tmr');
-    if(el)el.textContent=fmT(g.dayTimeLeft);
-    const ck=document.getElementById('clk');
-    if(ck){const pk=isPeak();ck.textContent=fmH();ck.classList.toggle('peak',pk)}
-    if(g.dayTimeLeft>0&&g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
-    if(g.dayTimeLeft<=0&&!busy){clearInterval(dayTmr);triggerDayEnd();}   // a delivery in progress finishes first
-  },1000);
+    const now=Date.now();
+    if(modal){dayLast=now;return}   // popups (refuel, pause, day/month end) freeze the clock
+    const n=Math.min(3,Math.floor((now-dayLast)/1000));
+    if(n<1)return;
+    dayLast+=n*1000;if(now-dayLast>1000)dayLast=now;
+    for(let i=0;i<n;i++)if(!dayStep())break;
+  },250);
+}
+function dayStep(){
+  const busy=['minigame','anim-deliver','anim-refuel'].includes(g.phase);
+  if(g.dayTimeLeft>0)g.dayTimeLeft--;
+  const el=document.getElementById('day-tmr');
+  if(el)el.textContent=fmT(g.dayTimeLeft);
+  const ck=document.getElementById('clk');
+  if(ck){const pk=isPeak();ck.textContent=fmH();ck.classList.toggle('peak',pk)}
+  if(g.dayTimeLeft>0&&g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
+  if(g.dayTimeLeft<=0&&!busy){clearInterval(dayTmr);triggerDayEnd();return false}   // a delivery in progress finishes first
+  return true;
 }
 function fmT(s){const m=Math.floor(s/60);const sc=s%60;return`${m}:${sc<10?'0':''}${sc}`}
 
@@ -314,6 +324,17 @@ function stopSleep(){
   g.activeAnim=null;g.phase='game';
   save();render();
 }
+function askEndDay(){
+  if(modal||g.activeAnim||g.phase!=='game')return;
+  if(g.dayTimeLeft>90){modal={type:'confirmEnd'};render();return}   // lots of the day left: ask first
+  doEndDay();
+}
+function startClick(fresh){
+  startGame(fresh);
+  let seen=false;try{seen=!!localStorage.getItem('btd_tut')}catch(e){}
+  if(!seen){if(g.phase==='game'&&!modal){modal={type:'tut',i:0};render()}}
+}
+function tutDone(){try{localStorage.setItem('btd_tut','1')}catch(e){}modal=null;render()}
 function doEndDay(){
   if(modal||g.activeAnim||g.phase!=='game')return;
   clearInterval(dayTmr);
@@ -658,3 +679,5 @@ document.addEventListener('keydown',e=>{
     else if(canPause())pauseGame();
   }
 });
+
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&canPause())pauseGame()});   // switching tabs pauses the game
