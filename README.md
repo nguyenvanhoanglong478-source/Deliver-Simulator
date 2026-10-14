@@ -1,33 +1,38 @@
 # Be The Driver (Deliver Simulator)
 
-Game mô phỏng tài xế giao hàng bằng xe máy, phong cách retro 8-bit. Chạy trực tiếp trên trình duyệt, không cần cài đặt.
+A retro 8-bit motorbike delivery-driver simulation that runs entirely in the browser. No install, no framework: plain HTML, CSS and JavaScript built into a single file.
 
-**Mục tiêu:** tiết kiệm 100 triệu đồng trong 24 tháng, trong khi vẫn trả đủ chi phí sinh hoạt mỗi tháng.
+**Goal:** save 100 million VND within 24 in-game months while still paying your monthly living costs.
 
-## Chơi
+## How to play
 
-Mở `index.html` bằng trình duyệt. Tiến trình được lưu trong `localStorage`.
+Open `index.html` in a browser. Progress is saved in `localStorage`.
 
-- Mỗi lượt có 3 đơn để chọn (đồ ăn/hàng hóa, gần/vừa/xa, đơn gấp). Đơn xa trả cao nhưng tốn thể lực, xăng và thời gian. "Đổi đơn" tốn 8 giây.
-- Hai mini game: bắt gói hàng (20 giây) hoặc né vật cản trên đường 3 làn (chạm làn, nút ◀ ▶ hoặc phím mũi tên). Đơn gấp chỉ có 15 giây.
-- Chọn tốc độ lái: chậm (ít tai nạn, thêm thời gian), thường, nhanh (nhanh hơn nhưng dễ tai nạn/bị phạt). Xe cũ dễ hỏng hơn.
-- Mỗi ngày game chạy từ 06:00 đến 22:00; giờ cao điểm (11-13h, 17-19h) đơn trả nhiều hơn nhưng kẹt xe gấp đôi.
-- Nâng cấp có đánh đổi: hai túi giao hàng và hai động cơ loại trừ nhau; GPS và bảo hiểm có phí hàng tháng.
-- Mốc tiết kiệm 25/50/75 triệu: thưởng tiền và mở khóa nâng cấp mới.
-- Cuối tháng có thưởng theo số đơn và đánh giá sao. Màn kết thúc cho biết tiền đã đi đâu.
-- Quản lý thể lực, xăng và độ bền xe. Đổ xăng bằng thanh trượt, tiền tính theo %.
-- Gửi tiền tiết kiệm để nhận lãi mỗi ngày (0,2%).
-- Nhạc nền 8-bit: màn hình bắt đầu có một bài lặp lại; trong game có 4 bài tự chuyển tiếp và phát lại từ đầu khi hết danh sách. Trình duyệt cần một lần chạm đầu tiên mới cho phát. Nút loa ở góc dưới bên phải mở cài đặt âm thanh: bật/tắt nhạc, chọn bài trước/sau, chỉnh âm lượng (được nhớ cho lần sau).
-- Mở **Hồ sơ tài xế** (bấm vào avatar) để đổi tên, sở thích, màu mũ, xem số sao và đánh giá của khách.
-- Khi mở game trong Claude (artifact), mỗi đánh giá có thể do Claude viết theo sở thích của bạn. Nơi khác dùng đánh giá có sẵn.
+- **Orders:** each turn offers 3 orders (food or goods, near / medium / far, optionally rush). Far orders pay more but cost stamina, fuel and time. Re-rolling the offers costs 8 seconds.
+- **Mini-games:** catch falling packages (20 s) or dodge obstacles on a 3-lane road (tap a lane, use the ◀ ▶ buttons, or the arrow keys). Rush orders give only 15 s.
+- **Driving speed:** slow (fewer accidents, extra time), normal, or fast (quicker, but riskier and more likely to be fined). Older bikes break down more often.
+- **Day cycle:** a game day runs from 06:00 to 22:00 (300 real seconds). Peak hours (11-13h and 17-19h) pay more but traffic jams are twice as likely.
+- **Upgrades with trade-offs:** the two delivery bags and the two engines are mutually exclusive; GPS and insurance carry monthly fees.
+- **Milestones:** saving 25 / 50 / 75 million pays a bonus and unlocks new upgrades.
+- **Month end:** a bonus based on completed orders and star rating. The end screen shows where your money went.
+- **Resources:** manage stamina, fuel and bike durability. Refuel with a slider; the price depends on the percentage added.
+- **Savings:** deposited money earns 0.2% interest per day.
+- **Pause:** use the ⏸ button (bottom left) or press `P` / `Esc`. The day clock and mini-game timers stop and resume without losing time.
+- **Driver profile:** click the avatar to edit your name, hobbies and hat colour, and to see your star rating and customer reviews. Cancelled orders produce no review.
+- **Reviews:** when the game runs inside Claude (as an artifact), each review can be written by Claude based on your hobbies. Everywhere else, 56 built-in reviews are used.
+- **Music:** the start screen loops one track; in game, 4 tracks play in a playlist that advances and wraps around automatically. Browsers need a first tap before audio can play. The speaker button (bottom right) opens sound settings: music on/off, previous/next track and volume (remembered between sessions).
 
-## Cấu trúc
+## Project structure
 
-- `index.html`: bản đã đóng gói, một file duy nhất.
-- `src/`: mã nguồn (`style.css`, `icons.js`, `audio.js`, `profile.js`, `logic.js`, `render.js`, `bike.png`, `music.mp3`, `track1-4.mp3`).
-- `build.py`: ghép `src/` thành `index.html` (`python3 build.py`).
-- `tests/`: kiểm thử bằng trình duyệt (Playwright): `python3 tests/test_gameplay.py`, `python3 tests/test_save_load.py`, `python3 tests/test_features.py`, `python3 tests/test_audio.py`.
+- `index.html`: the packaged game, one self-contained file.
+- `src/`: source files (`style.css`, `icons.js`, `audio.js`, `profile.js`, `logic.js`, `render.js`, `bike.png`, `music.mp3`, `track1-4.mp3`).
+- `build.py`: assembles `src/` into `index.html` (`python3 build.py`).
+- `tests/`: browser tests using Playwright (`pip install playwright && playwright install chromium`). Run each file separately:
+  `python3 tests/test_gameplay.py`, `test_save_load.py`, `test_features.py`, `test_audio.py`, `test_pause.py`.
+- `CHANGELOG.md`: history of changes and current settings.
 
-Phông chữ (VT323, Press Start 2P) tải từ Google Fonts; khi không có mạng game dùng phông monospace thay thế.
+Fonts (VT323, Press Start 2P) are loaded from Google Fonts; offline, the game falls back to a monospace font.
 
-Nhạc nền (do chủ dự án cung cấp, nén còn 64–80 kbps để nhúng vào index.html): "8-Bit Retro Game Music" (MoodMode) ở màn hình bắt đầu; trong game: "Waiting Time" (Lesiakower), "8-Bit Retro" (Mondamusic), "Game 8-Bit On" (MoodMode), "I Love My 8-Bit Game Console" (DJARTMUSIC).
+## Music credits
+
+Tracks were supplied by the project owner and compressed to 64-80 kbps so they can be embedded in `index.html`. Start screen: "8-Bit Retro Game Music" (MoodMode). In game: "Waiting Time" (Lesiakower), "8-Bit Retro" (Mondamusic), "Game 8-Bit On" (MoodMode), "I Love My 8-Bit Game Console" (DJARTMUSIC).
