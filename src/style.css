@@ -366,3 +366,4 @@ input.txt::placeholder{color:#5b52a0}
 .set-box{display:flex;flex-direction:column;gap:14px}
 .set-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .set-row b{font-family:var(--f-px);font-weight:400;font-size:12px}
+.trk-ctl{display:flex;gap:8px}.trk-name{color:var(--cy);margin-top:-6px;text-align:left}

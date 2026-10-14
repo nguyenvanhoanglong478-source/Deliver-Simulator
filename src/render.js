@@ -293,9 +293,13 @@ function rModal(){
       <div class="m-title" style="color:var(--cy)">${ic(AUD.on?'sound':'mute',28)} ÂM THANH</div>
       <div class="set-row"><span>Nhạc nền</span>
         <button class="btn sm ${AUD.on?'b-gr':'b-dim'}" onclick="toggleMusic()" aria-pressed="${AUD.on}">${AUD.on?'BẬT':'TẮT'}</button></div>
+      <div class="set-row trk"><span>Bài hát</span><span class="trk-ctl">
+        <button class="btn sm b-dim" onclick="skipTrack(-1)" ${g.phase==='start'?'disabled':''} aria-label="Bài trước">◀</button>
+        <button class="btn sm b-dim" onclick="skipTrack(1)" ${g.phase==='start'?'disabled':''} aria-label="Bài sau">▶</button></span></div>
+      <div class="lbl trk-name">${g.phase==='start'?'Màn hình bắt đầu: nhạc cố định':`${AUD.track+1}/${TRACKS.length} · ${TRACKS[AUD.track].n}`}</div>
       <div class="set-row"><span>Âm lượng</span><b id="vol-lbl">${Math.round(AUD.vol*100)}%</b></div>
       <input id="vol-slider" type="range" min="0" max="100" step="5" value="${Math.round(AUD.vol*100)}" oninput="setVolume(this.value)" aria-label="Âm lượng nhạc nền">
-      <div class="lbl">Nhạc phát ở màn hình bắt đầu. Mở cài đặt khi đang chơi sẽ tạm dừng đồng hồ ngày.</div>
+      <div class="lbl">Trong game nhạc tự chuyển bài và phát lại từ đầu. Mở cài đặt khi đang chơi sẽ tạm dừng đồng hồ ngày.</div>
       <button class="btn b-gr blk" onclick="closeSettings()">ĐÓNG</button>
     </div></div>`;
   }
