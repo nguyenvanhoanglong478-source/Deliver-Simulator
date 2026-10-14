@@ -41,3 +41,6 @@
 - Shop rows: icon | name + price button | description (about half the height).
 - Main screen on phones: three meters in one row, tighter cards, savings and log are collapsible sections (open on desktop).
 - tests/test_route.py (21 checks).
+
+## Failed orders get no good events
+- A delivery that pays nothing (failed mini-game) can no longer trigger tip / VIP / Be reward events; bad events (breakdown, fine, crash) can still happen. Tests added to test_gameplay.py.

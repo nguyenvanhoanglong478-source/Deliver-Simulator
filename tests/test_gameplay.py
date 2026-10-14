@@ -23,6 +23,12 @@ with sync_playwright() as p:
     ok('cancel: no income credited',pg.evaluate("g.cash")==c0 and pg.evaluate("g.earned")==0,f"{c0}->{pg.evaluate('g.cash')}")
     ok('cancel: event modal + log',pg.evaluate("modal&&modal.type==='event'&&g.log[0].m.includes('không có thu nhập')"))
     pg.evaluate("modal=null;rollEvt=window.__r;render()")
+    # failed delivery (no pay): no tip / VIP / reward event
+    pg.evaluate("rollEvt=window.__r")
+    n=pg.evaluate("(()=>{let b=0;for(let i=0;i<20000;i++){const e=rollEvtFor(0);if(e&&e.t==='good')b++}return b})()")
+    ok('failed order never gets a good event',n==0,str(n))
+    n2=pg.evaluate("(()=>{let b=0;for(let i=0;i<20000;i++){const e=rollEvtFor(50000);if(e&&e.t==='good')b++}return b})()")
+    ok('paid order can still get good events',n2>500,str(n2))
     # cancelled order: no review is created or shown
     pg.evaluate("rollEvt=()=>EVTS.find(e=>e.id==='cnl')")
     pg.evaluate("g.stamina=100;g.fuel=100;g.offers[0]={type:'food',dist:1,rush:false,mg:'catch',peak:false,base:50000};doDelivery(0)")

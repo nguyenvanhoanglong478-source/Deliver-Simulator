@@ -94,6 +94,8 @@ function evtChance(e){
   return p;
 }
 function rollEvt(){let r=Math.random(),c=0;for(const e of EVTS){c+=evtChance(e);if(r<c)return e;}return null}
+// a failed delivery (no pay) cannot earn a customer tip, VIP bonus or reward: only bad events can still happen
+function rollEvtFor(earn){const e=rollEvt();return(e&&earn<=0&&e.t==='good')?null:e}
 function clearTmrs(){clearInterval(mgTmr);clearInterval(mgSpw);clearInterval(animTmr);clearInterval(dayTmr)}
 // ===== SAVE / LOAD (localStorage key btd_v2, same shape as older saves) =====
 let _saveWarned=false;
@@ -573,7 +575,7 @@ function showMgResult(){
   else if(mgData.kind==='route')ok=mgData.rtOk;
   else ok=caught>=mgData.full?2:caught>=mgData.part?1:0;
   earn=[0,Math.floor(baseEarn*.5),baseEarn][ok];
-  const evt=rollEvt(),res=evt?evt.fn(earn):null;   // decided up front: a cancelled order gets no customer review
+  const evt=rollEvtFor(earn),res=evt?evt.fn(earn):null;   // decided up front: a cancelled order gets no customer review
   mgData.review=res&&res.skip?null:addReview(ok,job);
   mgData.result={earn,ok,job};render();
   const rvw=mgData.review;
@@ -581,7 +583,7 @@ function showMgResult(){
 }
 
 function afterMinigame(earn,job,rvw,pre){
-  const evt=pre?pre.evt:rollEvt();
+  const evt=pre?pre.evt:rollEvtFor(earn);
   const res=pre?pre.res:(evt?evt.fn(earn):null);
   const paid=res&&res.skip?0:earn;          // "khách hủy" means no income for this order
   g.phase='anim-deliver';
