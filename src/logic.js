@@ -96,7 +96,7 @@ function evtChance(e){
 function rollEvt(){let r=Math.random(),c=0;for(const e of EVTS){c+=evtChance(e);if(r<c)return e;}return null}
 // a failed delivery (no pay) cannot earn a customer tip, VIP bonus or reward: only bad events can still happen
 function rollEvtFor(earn){const e=rollEvt();return(e&&earn<=0&&e.t==='good')?null:e}
-function clearTmrs(){clearInterval(mgTmr);clearInterval(mgSpw);clearInterval(animTmr);clearInterval(dayTmr)}
+function clearTmrs(){stopAllT()}
 // ===== SAVE / LOAD (localStorage key btd_v2, same shape as older saves) =====
 let _saveWarned=false;
 // Only write states that are consistent: never mid-delivery/refuel (money moves at the end), never while a
@@ -109,6 +109,7 @@ function canPersist(){
 }
 function save(){
   if(!canPersist())return;
+  const fixed=repairState(g);if(fixed.length)console.warn('[btd] repaired state fields:',fixed.join(', '));   // never write a broken state
   try{localStorage.setItem('btd_v2',JSON.stringify(g));}
   catch(e){if(!_saveWarned){_saveWarned=true;toast('KHÔNG LƯU ĐƯỢC TIẾN TRÌNH TRÊN TRÌNH DUYỆT NÀY','warn');}}
 }
@@ -192,18 +193,9 @@ function persistNow(patch){try{localStorage.setItem('btd_v2',JSON.stringify(Obje
 function fuelMax(){return 100}
 
 // ===== DAY TIMER =====
-let dayLast=0;
 function startDayTimer(){
-  clearInterval(dayTmr);dayLast=Date.now();
-  // ticks by real elapsed time, so a throttled interval cannot slow the day down (catch-up is capped)
-  dayTmr=setInterval(()=>{
-    const now=Date.now();
-    if(modal){dayLast=now;return}   // popups (refuel, pause, day/month end) freeze the clock
-    const n=Math.min(3,Math.floor((now-dayLast)/1000));
-    if(n<1)return;
-    dayLast+=n*1000;if(now-dayLast>1000)dayLast=now;
-    for(let i=0;i<n;i++)if(!dayStep())break;
-  },250);
+  stopT(dayTmr);
+  dayTmr=every(1000,()=>{if(!modal)dayStep()});   // popups (refuel, day/month end, tutorial) freeze the day; deliveries and sleeping use it up
 }
 function dayStep(){
   const busy=['minigame','anim-deliver','anim-refuel'].includes(g.phase);
@@ -213,7 +205,7 @@ function dayStep(){
   const ck=document.getElementById('clk');
   if(ck){const pk=isPeak();ck.textContent=fmH();ck.classList.toggle('peak',pk)}
   if(g.dayTimeLeft>0&&g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
-  if(g.dayTimeLeft<=0&&!busy){clearInterval(dayTmr);triggerDayEnd();return false}   // a delivery in progress finishes first
+  if(g.dayTimeLeft<=0&&!busy){stopT(dayTmr);triggerDayEnd();return false}   // a delivery in progress finishes first
   return true;
 }
 function fmT(s){const m=Math.floor(s/60);const sc=s%60;return`${m}:${sc<10?'0':''}${sc}`}
@@ -275,53 +267,54 @@ function rfConfirm(){
   g.phase='anim-refuel';
   render();
   refuelVisual(startFuel,val,3000);
-  animTmr=setInterval(()=>{
+  animTmr=every(1000,()=>{
     g.activeAnim.timeLeft--;
     const tEl=document.getElementById('fuel-txt');
     if(tEl)tEl.textContent=g.activeAnim.timeLeft>0?g.activeAnim.timeLeft+'s còn lại':'Hoàn tất!';
     if(g.activeAnim.timeLeft<=0){
-      clearInterval(animTmr);
+      stopT(animTmr);
       g.fuel=val;
       const f=document.getElementById('fuel-fill'),p=document.getElementById('fuel-pct');   // make sure the gauge really shows the finished tank
       if(f)f.style.width=val+'%';if(p)p.textContent=val+'%';
       addLog('Đổ xăng +'+fillable+'%: -'+ff(cost),'cost');
-      setTimeout(()=>{if(g.phase!=='anim-refuel')return;g.activeAnim=null;g.phase='game';save();render();},HOLD_MS);   // let the full tank sit on screen for a moment
+      after(HOLD_MS,()=>{if(g.phase!=='anim-refuel')return;g.activeAnim=null;g.phase='game';save();render();});   // let the full tank sit on screen for a moment
     }
-  },1000);
+  });
 }
 
 // Cosmetic only: the gauge fills with a CSS transition and the percentage counts up smoothly; the real fuel is set when the timer ends.
 function refuelVisual(a,b,ms){
-  const t0=performance.now();
-  setTimeout(()=>{const f=document.getElementById('fuel-fill');if(f)f.style.width=b+'%'},40);
-  (function step(now){
+  const t0=gnow();
+  (function step(){
     if(g.phase!=='anim-refuel')return;
-    const k=Math.min(1,Math.max(0,(now-t0)/ms)),el=document.getElementById('fuel-pct');
-    if(el)el.textContent=Math.round(a+(b-a)*k)+'%';
+    const k=Math.min(1,Math.max(0,(gnow()-t0)/ms)),v=a+(b-a)*k;
+    const el=document.getElementById('fuel-pct'),f=document.getElementById('fuel-fill');
+    if(el)el.textContent=Math.round(v)+'%';
+    if(f)f.style.width=v+'%';
     if(k<1)requestAnimationFrame(step);
-  })(t0);
+  })();
 }
 
 function doSleep(){
   if(modal||g.activeAnim||g.phase!=='game')return;
   if(g.stamina>=100){toast('THỂ LỰC ĐÃ ĐẦY!');return;}
   g.activeAnim={type:'sleep'};g.phase='anim-sleep';render();
-  animTmr=setInterval(()=>{
+  animTmr=every(1000,()=>{
     g.stamina=Math.min(100,g.stamina+C.sleepRate);
     const bar=document.getElementById('sleep-bar');
     const txt=document.getElementById('sleep-txt');
     if(bar)bar.style.width=g.stamina+'%';
     if(txt)txt.textContent=g.stamina+'/100';
     if(g.stamina>=100){
-      clearInterval(animTmr);
+      stopT(animTmr);
       addLog('Nghỉ ngơi đủ giấc ('+g.stamina+'/100)','info');
       const sb=document.querySelector('.anim .btn');if(sb)sb.disabled=true;
-      setTimeout(()=>{if(g.phase!=='anim-sleep')return;g.activeAnim=null;g.phase='game';save();render();},HOLD_MS);
+      after(HOLD_MS,()=>{if(g.phase!=='anim-sleep')return;g.activeAnim=null;g.phase='game';save();render();});
     }
-  },1000);
+  });
 }
 function stopSleep(){
-  clearInterval(animTmr);
+  stopT(animTmr);
   addLog('Dừng nghỉ — thể lực: '+g.stamina+'/100','info');
   g.activeAnim=null;g.phase='game';
   save();render();
@@ -339,7 +332,7 @@ function startClick(fresh){
 function tutDone(){try{localStorage.setItem('btd_tut','1')}catch(e){}modal=null;render()}
 function doEndDay(){
   if(modal||g.activeAnim||g.phase!=='game')return;
-  clearInterval(dayTmr);
+  stopT(dayTmr);
   triggerDayEnd();
 }
 
@@ -404,23 +397,23 @@ let mgData=null;
 function startMinigame(o,baseEarn){
   const rush=!!o.rush,limit=rush?15:C.mgTime;
   mgData={jobId:o.type,offer:o,kind:o.mg,baseEarn,limit,full:rush?9:C.mgFull,part:rush?5:C.mgPartial,
-    caught:0,total:0,hits:0,passed:0,obs:[],lane:1,spawnIn:.4,flash:0,lastTs:Date.now(),
-    timeLeft:limit,done:false,spots:Array(9).fill(null),startTs:Date.now()};
+    caught:0,total:0,hits:0,passed:0,obs:[],lane:1,spawnIn:.4,flash:0,lastTs:gnow(),
+    timeLeft:limit,done:false,spots:Array(9).fill(null),startTs:gnow()};
   if(o.mg==='route')rtInit(mgData);
   g.phase='minigame';render();
-  if(o.mg==='route'){mgTmr=setInterval(rtTick,50);return;}
-  if(o.mg==='dodge'){mgTmr=setInterval(dgTick,50);return;}
-  mgTmr=setInterval(mgTick,80);
-  mgSpw=setInterval(mgSpawn,1200);
-  setTimeout(mgSpawn,200);
+  if(o.mg==='route'){mgTmr=every(50,rtTick);rtLoop();return;}
+  if(o.mg==='dodge'){mgTmr=every(50,dgTick);dgLoop();return;}
+  mgTmr=every(80,mgTick);
+  mgSpw=every(1200,mgSpawn);
+  after(200,mgSpawn);
 }
 
 function mgTick(){
   if(!mgData||mgData.done)return;
-  const now=Date.now();
+  const now=gnow();
   mgData.timeLeft=Math.max(0,mgData.limit-(now-mgData.startTs)/1000);
   mgData.spots=mgData.spots.map(sp=>sp&&now-sp.ts>1350?null:sp);
-  if(mgData.timeLeft<=0){mgData.done=true;clearInterval(mgTmr);clearInterval(mgSpw);showMgResult();return;}
+  if(mgData.timeLeft<=0){mgData.done=true;stopT(mgTmr);stopT(mgSpw);showMgResult();return;}
   mgPaint();
 }
 
@@ -433,54 +426,83 @@ function genTurns(){
   return t;
 }
 function rtApproach(){return mgData.offer.rush?1700:isPeak()?1900:2200}   // ms to reach the junction; peak hour = more traffic = tighter
-function rtInit(m){Object.assign(m,{turns:genTurns(),idx:0,mistakes:0,rtPhase:'preview',previewEnd:Date.now()+RT_PREVIEW,appTs:0,rtOk:0,fb:null,fbUntil:0})}
+function rtInit(m){Object.assign(m,{turns:genTurns(),idx:0,mistakes:0,rtPhase:'preview',previewEnd:gnow()+RT_PREVIEW,appTs:0,rtOk:0,fb:null,fbUntil:0})}
 function rtMove(d){
   const m=mgData;if(!m||m.kind!=='route'||m.done||m.rtPhase!=='drive')return;
   if(m.turns[m.idx]===d){
-    m.idx++;m.fb='ok';m.fbUntil=Date.now()+350;m.appTs=Date.now();
+    m.idx++;m.fb='ok';m.fbUntil=gnow()+350;m.appTs=gnow();
     if(m.idx>=RT_N){
-      m.done=true;clearInterval(mgTmr);
-      m.timeLeft=Math.max(0,m.limit-(Date.now()-m.startTs)/1000);
+      m.done=true;stopT(mgTmr);
+      m.timeLeft=Math.max(0,m.limit-(gnow()-m.startTs)/1000);
       m.rtOk=m.mistakes<=1?2:1;
-      rtPaint();setTimeout(showMgResult,450);return;
+      rtPaint();after(450,showMgResult);return;
     }
   }else rtMiss();
   rtPaint();
 }
 function rtMiss(){   // wrong turn or missed junction: a detour costs time and the junction comes round again
-  const m=mgData;m.mistakes++;m.startTs-=RT_PENALTY;m.fb='bad';m.fbUntil=Date.now()+450;m.appTs=Date.now();
+  const m=mgData;m.mistakes++;m.startTs-=RT_PENALTY;m.fb='bad';m.fbUntil=gnow()+450;m.appTs=gnow();
 }
 function rtTick(){
   const m=mgData;if(!m||m.done||m.kind!=='route')return;
-  const now=Date.now();
+  const now=gnow();
   if(m.rtPhase==='preview'){
     if(now>=m.previewEnd){m.rtPhase='drive';m.startTs=now;m.appTs=now}
     rtPaint();return;
   }
   m.timeLeft=Math.max(0,m.limit-(now-m.startTs)/1000);
-  if(m.timeLeft<=0){m.done=true;m.rtOk=m.idx>=3?1:0;clearInterval(mgTmr);rtPaint();showMgResult();return}
+  if(m.timeLeft<=0){m.done=true;m.rtOk=m.idx>=3?1:0;stopT(mgTmr);rtPaint();showMgResult();return}
   if(now-m.appTs>=rtApproach())rtMiss();
   rtPaint();
 }
-function rtHTML(){
+function rtStripHTML(){
   const m=mgData,gps=up('gps'),pre=m.rtPhase==='preview';
-  const slots=m.turns.map((t,i)=>{
+  return m.turns.map((t,i)=>{
     const done=i<m.idx,cur=i===m.idx&&!pre;
     const vis=pre||done||(gps&&i<m.idx+3);
     return`<div class="rt-slot${done?' done':''}${cur?' cur':''}">${vis?RT_ARR[t]:'?'}</div>`;
   }).join('');
-  const prog=pre?0:Math.min(1,(Date.now()-m.appTs)/rtApproach());
-  const fb=Date.now()<m.fbUntil?m.fb:null;
-  return`<div class="rt-strip">${slots}</div>
-  <div class="rt-road${fb?' '+fb:''}"><div class="rt-fork"><span>◀</span><span>▲</span><span>▶</span></div>
-    <img class="rt-bike" src="${BIKE}" alt="xe" style="bottom:${(prog*72).toFixed(1)}%">
-    <div class="rt-msg">${pre?'GHI NHỚ ĐƯỜNG ĐI! '+Math.max(1,Math.ceil((m.previewEnd-Date.now())/1000))+'s':fb==='bad'?'SAI ĐƯỜNG! -2s':fb==='ok'?'ĐÚNG!':''}</div></div>`;
 }
+function rtMsg(){
+  const m=mgData,pre=m.rtPhase==='preview',fb=gnow()<m.fbUntil?m.fb:null;
+  return pre?'GHI NHỚ ĐƯỜNG ĐI! '+Math.max(1,Math.ceil((m.previewEnd-gnow())/1000))+'s':fb==='bad'?'SAI ĐƯỜNG! -2s':fb==='ok'?'ĐÚNG!':'';
+}
+function rtHTML(){
+  return`<div class="rt-strip" id="rt-strip">${rtStripHTML()}</div>
+  <div class="rt-road" id="rt-road"><canvas id="rt-cv" width="192" height="112"></canvas><div class="rt-msg" id="rt-msg">${rtMsg()}</div></div>`;
+}
+// Road scene on a canvas: scrolling lane stripes, the junction ahead, the bike closing in.
+function rtDraw(){
+  const m=mgData,cv=document.getElementById('rt-cv');
+  if(!m||!cv||m.kind!=='route')return;
+  const x=cv.getContext('2d'),W=192,H=112,T=gnow(),pre=m.rtPhase==='preview';
+  x.fillStyle='#0f0b26';x.fillRect(0,0,W,H);
+  const off=pre?0:(T/1000*60)%24;
+  x.fillStyle='#1a1440';for(let y=-24+off;y<H;y+=24)x.fillRect(0,y,W,12);
+  x.fillStyle='#3a3180';for(let y=-24+off;y<H;y+=24)x.fillRect(W/2-1,y,2,12);
+  // junction arrows at the top: left, straight, right
+  x.fillStyle='#ffd23f';
+  for(let k=0;k<9;k++){
+    x.fillRect(24+k,16-k,1,k*2+1);                 // left, apex on the left
+    x.fillRect(W/2-k,6+k,k*2+1,1);                 // straight, apex on top
+    x.fillRect(W-24-k,16-k,1,k*2+1);               // right, apex on the right
+  }
+  const prog=pre?0:Math.min(1,(T-m.appTs)/rtApproach());
+  const bw=56,bh=38;
+  x.imageSmoothingEnabled=false;
+  const im=bikeImage();if(im.complete&&im.naturalWidth)x.drawImage(im,W/2-bw/2,H-bh-4-prog*(H-bh-36),bw,bh);
+}
+function rtLoop(){if(!mgData||mgData.kind!=='route'||mgData.done||g.phase!=='minigame')return;rtDraw();requestAnimationFrame(rtLoop)}
 function rtPaint(){
   const f=document.getElementById('rt-field');if(!f||!mgData||mgData.kind!=='route')return;
-  f.innerHTML=rtHTML();
-  const s=document.getElementById('mg-score');if(s)s.textContent=mgData.idx+'/'+RT_N;
-  const t=document.getElementById('mg-timer');if(t)t.textContent=Math.ceil(mgData.timeLeft)+'s';
+  const m=mgData,st=document.getElementById('rt-strip'),road=document.getElementById('rt-road'),msg=document.getElementById('rt-msg');
+  if(st){const h=rtStripHTML();if(st.dataset.h!==h){st.innerHTML=h;st.dataset.h=h}}
+  const fb=gnow()<m.fbUntil?m.fb:null;
+  if(road)road.className='rt-road'+(fb?' '+fb:'');
+  if(msg)msg.textContent=rtMsg();
+  const s=document.getElementById('mg-score');if(s)s.textContent=m.idx+'/'+RT_N;
+  const t=document.getElementById('mg-timer');if(t)t.textContent=Math.ceil(m.timeLeft)+'s';
+  rtDraw();
 }
 document.addEventListener('keydown',e=>{
   if(!mgData||mgData.kind!=='route')return;
@@ -493,9 +515,9 @@ document.addEventListener('keydown',e=>{
 const DG_ROWS=7,DG_SPEED=4.2;
 function dgTick(){
   const m=mgData;if(!m||m.done||m.kind!=='dodge')return;
-  const now=Date.now(),dt=Math.min(.2,(now-m.lastTs)/1000);m.lastTs=now;
+  const now=gnow(),dt=Math.min(.2,(now-m.lastTs)/1000);m.lastTs=now;
   m.timeLeft=Math.max(0,m.limit-(now-m.startTs)/1000);
-  if(m.timeLeft<=0){m.done=true;clearInterval(mgTmr);showMgResult();return;}
+  if(m.timeLeft<=0){m.done=true;stopT(mgTmr);showMgResult();return;}
   m.spawnIn-=dt;
   if(m.spawnIn<=0){
     m.spawnIn=.6+Math.random()*.35;
@@ -510,18 +532,36 @@ function dgTick(){
   m.obs=m.obs.filter(o=>{if(o.y>=DG_ROWS){if(!o.hit)m.passed++;return false}return true});
   dgPaint();
 }
+// Dodge field is a <canvas> (192x256 logical pixels, lane = 64px) drawn every animation frame from the game clock.
+const DG_W=192,DG_H=256;
 function dgPaint(){
   const m=mgData,$=id=>document.getElementById(id);
   if(!m||!$('dg-field'))return;
   $('mg-timer').textContent=Math.ceil(m.timeLeft)+'s';
   $('mg-score').textContent='VA '+m.hits+'/3';
   $('mg-bar').style.width=Math.min(100,(1-m.timeLeft/m.limit)*100)+'%';
-  const ob=ic('warn',32);
-  let h='';
-  m.obs.forEach(o=>{h+=`<div class="dg-ob${o.hit?' hit':''}" style="left:${o.lane*100/3}%;top:${o.y*100/DG_ROWS}%">${ob}</div>`});
-  h+=`<div class="dg-me${m.flash>0?' hit':''}" style="left:${m.lane*100/3}%">${avatarHTML(g.profile.helmet,40)}</div>`;
-  $('dg-field').innerHTML=h;
+  dgDraw();
 }
+function dgDraw(){
+  const m=mgData,cv=document.getElementById('dg-field');
+  if(!m||!cv||m.kind!=='dodge')return;
+  const x=cv.getContext('2d'),T=gnow(),ahead=GT.paused?0:Math.min(.1,(T-m.lastTs)/1000);   // smooth between logic ticks
+  x.fillStyle='#0a0814';x.fillRect(0,0,DG_W,DG_H);
+  // road: scrolling lane dashes
+  const off=(T/1000*DG_SPEED*DG_H/DG_ROWS)%32;
+  x.fillStyle='#3a3180';
+  for(let k=1;k<3;k++)for(let y=-32+off;y<DG_H;y+=32)x.fillRect(k*64-1,y,2,16);
+  x.fillStyle='#1a1440';x.fillRect(0,0,2,DG_H);x.fillRect(DG_W-2,0,2,DG_H);
+  const ob=spriteCanvas('warn');
+  m.obs.forEach(o=>{
+    const y=(o.y+DG_SPEED*ahead)*DG_H/DG_ROWS;
+    x.globalAlpha=o.hit?.3:1;drawSprite(x,ob,o.lane*64+16,y,32);
+  });
+  x.globalAlpha=1;
+  drawSprite(x,avatarCanvas(g.profile.helmet),m.lane*64+16,DG_H-44,32);
+  if(m.flash>0){x.fillStyle=`rgba(255,77,94,${(m.flash/.35*.35).toFixed(2)})`;x.fillRect(0,0,DG_W,DG_H)}
+}
+function dgLoop(){if(!mgData||mgData.kind!=='dodge'||mgData.done||g.phase!=='minigame')return;dgDraw();requestAnimationFrame(dgLoop)}
 function dgMove(d){if(mgData&&mgData.kind==='dodge'&&!mgData.done){mgData.lane=Math.min(2,Math.max(0,mgData.lane+d));dgPaint()}}
 function dgTap(ev){
   if(!mgData||mgData.kind!=='dodge'||mgData.done)return;
@@ -539,7 +579,7 @@ function mgPaint(){
   if(!mgData||mgData.done)return;
   const $=id=>document.getElementById(id);
   if(!$('mg-grid'))return;
-  const now=Date.now(),pk=mgData.jobId==='food'?'bowl':'box';
+  const now=gnow(),pk=mgData.jobId==='food'?'bowl':'box';
   $('mg-timer').textContent=Math.ceil(mgData.timeLeft)+'s';
   $('mg-score').textContent=mgData.caught+'/'+mgData.full;
   $('mg-bar').style.width=Math.min(100,mgData.caught/mgData.full*100)+'%';
@@ -559,7 +599,7 @@ function mgSpawn(){
   const empty=mgData.spots.map((v,i)=>[v,i]).filter(([v])=>!v).map(([,i])=>i);
   if(!empty.length)return;
   const idx=empty[rnd(0,empty.length-1)];
-  mgData.spots[idx]={ts:Date.now()};mgData.total++;mgPaint();
+  mgData.spots[idx]={ts:gnow()};mgData.total++;mgPaint();
 }
 
 function catchPkg(i){
@@ -579,7 +619,7 @@ function showMgResult(){
   mgData.review=res&&res.skip?null:addReview(ok,job);
   mgData.result={earn,ok,job};render();
   const rvw=mgData.review;
-  setTimeout(()=>afterMinigame(earn,job,rvw,{evt,res}),1800);
+  after(1800,()=>afterMinigame(earn,job,rvw,{evt,res}));
 }
 
 function afterMinigame(earn,job,rvw,pre){
@@ -592,7 +632,7 @@ function afterMinigame(earn,job,rvw,pre){
   g.activeAnim={type:'deliver',earn:paid,job};
   render(); // Render một lần — CSS bike animation bắt đầu
   // Sau 3s: patch DOM trực tiếp, KHÔNG gọi render() để tránh reset bike animation
-  setTimeout(()=>{
+  after(travel,()=>{
     const statusEl=document.getElementById('anim-status');
     const earnEl=document.getElementById('anim-earn-val');
     if(statusEl){
@@ -600,9 +640,10 @@ function afterMinigame(earn,job,rvw,pre){
       statusEl.classList.add('done');
     }
     if(earnEl){earnEl.textContent=paid>0?'+'+ff(paid):'KHÔNG CÓ THU NHẬP';earnEl.style.display='block';}
+    if(paid>0)burst(26,FX_COIN);
     const rv=document.getElementById('rv');
     if(rv&&rvw){rv.dataset.id=String(rvw.t0);rv.innerHTML=reviewHTML(rvw);rv.classList.add('show');}
-    setTimeout(()=>{
+    after(1500,()=>{
       if(paid>0){g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;g.fin.earn+=paid;}
       g.delivered++;g.totalDelivered++;
       if(evt){
@@ -621,8 +662,8 @@ function afterMinigame(earn,job,rvw,pre){
       mgData=null;save();
       if(g.vehicleHp<=0)toast('XE HỎNG NẶNG! CẦN SỬA NGAY!','bad');
       render();
-    },1500);
-  },travel);
+    });
+  });
 }
 
 // ===== DAY END =====
@@ -631,10 +672,11 @@ function finish(win){
   g.phase=win?'win':'lose';
   try{localStorage.removeItem('btd_v2');}catch(e){}
   render();
+  if(win){burst(90,FX_WIN,{v:420});after(500,()=>burst(70,FX_WIN,{x:innerWidth*.25,y:innerHeight*.45}));after(900,()=>burst(70,FX_WIN,{x:innerWidth*.75,y:innerHeight*.45}))}
 }
 
 function triggerDayEnd(){
-  if(g.phase==='anim-sleep'){clearInterval(animTmr);g.activeAnim=null;g.phase='game';addLog('Hết ngày khi đang nghỉ ngơi','info');}
+  if(g.phase==='anim-sleep'){stopT(animTmr);g.activeAnim=null;g.phase='game';addLog('Hết ngày khi đang nghỉ ngơi','info');}
   const interest=Math.floor(g.savings*C.dailyInterest);
   g.savings+=interest;
   if(g.savings>=C.winTarget){finish(true);return;}
@@ -656,7 +698,7 @@ function monthBonus(del){
 }
 function billsTotal(){return BILLS+UPGS.reduce((n,u)=>n+(u.fee&&g.upgrades[u.id]?u.fee:0),0)}
 function triggerMonthEnd(){
-  clearInterval(dayTmr);
+  stopT(dayTmr);
   const bonus=monthBonus(g.delivered);
   modal={type:'monthEnd',month:g.month,earned:g.earned,bonus,del:g.delivered,stars:g.stars,bills:billsTotal()};
   render();
@@ -714,30 +756,29 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 window.addEventListener('pagehide',()=>save());
 
 // ===== PAUSE =====
-let pauseAt=0;
+// Everything runs on the game clock (loop.js), so pausing = freezing that clock. Screens that patch the DOM directly
+// (delivery / refuel / sleep animations) get a light overlay instead of a modal, because a re-render would reset them.
+let pausedLight=false;
 function canPause(){
-  if(!g||modal)return false;
-  if(g.phase==='game')return true;
-  return g.phase==='minigame'&&!!mgData&&!mgData.done;
+  if(!g||modal||GT.paused)return false;
+  return ['game','minigame','anim-deliver','anim-refuel','anim-sleep'].includes(g.phase);
 }
 function pauseGame(){
   if(!canPause())return;
-  if(g.phase==='minigame'){clearInterval(mgTmr);clearInterval(mgSpw);pauseAt=Date.now()}
-  modal={type:'pause'};render();
+  setPaused(true);
+  if(g.phase==='game'||g.phase==='minigame'){pausedLight=false;modal={type:'pause'};render();return}
+  pausedLight=true;
+  const o=document.getElementById('pause-ov');
+  if(o){o.innerHTML=`<div class="pxf2 modal"><div class="m-title" style="color:var(--gold)">${ic('pause',28)} TẠM DỪNG</div><div class="lbl" style="text-align:center">Thời gian đang dừng.</div><button class="btn b-gr blk" onclick="resumeGame()">TIẾP TỤC</button></div>`;o.hidden=false}
+  pauseBtnSync();
 }
 function resumeGame(){
-  if(!modal||(modal.type!=='pause'&&!(modal.type==='settings'&&modal.from==='pause')))return;
-  modal=null;
-  if(g.phase==='minigame'&&mgData&&!mgData.done&&pauseAt){
-    const d=Date.now()-pauseAt;pauseAt=0;
-    mgData.startTs+=d;mgData.lastTs+=d;
-    if(mgData.appTs)mgData.appTs+=d;if(mgData.previewEnd)mgData.previewEnd+=d;if(mgData.fbUntil)mgData.fbUntil+=d;
-    mgData.spots=mgData.spots.map(sp=>sp?{ts:sp.ts+d}:sp);
-    if(mgData.kind==='dodge')mgTmr=setInterval(dgTick,50);
-    else if(mgData.kind==='route')mgTmr=setInterval(rtTick,50);
-    else{mgTmr=setInterval(mgTick,80);mgSpw=setInterval(mgSpawn,1200)}
+  if(pausedLight){
+    pausedLight=false;const o=document.getElementById('pause-ov');if(o){o.hidden=true;o.innerHTML=''}
+    setPaused(false);pauseBtnSync();return;
   }
-  render();
+  if(!modal||(modal.type!=='pause'&&!(modal.type==='settings'&&modal.from==='pause')))return;
+  modal=null;setPaused(false);render();
 }
 function pauseBtnSync(){
   const b=document.getElementById('pause-btn');if(!b)return;
@@ -746,10 +787,37 @@ function pauseBtnSync(){
 }
 document.addEventListener('keydown',e=>{
   if(e.key==='p'||e.key==='P'||e.key==='Escape'){
-    if(modal&&modal.type==='pause')resumeGame();
+    if(pausedLight||(modal&&modal.type==='pause'))resumeGame();
     else if(modal&&modal.type==='settings'&&modal.from==='pause')closeSettings();
     else if(canPause())pauseGame();
   }
 });
 
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&canPause())pauseGame()});   // switching tabs pauses the game
+
+// ===== EFFECTS: pixel particles on a full-screen canvas (follows the game clock, so pausing freezes them) =====
+const FX={ps:[],run:false,last:0};
+function burst(n,colors,opt){
+  const cv=document.getElementById('fx');if(!cv)return;
+  opt=opt||{};
+  cv.width=innerWidth;cv.height=innerHeight;
+  const cx=opt.x!==undefined?opt.x:innerWidth/2,cy=opt.y!==undefined?opt.y:innerHeight*.38;
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,v=(opt.v||260)*(.35+Math.random()*.65);
+    FX.ps.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v-(opt.up||160),life:0,max:900+Math.random()*700,s:4+(Math.random()*2|0)*2,c:colors[i%colors.length]});
+  }
+  if(!FX.run){FX.run=true;FX.last=gnow();requestAnimationFrame(fxStep)}
+}
+function fxStep(){
+  const cv=document.getElementById('fx');if(!cv){FX.run=false;FX.ps=[];return}
+  const T=gnow(),dt=Math.min(50,T-FX.last);FX.last=T;
+  const x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);
+  FX.ps=FX.ps.filter(p=>p.life<p.max);
+  FX.ps.forEach(p=>{
+    p.life+=dt;p.vy+=900*dt/1000;p.x+=p.vx*dt/1000;p.y+=p.vy*dt/1000;
+    x.globalAlpha=Math.max(0,1-p.life/p.max);x.fillStyle=p.c;x.fillRect(Math.round(p.x),Math.round(p.y),p.s,p.s);
+  });
+  x.globalAlpha=1;
+  if(FX.ps.length)requestAnimationFrame(fxStep);else{FX.run=false;x.clearRect(0,0,cv.width,cv.height)}
+}
+const FX_COIN=['#ffd23f','#ffb000','#fff3a8'],FX_WIN=['#ffd23f','#ff4d5e','#3dff7a','#4dd2ff','#b36bff'];

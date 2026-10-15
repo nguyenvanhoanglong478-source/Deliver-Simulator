@@ -32,7 +32,7 @@ with sync_playwright() as p:
     tl2=pg.evaluate("mgData.timeLeft")
     ok('minigame resumes without losing the paused time',tl2<tl and tl-tl2<1.6,f"{tl}->{tl2}")
     # dodge
-    pg.evaluate("clearInterval(mgTmr);clearInterval(mgSpw);mgData=null;g.phase='game';render()")
+    pg.evaluate("stopT(mgTmr);stopT(mgSpw);mgData=null;g.phase='game';render()")
     pg.evaluate("g.stamina=100;g.fuel=100;g.offers[0]={type:'goods',dist:1,rush:false,mg:'dodge',peak:false,base:80000};doDelivery(0)")
     pg.wait_for_function("g.phase==='minigame'",timeout=5000)
     pg.wait_for_timeout(800); pg.keyboard.press('p'); y=pg.evaluate("JSON.stringify(mgData.obs)"); pg.wait_for_timeout(1500)

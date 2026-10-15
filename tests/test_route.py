@@ -51,7 +51,7 @@ with sync_playwright() as p:
     pg.keyboard.press('p'); pg.wait_for_timeout(300); ok('resume: no instant miss',pg.evaluate("mgData.mistakes")==mi)
     pg.keyboard.press('ArrowUp'); ok('keyboard works',pg.evaluate("mgData.idx+mgData.mistakes")>=mi+0 and pg.evaluate("mgData.mistakes+mgData.idx")>=1)
     # layout
-    pg.evaluate("clearInterval(mgTmr);mgData=null;modal=null"); pg.evaluate("localStorage.clear();localStorage.setItem('btd_tut','1')"); pg.reload(); pg.evaluate("startGame(true)")
+    pg.evaluate("stopT(mgTmr);mgData=null;modal=null"); pg.evaluate("localStorage.clear();localStorage.setItem('btd_tut','1')"); pg.reload(); pg.evaluate("startGame(true)")
     ok('main screen compact (<1450px)',pg.evaluate("document.documentElement.scrollHeight")<1450,str(pg.evaluate("document.documentElement.scrollHeight")))
     ok('meters 3 per row',pg.evaluate("new Set([...document.querySelectorAll('.meters .meter')].map(e=>Math.round(e.getBoundingClientRect().top))).size")==1)
     pg.evaluate("g.cash=9e6;g.phase='upgrade';render()")

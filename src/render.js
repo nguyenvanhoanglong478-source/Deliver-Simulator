@@ -164,7 +164,7 @@ function rMG(){
     return`<div class="mg">
     <div class="mg-hdr"><span class="mg-timer" id="mg-timer">${Math.ceil(mgData.timeLeft)}s</span><span class="lbl">NÉ VẬT CẢN!</span><span class="mg-score" id="mg-score">VA 0/3</span></div>
     <div class="bar"><i id="mg-bar" class="gr" style="width:0%"></i></div>
-    <div class="dg-field" id="dg-field" onpointerdown="dgTap(event)" aria-label="Đường 3 làn"></div>
+    <canvas class="dg-field" id="dg-field" width="192" height="256" onpointerdown="dgTap(event)" aria-label="Đường 3 làn"></canvas>
     <div class="dg-btns"><button class="btn b-dim" onpointerdown="event.preventDefault();dgMove(-1)" aria-label="Sang trái">◀</button><button class="btn b-dim" onpointerdown="event.preventDefault();dgMove(1)" aria-label="Sang phải">▶</button></div>
     <div class="mg-hint">Chạm làn hoặc bấm ◀ ▶ (phím mũi tên). Va tối đa 2 lần để nhận đủ tiền.</div>
   </div>`;

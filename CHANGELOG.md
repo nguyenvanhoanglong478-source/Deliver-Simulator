@@ -44,3 +44,12 @@
 
 ## Failed orders get no good events
 - A delivery that pays nothing (failed mini-game) can no longer trigger tip / VIP / Be reward events; bad events (breakdown, fine, crash) can still happen. Tests added to test_gameplay.py.
+
+## Engineering pass (packaging, game clock, canvas, validation, offline)
+- Music and fonts are separate files: `index.html` went from 5.6 MB to about 400 KB. `python3 build.py --artifact FILE` still builds a one-file embedded version for Claude artifacts.
+- Bundled fonts (VT323 incl. Vietnamese subset, Press Start 2P), no Google Fonts request.
+- Service worker + web manifest + icons: offline play and installable (precaches the shell and fonts, caches music on first play with Range support).
+- `src/loop.js`: a single game clock replaces every setInterval/setTimeout of the game; pause is one switch and now also works during delivery, refuel and sleep animations (light overlay, no re-render). Hidden tab pauses.
+- Dodge and Route Rush road drawn on canvas (smooth frame-by-frame, scrolling road); canvas particle bursts on successful delivery and on winning.
+- `src/state.js`: JSDoc state shape, `stateProblems()` / `repairState()`; `save()` repairs and warns instead of writing a broken state.
+- New tests: test_loop (14), test_state (23), test_offline (20).

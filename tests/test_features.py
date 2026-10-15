@@ -39,13 +39,13 @@ with sync_playwright() as p:
     E("g.dayTimeLeft=300;g.stamina=100;g.fuel=100;g.offers[0]={type:'food',dist:1,rush:false,mg:'catch',peak:false,base:50000}")
     E("rollEvt=()=>null"); c0=E("g.cash"); E("doDelivery(0)")
     ok('order costs paid and order replaced',E("g.stamina")<100 and E("g.offers.length")==3 and E("g.phase")=='minigame')
-    E("mgData.caught=12;mgData.timeLeft=0;mgData.done=true;clearInterval(mgTmr);clearInterval(mgSpw);showMgResult()")
+    E("mgData.caught=12;mgData.timeLeft=0;mgData.done=true;stopT(mgTmr);stopT(mgSpw);showMgResult()")
     pg.wait_for_function("g.phase==='game'",timeout=12000)
     ok('full catch pays full price',E("g.cash")-c0==50000,str(E("g.cash")-c0))
     # rush: easier threshold, shorter time
     E("g.offers[0]={type:'food',dist:1,rush:true,mg:'catch',peak:false,base:80000};doDelivery(0)")
     ok('rush: 15s and 9 catches needed',E("mgData.limit==15&&mgData.full==9"))
-    E("mgData.caught=9;mgData.done=true;clearInterval(mgTmr);clearInterval(mgSpw);showMgResult()"); c0=E("g.cash")
+    E("mgData.caught=9;mgData.done=true;stopT(mgTmr);stopT(mgSpw);showMgResult()"); c0=E("g.cash")
     pg.wait_for_function("g.phase==='game'",timeout=12000); ok('rush pays on 9 catches',E("g.cash")-c0==80000,str(E("g.cash")-c0))
     # --- dodge ---
     for hits,exp in ((0,1),(2,1),(4,.5),(7,0)):
@@ -53,7 +53,7 @@ with sync_playwright() as p:
         E("doDelivery(0)")
         ok(f'dodge screen renders ({hits})',pg.locator('#dg-field').count()==1)
         c0=E("g.cash")
-        E(f"mgData.hits={hits};mgData.done=true;clearInterval(mgTmr);showMgResult()")
+        E(f"mgData.hits={hits};mgData.done=true;stopT(mgTmr);showMgResult()")
         pg.wait_for_function("g.phase==='game'",timeout=12000)
         ok(f'dodge {hits} hits pays x{exp}',E("g.cash")-c0==int(60000*exp),str(E("g.cash")-c0))
     E("g.offers[0]={type:'food',dist:1,rush:false,mg:'dodge',peak:false,base:60000};doDelivery(0)")

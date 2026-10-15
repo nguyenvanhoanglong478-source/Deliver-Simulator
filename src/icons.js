@@ -461,3 +461,25 @@ function skylineURI(seed,body,win,h){
   rs.setProperty('--sky-far',skylineURI(7,'#231659','#4a3a9a',96));
   rs.setProperty('--sky-near',skylineURI(21,'#120b36','#ffd43b',72));
 })();
+
+// ===== CANVAS SPRITES: the same pixel maps, drawn to <canvas> for mini-games and effects =====
+const _spr={};
+function spriteCanvas(name){
+  if(_spr[name])return _spr[name];
+  const d=ICONS[name];if(!d)return null;
+  const rows=d.m,c=document.createElement('canvas');c.width=rows[0].length;c.height=rows.length;
+  const x=c.getContext('2d');
+  rows.forEach((row,y)=>{for(let i=0;i<row.length;i++){const ch=row[i];if(ch!=='.'){x.fillStyle=d.p[ch];x.fillRect(i,y,1,1)}}});
+  return _spr[name]=c;
+}
+function avatarCanvas(helmet){
+  const hc=helmet||HELMETS[0],key='av'+hc;
+  if(_spr[key])return _spr[key];
+  const pal={o:'#000',h:hc,H:shade(hc,.65),s:'#f2c28f',e:'#000',m:'#b5503c',j:'#1fae4c',J:'#14762f'};
+  const c=document.createElement('canvas');c.width=12;c.height=12;const x=c.getContext('2d');
+  AV_MAP.forEach((row,y)=>{for(let i=0;i<row.length;i++){const ch=row[i];if(ch!=='.'){x.fillStyle=pal[ch];x.fillRect(i,y,1,1)}}});
+  return _spr[key]=c;
+}
+let _bikeImg=null;
+function bikeImage(){if(!_bikeImg){_bikeImg=new Image();_bikeImg.src=BIKE}return _bikeImg}
+function drawSprite(ctx,cv,x,y,w,h){if(!cv)return;ctx.imageSmoothingEnabled=false;ctx.drawImage(cv,Math.round(x),Math.round(y),w,h===undefined?w:h)}
