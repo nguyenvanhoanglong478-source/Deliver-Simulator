@@ -53,3 +53,6 @@
 - Dodge and Route Rush road drawn on canvas (smooth frame-by-frame, scrolling road); canvas particle bursts on successful delivery and on winning.
 - `src/state.js`: JSDoc state shape, `stateProblems()` / `repairState()`; `save()` repairs and warns instead of writing a broken state.
 - New tests: test_loop (14), test_state (23), test_offline (20).
+
+## Shop price cells
+- Price / owned / locked cells on the Upgrade page are now all exactly 128x38 on phones and desktop (they used to size by their text, 51-118 px wide and two different heights). Removed the conflicting CSS rules. Test added in test_ux.py (21 checks).

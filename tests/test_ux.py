@@ -32,6 +32,14 @@ with sync_playwright() as p:
     bad=pg.evaluate("[...document.querySelectorAll('.upg-act .btn')].filter(b=>b.scrollWidth>b.clientWidth+1||b.getBoundingClientRect().right>innerWidth).length")
     ok('shop buttons not clipped at 360px',bad==0,str(bad))
     ok('no horizontal scroll',pg.evaluate("document.documentElement.scrollWidth<=innerWidth"))
+    # shop price cells: identical size for price / owned / locked, on phone and desktop
+    for w in (320,360,1280):
+        pg.set_viewport_size({'width':w,'height':800})
+        pg.evaluate("g.cash=99e6;g.ms=[25e6];g.upgrades={gps:true,heat:true};g.vehicleHp=60;g.phase='upgrade';render()")
+        sz=pg.evaluate("[...new Set([...document.querySelectorAll('.upg-act > *')].map(e=>Math.round(e.getBoundingClientRect().width)+'x'+Math.round(e.getBoundingClientRect().height)))]")
+        ok(f'shop action cells all one size at {w}px',len(sz)==1,str(sz))
+        ok(f'shop action text fits at {w}px',pg.evaluate("[...document.querySelectorAll('.upg-act > *')].every(e=>e.scrollWidth<=e.clientWidth+1)"))
+    pg.set_viewport_size({'width':360,'height':640})
     pg.evaluate("g.phase='game';render()")
     ok('money fits on one line',pg.evaluate("[...document.querySelectorAll('.stat .v')].every(e=>e.scrollWidth<=e.clientWidth+1)"))
     ok('no page errors',not errs,str(errs)); b.close()
