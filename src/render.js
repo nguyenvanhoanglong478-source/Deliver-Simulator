@@ -95,11 +95,15 @@ function rGame(){
       <div class="pxf meter hp" aria-label="Độ bền xe"><div class="meter-top"><span>${ic('gear',20)}<em>ĐỘ BỀN XE</em></span><b${hpLow?' style="color:var(--red)"':''}>${g.vehicleHp}%</b></div>
         <div class="bar"><i class="${g.vehicleHp>=60?'gr':g.vehicleHp>=30?'or':'red'}" style="width:${g.vehicleHp}%"></i></div></div>
     </div>
+    <div class="lmeters">
+      <div class="pxf meter" aria-label="Sức khỏe"><div class="meter-top"><span>${ic('heart',20)}<em>SỨC KHỎE</em></span><b>${g.health}</b></div>
+        <div class="bar"><i class="${meterColor(g.health,35,60)}" style="width:${g.health}%"></i></div></div>
+      <div class="pxf meter" aria-label="Gia đình yên tâm"><div class="meter-top"><span>${ic('house',20)}<em>GIA ĐÌNH</em></span><b>${g.family}</b></div>
+        <div class="bar"><i class="${meterColor(g.family,25,50)}" style="width:${g.family}%"></i></div></div>
+    </div>
     <div class="pxf strip">
       <span>${ic('cal',20)}NGÀY ${g.day}/${C.daysPerMonth}</span>
       <span>${ic('box',20)}${g.delivered} ĐƠN</span>
-      <span style="${g.health<35?'color:var(--red)':''}">${ic('heart',20)}${g.health}</span>
-      <span style="${g.family<25?'color:var(--red)':''}">${ic('house',20)}${g.family}</span>
       ${g.debt>0?`<span style="color:var(--red)">${ic('bag',20)}NỢ ${fm(g.debt)}</span>`:''}
       ${isSick()?`<span class="rain-tag" style="color:var(--red)">${ic('pill',20)}ỐM ${g.sickDays} NGÀY</span>`:''}
       ${g.rainToday?`<span class="rain-tag">${ic('cloud',20)}MƯA</span>`:''}
@@ -124,7 +128,7 @@ function rGame(){
         <button class="btn b-dim util" onclick="doSleep()">${ic('moon',28)}<span class="lb">NGỦ NGHỈ</span><span class="sb" style="color:var(--cy)">+${C.sleepRate}/giây</span></button>
         <button class="btn b-pu util" onclick="goUpgrade()">${ic('gear',28)}<span class="lb">NÂNG CẤP</span><span class="sb">xe & phụ tùng</span></button>
       </div>
-      <button class="btn b-dim blk life-btn" onclick="openHub()">${ic('house',24)}ĐỜI SỐNG: GIA ĐÌNH & ĐẦU TƯ${invTotal()>0?` <small>(${fm(invTotal())})</small>`:''}</button>
+      <button class="btn b-dim blk life-btn" onclick="openHub()">${ic('house',24)}ĐỜI SỐNG${invTotal()>0||g.debt>0?` <small>(${[invTotal()>0?'ĐT '+fm(invTotal()):'',g.debt>0?'NỢ '+fm(g.debt):''].filter(Boolean).join(' · ')})</small>`:''}</button>
       <button class="btn b-cy blk endday" onclick="askEndDay()">${ic('flag',24)}KẾT THÚC NGÀY ${g.day}</button>
     </div>
     <details class="fold" ${foldOpen.sav||innerWidth>=860?'open':''} ontoggle="foldOpen.sav=this.open">
@@ -334,24 +338,33 @@ function rModal(){
   }
   if(type==='hub'){
     const rb=(a,l)=>`<button class="btn b-gold sm" onclick="remit(${a})" ${g.cash<a?'disabled':''}>${l}</button>`;
+    const lb=(fn,cls,l,dis)=>`<button class="btn ${cls} sm" onclick="${fn}" ${dis?'disabled':''}>${l}</button>`;
     return`<div class="overlay"><div class="pxf2 modal hub">
       <div class="m-title" style="color:var(--gold)">${ic('house',28)} ĐỜI SỐNG</div>
-      <div class="m-body">Tiền mặt: <b>${ff(g.cash)}</b> · Gia đình yên tâm: <b>${g.family}/100</b></div>
-      <div class="sec-t">${ic('phone',20)}GỬI TIỀN VỀ QUÊ</div>
-      <div class="save-grid">${rb(2e5,'200K')}${rb(5e5,'500K')}${rb(1e6,'1TR')}${rb(2e6,'2TR')}</div>
-      <div class="sub">Gia đình lo lắng dần theo tháng. Yên tâm thì mẹ gửi đồ quê, lo quá thì bạn ăn ngủ không yên.</div>
-      ${g.drink>0||g.gamble>0?`<div class="sec-t">${ic('heart',20)}THÓI QUEN</div>
-      <div class="m-body">${g.drink>0?`${ic('beer',20)} Rượu bia ${g.drink}/100 `:''}${g.gamble>0?`${ic('dice',20)} Cờ bạc ${g.gamble}/100`:''}</div>
-      <button class="btn b-dim sm" onclick="quitHabits()" ${g.quitM===g.month?'disabled':''}>${g.quitM===g.month?'ĐÃ TỰ NHỦ THÁNG NÀY':'TỰ NHỦ BỚT LẠI (-15)'}</button>`:''}
-      <div class="sec-t">${ic('bag',20)}VAY & TRẢ NỢ</div>
-      <div class="m-body">Nợ: <b style="color:${g.debt?'var(--red)':'inherit'}">${ff(g.debt)}</b>${g.debt?` · lãi ${Math.round(g.debtRate*100)}%/tháng`:''}</div>
-      <div class="save-grid">${g.debt>0?`<button class="btn b-gr sm" onclick="repay(1e6);render()" ${g.cash<1e6?'disabled':''}>TRẢ 1TR</button><button class="btn b-gr sm" onclick="repay(5e6);render()" ${g.cash<5e6?'disabled':''}>TRẢ 5TR</button><button class="btn b-gr sm" onclick="repay(g.debt);render()" ${g.cash<=0?'disabled':''}>TRẢ HẾT</button>`:''}
-      <button class="btn b-red sm" onclick="takeLoan('hot')" ${g.debt>=2e7?'disabled':''}>VAY NÓNG 3TR (15%)</button><button class="btn b-red sm" onclick="takeLoan('app')" ${g.debt>=2e7?'disabled':''}>VAY APP 5TR (PHÍ 10%, LÃI 25%)</button></div>
-      <div class="sub">Vay nóng lãi cộng dồn mỗi tháng. Nợ từ 30TR là bị siết nhà. Phải hết nợ mới được tính là thắng.</div>
-      <div class="sec-t">${ic('chart',20)}ĐẦU TƯ (SỔ THEO THÁNG)</div>
-      ${INVS.map(x=>`<div class="inv-row"><div>${ic(x.ic,28)} <b>${x.n}</b> ${fm(invOf(x.id))}<div class="sub">${x.d}</div></div>
-        <div class="save-grid"><button class="btn b-gr sm" onclick="invBuy('${x.id}',1e6)" ${g.cash<1e6?'disabled':''}>MUA 1TR</button><button class="btn b-gr sm" onclick="invBuy('${x.id}',5e6)" ${g.cash<5e6?'disabled':''}>MUA 5TR</button><button class="btn b-red sm" onclick="invSell('${x.id}','all')" ${invOf(x.id)<=0?'disabled':''}>BÁN HẾT</button></div></div>`).join('')}
-      <div class="sub">Bán mất phí 1%. Hết 24 tháng, đầu tư tự bán vào tiết kiệm.</div>
+      <div class="hub-sum"><span>Tiền mặt <b>${ff(g.cash)}</b></span><span>Sức khỏe <b>${g.health}</b></span><span>Gia đình <b>${g.family}</b></span></div>
+      <section class="hub-sec">
+        <div class="sec-t">${ic('phone',20)}GỬI TIỀN VỀ QUÊ</div>
+        <div class="hub-grid g4">${rb(2e5,'200K')}${rb(5e5,'500K')}${rb(1e6,'1TR')}${rb(2e6,'2TR')}</div>
+        <div class="sub">Gia đình lo lắng dần theo tháng. Yên tâm thì mẹ gửi đồ quê, lo quá thì bạn ăn ngủ không yên.</div>
+      </section>
+      ${g.drink>0||g.gamble>0?`<section class="hub-sec">
+        <div class="sec-t">${ic('heart',20)}THÓI QUEN</div>
+        <div class="hub-habits">${g.drink>0?`<span>${ic('beer',20)} Rượu bia <b>${g.drink}</b>/100</span>`:''}${g.gamble>0?`<span>${ic('dice',20)} Cờ bạc <b>${g.gamble}</b>/100</span>`:''}</div>
+        <div class="hub-grid g1">${lb('quitHabits()','b-dim',g.quitM===g.month?'ĐÃ TỰ NHỦ THÁNG NÀY':'TỰ NHỦ BỚT LẠI (-15)',g.quitM===g.month)}</div>
+      </section>`:''}
+      <section class="hub-sec">
+        <div class="sec-t">${ic('bag',20)}VAY & TRẢ NỢ</div>
+        <div class="hub-debt">Nợ <b style="color:${g.debt?'var(--red)':'inherit'}">${ff(g.debt)}</b>${g.debt?` <em>lãi ${Math.round(g.debtRate*100)}%/tháng</em>`:''}</div>
+        ${g.debt>0?`<div class="hub-grid g3">${lb('repay(1e6);render()','b-gr','TRẢ 1TR',g.cash<1e6)}${lb('repay(5e6);render()','b-gr','TRẢ 5TR',g.cash<5e6)}${lb('repay(g.debt);render()','b-gr','TRẢ HẾT',g.cash<=0)}</div>`:''}
+        <div class="hub-grid g2">${lb("takeLoan('hot')",'b-red','<span>VAY NÓNG 3TR<small>lãi 15%/tháng</small></span>',g.debt>=2e7)}${lb("takeLoan('app')",'b-red','<span>VAY APP 5TR<small>phí 10%, lãi 25%</small></span>',g.debt>=2e7)}</div>
+        <div class="sub">Lãi cộng dồn mỗi tháng. Nợ từ 30TR là bị siết nhà. Phải hết nợ mới được tính là thắng.</div>
+      </section>
+      <section class="hub-sec">
+        <div class="sec-t">${ic('chart',20)}ĐẦU TƯ (SỔ THEO THÁNG)</div>
+        ${INVS.map(x=>`<div class="inv-row"><div class="inv-h">${ic(x.ic,28)}<div><b>${x.n}</b> <span>${fm(invOf(x.id))}</span><div class="sub">${x.d}</div></div></div>
+          <div class="hub-grid g3">${lb(`invBuy('${x.id}',1e6)`,'b-gr','MUA 1TR',g.cash<1e6)}${lb(`invBuy('${x.id}',5e6)`,'b-gr','MUA 5TR',g.cash<5e6)}${lb(`invSell('${x.id}','all')`,'b-red','BÁN HẾT',invOf(x.id)<=0)}</div></div>`).join('')}
+        <div class="sub">Bán mất phí 1%. Hết 24 tháng, đầu tư tự bán vào tiết kiệm.</div>
+      </section>
       <button class="btn b-cy blk" onclick="modal=null;render()">ĐÓNG</button>
     </div></div>`;
   }

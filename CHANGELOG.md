@@ -1,6 +1,7 @@
 # Nhật ký thay đổi
 
 ## Gần nhất
+- Layout: thanh Sức khỏe / Gia đình riêng ở màn chính, bảng ĐỜI SỐNG chia mục rõ ràng (nút không còn tràn trên mobile, rộng hơn trên PC), nút ĐỜI SỐNG tách khỏi khối hành động.
 - Rà soát logic life-sim: cảm lạnh sau hôm mưa (trước đó không bao giờ xảy ra), "hết tiền ăn" chỉ khi thật sự hết tiền và tiết kiệm, sự kiện đang mở được lưu và hiện lại khi tải lại trang, trả hết nợ là thắng ngay, tháng cuối trả nợ bằng tiền mặt trước, hướng dẫn thêm trang ĐỜI SỐNG.
 - Life-sim giai đoạn 5: cốt truyện 4 chương (tháng 1/7/13/19), sự kiện gia đình theo tháng 3/9/15/21 (mái nhà dột, em đóng học phí, mẹ nhập viện, bạn rủ góp vốn), kết thúc nhiều kiểu theo cách sống, hiển thị mức khắc nghiệt. Cân bằng lại: tiền đơn tăng khoảng 20% (đồ ăn 30k-60k, hàng hóa 60k-130k); mô phỏng Monte-Carlo cho người giỏi thắng ~50%, người trung bình ~12%.
 - Life-sim giai đoạn 4: vay (bạn không lãi, vay nóng 15%, app 25% có phí), lãi cộng dồn hàng tháng, người đòi nợ, nợ từ 30TR bị siết (thua), phải hết nợ mới thắng; vé số (trúng nhỏ/lớn/độc đắc), sự kiện hết tiền ăn.
