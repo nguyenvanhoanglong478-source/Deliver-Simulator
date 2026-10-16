@@ -339,6 +339,9 @@ function rModal(){
       <div class="sec-t">${ic('phone',20)}GỬI TIỀN VỀ QUÊ</div>
       <div class="save-grid">${rb(2e5,'200K')}${rb(5e5,'500K')}${rb(1e6,'1TR')}${rb(2e6,'2TR')}</div>
       <div class="sub">Gia đình lo lắng dần theo tháng. Yên tâm thì mẹ gửi đồ quê, lo quá thì bạn ăn ngủ không yên.</div>
+      ${g.drink>0||g.gamble>0?`<div class="sec-t">${ic('heart',20)}THÓI QUEN</div>
+      <div class="m-body">${g.drink>0?`${ic('beer',20)} Rượu bia ${g.drink}/100 `:''}${g.gamble>0?`${ic('dice',20)} Cờ bạc ${g.gamble}/100`:''}</div>
+      <button class="btn b-dim sm" onclick="quitHabits()" ${g.quitM===g.month?'disabled':''}>${g.quitM===g.month?'ĐÃ TỰ NHỦ THÁNG NÀY':'TỰ NHỦ BỚT LẠI (-15)'}</button>`:''}
       <div class="sec-t">${ic('chart',20)}ĐẦU TƯ (SỔ THEO THÁNG)</div>
       ${INVS.map(x=>`<div class="inv-row"><div>${ic(x.ic,28)} <b>${x.n}</b> ${fm(invOf(x.id))}<div class="sub">${x.d}</div></div>
         <div class="save-grid"><button class="btn b-gr sm" onclick="invBuy('${x.id}',1e6)" ${g.cash<1e6?'disabled':''}>MUA 1TR</button><button class="btn b-gr sm" onclick="invBuy('${x.id}',5e6)" ${g.cash<5e6?'disabled':''}>MUA 5TR</button><button class="btn b-red sm" onclick="invSell('${x.id}','all')" ${invOf(x.id)<=0?'disabled':''}>BÁN HẾT</button></div></div>`).join('')}

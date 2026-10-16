@@ -1,6 +1,7 @@
 # Nhật ký thay đổi
 
 ## Gần nhất
+- Life-sim giai đoạn 3: lời mời nhậu / đánh bài / tò mò cá cược (sự kiện nhỏ, có giá), thanh thói quen rượu và cờ bạc, thèm, mệt sau rượu, gan yếu; nút "tự nhủ bớt lại" mỗi tháng một lần.
 - Life-sim giai đoạn 2: menu ĐỜI SỐNG (gửi tiền về quê, mua/bán vàng và chứng khoán, biến động theo tháng, tự bán vào tiết kiệm khi hết 24 tháng); gia đình lo dần mỗi tháng.
 - Life-sim giai đoạn 1: mức khắc nghiệt ngẫu nhiên (ẩn, hiện ở màn thắng/thua), chỉ số sức khỏe/gia đình/nợ, engine sự kiện có lựa chọn (cảm lạnh, mẹ gọi), ốm thì không nhận đơn được.
 - Đơn bị khách hủy không tạo đánh giá và không đổi số sao.

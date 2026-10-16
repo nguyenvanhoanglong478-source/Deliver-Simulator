@@ -6,13 +6,14 @@ const HARDS=[
   {n:'KHẮC NGHIỆT',m:1.4,c:'var(--red)'},
 ];
 function hardM(){return(HARDS[g.hard]||HARDS[1]).m}
-function lifeDefaults(){return{hard:Math.floor(Math.random()*HARDS.length),health:100,family:60,debt:0,sickDays:0,lifeCd:0,lifeSeen:{},inv:{}}}
+function lifeDefaults(){return{hard:Math.floor(Math.random()*HARDS.length),health:100,family:60,debt:0,sickDays:0,lifeCd:0,lifeSeen:{},inv:{},drink:0,gamble:0,quitM:0}}
 function lifeFix(s){   // fill / clamp life fields (older saves, repair)
   const d=lifeDefaults(),cl=(v,lo,hi,x)=>Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):x;
   s.hard=[0,1,2].includes(s.hard)?s.hard:1;
   s.health=cl(s.health,0,100,100);s.family=cl(s.family,0,100,60);s.debt=Math.round(cl(s.debt,0,1e12,0));
   s.sickDays=Math.round(cl(s.sickDays,0,30,0));s.lifeCd=Math.round(cl(s.lifeCd,0,60,0));
   if(!s.lifeSeen||typeof s.lifeSeen!=='object'||Array.isArray(s.lifeSeen))s.lifeSeen={};
+  s.drink=cl(s.drink,0,100,0);s.gamble=cl(s.gamble,0,100,0);s.quitM=Math.round(cl(s.quitM,0,99,0));
   if(!s.inv||typeof s.inv!=='object'||Array.isArray(s.inv))s.inv={};
   Object.keys(s.inv).forEach(k=>{if(!Number.isFinite(s.inv[k])||s.inv[k]<0)s.inv[k]=0});
   return s;
@@ -25,6 +26,7 @@ function lifeBad(s){
   if(!_inR(s.sickDays,0,30))p.push('sickDays');
   if(!_inR(s.lifeCd,0,60))p.push('lifeCd');
   if(!s.lifeSeen||typeof s.lifeSeen!=='object'||Array.isArray(s.lifeSeen))p.push('lifeSeen');
+  ['drink','gamble'].forEach(k=>{if(!_inR(s[k],0,100))p.push(k)});
   if(!s.inv||typeof s.inv!=='object'||Array.isArray(s.inv)||Object.values(s.inv).some(v=>!_inR(v,0,1e12)))p.push('inv');
   return p;
 }
@@ -49,16 +51,77 @@ const LIFE_EVTS=[
     {l:'GỬI MẸ 200K',ok:()=>g.cash>=2e5,fn:()=>{lifeSpend(2e5);lifeGain('family',5);return 'Ít thôi nhưng là tấm lòng. Mẹ dặn con giữ sức khỏe.'}},
     {l:'"CON BẬN, ĐỂ SAU"',fn:()=>{lifeGain('family',-8);return 'Mẹ im lặng một chút rồi nói "ừ, con lo công việc đi".'}},
    ]},
+  // --- temptations: small, optional, never the "right" answer; each yes has a visible cost ---
+  {id:'friendDrink',ic:'beer',ti:'BẠN RỦ NHẬU',
+   when:()=>g.day>=4&&!isSick(),p:()=>.045*hardM()*(1+g.drink/60),
+   text:()=>g.drink>=40?'Mấy anh em cùng xóm trọ rủ: "Hôm nay làm vài chai cho đỡ mệt, bao nhiêu mà tính".':'Một người bạn cùng quê rủ sau ca: "Đi làm một ly cho vui, lên phố khổ lắm, giải sầu tí".',
+   choices:[
+    {l:'TỪ CHỐI, VỀ NGHỈ',fn:()=>{g.drink=Math.max(0,g.drink-3);lifeGain('health',2);return 'Bạn cười trừ rồi về phòng. Ngủ sớm, sáng mai đỡ mệt hơn.'}},
+    {l:'ĐI MỘT LY THÔI (150K)',ok:()=>g.cash>=15e4,fn:()=>{lifeSpend(15e4);g.drink=Math.min(100,g.drink+7);g.stamina=Math.max(0,g.stamina-10);return 'Một ly thành vài ly. Về trễ, người nặng nề.'}},
+    {l:'NHẬU CHO ĐÃ (400K)',ok:()=>g.cash>=4e5,fn:()=>{lifeSpend(4e5);g.drink=Math.min(100,g.drink+16);lifeGain('health',-8);g.sickDays=Math.max(g.sickDays,1);return 'Sáng hôm sau đầu như búa bổ, bạn nằm bẹp cả ngày. Tiền mất, việc cũng mất.'}},
+   ]},
+  {id:'craveDrink',ic:'beer',ti:'THÈM MEN',
+   when:()=>g.drink>=35&&!isSick(),p:()=>.03+g.drink/1500,
+   text:()=>'Tối về phòng trọ vắng, bạn thấy bứt rứt, tay cứ muốn với chai bia trong tủ lạnh.',
+   choices:[
+    {l:'NHỊN, ĐI TẮM RỒI NGỦ',fn:()=>{g.drink=Math.max(0,g.drink-10);lifeGain('health',3);return 'Cơn thèm qua đi sau nửa tiếng. Bạn thấy nhẹ nhõm vì đã nhịn được.'}},
+    {l:'UỐNG MỘT MÌNH (100K)',ok:()=>g.cash>=1e5,fn:()=>{lifeSpend(1e5);g.drink=Math.min(100,g.drink+6);lifeGain('health',-4);return 'Một chai rồi hai chai. Sáng dậy bạn thấy hơi hối hận.'}},
+   ]},
+  {id:'hangover',ic:'pill',ti:'MỆT SAU RƯỢU BIA',
+   when:()=>g.drink>=45&&!isSick(),p:()=>g.drink/700*hardM(),
+   text:()=>'Thói quen uống bắt đầu đòi nợ: đau đầu, buồn nôn, tay run khi cầm lái.',
+   choices:[
+    {l:'MUA THUỐC & NGHỈ (120K)',ok:()=>g.cash>=12e4,fn:()=>{lifeSpend(12e4);g.sickDays=1;return 'Bạn nằm nghỉ một ngày, nghĩ lại chuyện uống bia.'}},
+    {l:'CỐ CHẠY XE',fn:()=>{g.sickDays=2;lifeGain('health',-8);return 'Chạy được nửa buổi thì choáng, phải tấp vào lề. Bạn nghỉ hai ngày, may chưa tai nạn.'}},
+   ]},
+  {id:'liver',ic:'pill',ti:'ĐI KHÁM: GAN YẾU',
+   when:()=>g.drink>=65&&g.health<55,p:()=>.05*hardM(),
+   text:()=>'Bác sĩ nhìn kết quả xét nghiệm rồi lắc đầu: "Gan anh đang quá tải. Phải bỏ rượu và nghỉ ngơi."',
+   choices:[
+    {l:'ĐIỀU TRỊ (1,5TR)',ok:()=>g.cash>=15e5,fn:()=>{lifeSpend(15e5);g.sickDays=3;g.drink=Math.max(0,g.drink-30);lifeGain('health',10);return 'Nằm viện vài ngày, bạn hứa với mình sẽ bỏ. Gia đình biết tin đã rất lo.'}},
+    {l:'BỎ QUA',fn:()=>{g.sickDays=5;lifeGain('health',-15);lifeGain('family',-6);return 'Bạn tự ý bỏ qua. Cơ thể đòi lại: năm ngày ốm liệt giường.'}},
+   ]},
+  {id:'friendCards',ic:'dice',ti:'BẠN RỦ ĐÁNH BÀI',
+   when:()=>g.day>=6&&!isSick(),p:()=>.035*hardM()*(1+g.gamble/60),
+   text:()=>'Anh bạn quán nước vẫy tay: "Vào chơi ván cho vui, mấy trăm thôi, nhẹ nhàng!"',
+   choices:[
+    {l:'KHÔNG CHƠI',fn:()=>{g.gamble=Math.max(0,g.gamble-3);return 'Bạn nói còn phải đi giao hàng. Anh bạn nhún vai, rủ người khác.'}},
+    {l:'THỬ MỘT VÁN (100K)',ok:()=>g.cash>=1e5,fn:()=>gamble(1e5,6)},
+    {l:'CHƠI LỚN (500K)',ok:()=>g.cash>=5e5,fn:()=>gamble(5e5,13)},
+   ]},
+  {id:'curiousBet',ic:'phone',ti:'TÒ MÒ ĐIỆN THOẠI',
+   when:()=>g.day>=6&&!isSick(),p:()=>.025*hardM()*(1+g.gamble/60),
+   text:()=>'Quảng cáo "trò chơi đỏ đen, thắng ngay tiền mặt" hiện lên trên điện thoại lúc chờ đơn. Bạn tò mò.',
+   choices:[
+    {l:'TẮT QUẢNG CÁO',fn:()=>{g.gamble=Math.max(0,g.gamble-2);return 'Bạn tắt đi, tập trung chờ đơn tiếp theo.'}},
+    {l:'THỬ NẠP 100K',ok:()=>g.cash>=1e5,fn:()=>gamble(1e5,7)},
+   ]},
+  {id:'craveBet',ic:'dice',ti:'NGỨA TAY',
+   when:()=>g.gamble>=35&&!isSick(),p:()=>.03+g.gamble/1500,
+   text:()=>'Điện thoại rung. Bạn nhớ cảm giác hồi hộp lần trước, và cả số tiền đã mất. "Gỡ lại một ván thôi".',
+   choices:[
+    {l:'XÓA ỨNG DỤNG',fn:()=>{g.gamble=Math.max(0,g.gamble-12);return 'Bạn xóa app, hít một hơi. Số tiền đã mất không quay lại, nhưng sẽ không mất thêm.'}},
+    {l:'GỠ LẠI (300K)',ok:()=>g.cash>=3e5,fn:()=>gamble(3e5,9)},
+   ]},
 ];
+// Gambling: a first small win ("beginner's luck") hooks, afterwards the house wins more often. Hard mode tilts it further.
+function gamble(stake,hook){
+  const first=!g.lifeSeen.won;g.gamble=Math.min(100,g.gamble+hook);
+  const pWin=first?1:Math.max(.25,.42-g.gamble/400-(g.hard===2?.04:0));
+  if(Math.random()<pWin){const w=Math.round(stake*1.8);g.cash+=w-stake;g.lifeSeen.won=1;return first?`Bạn thắng ${ff(w-stake)}! Tim đập thình thịch... và muốn chơi thêm.`:`Lần này bạn thắng ${ff(w-stake)}.`}
+  lifeSpend(stake);return `Thua sạch ${ff(stake)}. Bạn thấy cay, nhưng cũng thấy mình dại.`;
+}
 function lifeNewDay(){
   if(g.sickDays>0){g.sickDays--;lifeGain('health',2);if(!g.sickDays)addLog('Đã khỏe lại, có thể chạy xe!','good');else addLog(`Còn ốm ${g.sickDays} ngày.`,'warn')}
   else lifeGain('health',3);
   if(g.lifeCd>0)g.lifeCd--;
+  if(Math.random()<.5)g.drink=Math.max(0,g.drink-1);if(Math.random()<.5)g.gamble=Math.max(0,g.gamble-1);
 }
 // Roll at most one life event for the new day; returns true if a modal was opened.
 function lifeRoll(){
   if(g.lifeCd>0||modal)return false;
-  for(const e of LIFE_EVTS){
+  const order=LIFE_EVTS.map(e=>[Math.random(),e]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+  for(const e of order){
     if(e.when()&&Math.random()<e.p()){
       g.lifeCd=3;g.lifeSeen[e.id]=(g.lifeSeen[e.id]||0)+1;
       modal={type:'life',id:e.id,res:null};return true;
@@ -109,8 +172,14 @@ function remit(amt){
 // monthly: family worries when nothing is sent; content family sends food and a little money
 function familyMonthEnd(){
   lifeGain('family',-Math.round(6*hardM()));
+  if(g.drink>=50){lifeGain('family',-4);addLog('Người nhà nghe tin bạn hay nhậu: -4 gia đình','warn')}
+  if(g.gamble>=50){lifeGain('family',-4);addLog('Người nhà nghe tin bạn hay cá cược: -4 gia đình','warn')}
   if(g.family>=70){const gift=rnd(2,4)*1e5;g.cash+=gift;addLog('Mẹ gửi đồ quê: +'+ff(gift),'earn')}
   else if(g.family<=20){lifeGain('health',-5);addLog('Lo chuyện nhà, ăn ngủ không yên: -5 sức khỏe','warn')}
 }
 function invLiquidate(){const t=invTotal();if(t>0){g.savings+=t;g.inv={};addLog('Bán hết đầu tư vào tiết kiệm: '+ff(t),'save')}}
+function quitHabits(){
+  if(g.phase!=='game'||g.quitM===g.month||(g.drink<=0&&g.gamble<=0))return;
+  g.quitM=g.month;g.drink=Math.max(0,g.drink-15);g.gamble=Math.max(0,g.gamble-15);lifeGain('family',2);addLog('Bạn tự nhủ phải bớt lại.','good');save();render();
+}
 function openHub(){if(modal||g.phase!=='game')return;modal={type:'hub'};render()}
