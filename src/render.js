@@ -123,6 +123,7 @@ function rGame(){
         <button class="btn b-dim util" onclick="doSleep()">${ic('moon',28)}<span class="lb">NGỦ NGHỈ</span><span class="sb" style="color:var(--cy)">+${C.sleepRate}/giây</span></button>
         <button class="btn b-pu util" onclick="goUpgrade()">${ic('gear',28)}<span class="lb">NÂNG CẤP</span><span class="sb">xe & phụ tùng</span></button>
       </div>
+      <button class="btn b-dim blk life-btn" onclick="openHub()">${ic('house',24)}ĐỜI SỐNG: GIA ĐÌNH & ĐẦU TƯ${invTotal()>0?` <small>(${fm(invTotal())})</small>`:''}</button>
       <button class="btn b-cy blk endday" onclick="askEndDay()">${ic('flag',24)}KẾT THÚC NGÀY ${g.day}</button>
     </div>
     <details class="fold" ${foldOpen.sav||innerWidth>=860?'open':''} ontoggle="foldOpen.sav=this.open">
@@ -328,6 +329,21 @@ function rModal(){
       <div class="m-body">${done?esc(modal.res):esc(e.text())}</div>
       ${done?`<button class="btn b-gr blk" onclick="lifeClose()">TIẾP TỤC</button>`
         :`<div class="life-ch">${e.choices.map((c,i)=>`<button class="btn ${i?'b-dim':'b-gr'} blk" ${c.ok&&!c.ok()?'disabled':''} onclick="lifeChoose(${i})">${c.l}</button>`).join('')}</div>`}
+    </div></div>`;
+  }
+  if(type==='hub'){
+    const rb=(a,l)=>`<button class="btn b-gold sm" onclick="remit(${a})" ${g.cash<a?'disabled':''}>${l}</button>`;
+    return`<div class="overlay"><div class="pxf2 modal hub">
+      <div class="m-title" style="color:var(--gold)">${ic('house',28)} ĐỜI SỐNG</div>
+      <div class="m-body">Tiền mặt: <b>${ff(g.cash)}</b> · Gia đình yên tâm: <b>${g.family}/100</b></div>
+      <div class="sec-t">${ic('phone',20)}GỬI TIỀN VỀ QUÊ</div>
+      <div class="save-grid">${rb(2e5,'200K')}${rb(5e5,'500K')}${rb(1e6,'1TR')}${rb(2e6,'2TR')}</div>
+      <div class="sub">Gia đình lo lắng dần theo tháng. Yên tâm thì mẹ gửi đồ quê, lo quá thì bạn ăn ngủ không yên.</div>
+      <div class="sec-t">${ic('chart',20)}ĐẦU TƯ (SỔ THEO THÁNG)</div>
+      ${INVS.map(x=>`<div class="inv-row"><div>${ic(x.ic,28)} <b>${x.n}</b> ${fm(invOf(x.id))}<div class="sub">${x.d}</div></div>
+        <div class="save-grid"><button class="btn b-gr sm" onclick="invBuy('${x.id}',1e6)" ${g.cash<1e6?'disabled':''}>MUA 1TR</button><button class="btn b-gr sm" onclick="invBuy('${x.id}',5e6)" ${g.cash<5e6?'disabled':''}>MUA 5TR</button><button class="btn b-red sm" onclick="invSell('${x.id}','all')" ${invOf(x.id)<=0?'disabled':''}>BÁN HẾT</button></div></div>`).join('')}
+      <div class="sub">Bán mất phí 1%. Hết 24 tháng, đầu tư tự bán vào tiết kiệm.</div>
+      <button class="btn b-cy blk" onclick="modal=null;render()">ĐÓNG</button>
     </div></div>`;
   }
   if(type==='confirmEnd'){

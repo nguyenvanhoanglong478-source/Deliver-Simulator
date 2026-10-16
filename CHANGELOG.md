@@ -1,6 +1,7 @@
 # Nhật ký thay đổi
 
 ## Gần nhất
+- Life-sim giai đoạn 2: menu ĐỜI SỐNG (gửi tiền về quê, mua/bán vàng và chứng khoán, biến động theo tháng, tự bán vào tiết kiệm khi hết 24 tháng); gia đình lo dần mỗi tháng.
 - Life-sim giai đoạn 1: mức khắc nghiệt ngẫu nhiên (ẩn, hiện ở màn thắng/thua), chỉ số sức khỏe/gia đình/nợ, engine sự kiện có lựa chọn (cảm lạnh, mẹ gọi), ốm thì không nhận đơn được.
 - Đơn bị khách hủy không tạo đánh giá và không đổi số sao.
 - Màn đổ xăng/nghỉ ngơi giữ thêm 1,5 giây khi xong; thanh xăng luôn đầy đúng mức đã chọn.

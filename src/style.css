@@ -454,3 +454,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 .upg-act .cur{margin-left:2px;font-size:inherit}
 .life-ch{display:flex;flex-direction:column;gap:8px}
 .life-ch .btn[disabled]{opacity:.4;pointer-events:none}
+.hub{max-height:92vh;overflow:auto}
+.hub .sec-t{margin-top:10px}
+.inv-row{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.life-btn{margin-top:0;padding:6px 10px;font-size:20px}

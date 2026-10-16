@@ -712,6 +712,7 @@ function confirmMonthEnd(){
   const {bonus}=modal;
   const bills=billsTotal();
   g.cash+=bonus;g.cash-=bills;g.fin.bills+=bills;
+  invMonthEnd();familyMonthEnd();
   if(bonus>0)addLog('Thưởng Be: +'+ff(bonus),'earn');
   addLog('Chi phí tháng '+g.month+': -'+ff(bills),'cost');
   if(g.cash<0&&g.savings>0){   // bills come out of savings before the player is declared broke
@@ -722,7 +723,7 @@ function confirmMonthEnd(){
   g.month++;g.day=1;g.earned=0;g.delivered=0;
   g.dailyEarned=0;g.dailySpent=0;g.dayTimeLeft=C.dayDuration;
   modal=null;
-  if(g.month>C.maxMonths){finish(g.savings>=C.winTarget);return;}
+  if(g.month>C.maxMonths){invLiquidate();finish(g.savings>=C.winTarget);return;}
   lifeNewDay();lifeRoll();
   save();startDayTimer();render();
 }
