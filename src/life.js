@@ -129,7 +129,74 @@ const LIFE_EVTS=[
     {l:'MUA 1 TỜ (20K)',ok:()=>g.cash>=2e4,fn:()=>lotto(1)},
     {l:'MUA 10 TỜ (200K)',ok:()=>g.cash>=2e5,fn:()=>lotto(10)},
    ]},
+  // --- story chain: fires once at the start of months 3, 9, 15, 21 (see STORY) ---
+  {id:'roof',ic:'house',ti:'CHUYỆN NHÀ: MÁI DỘT',when:()=>false,p:()=>0,
+   text:()=>'Mẹ gọi báo mùa mưa này mái nhà dột nặng, giường ướt hết. Mẹ nói "không sao", nhưng giọng nghe rất mệt.',
+   choices:[
+    {l:'GỬI 4TR SỬA MÁI',ok:()=>g.cash>=4e6,fn:()=>{lifeSpend(4e6);lifeGain('family',25);return 'Mái nhà được lợp lại. Mẹ khóc khi gọi báo tin, bạn bảo "con lo được".'}},
+    {l:'GỬI 1,5TR',ok:()=>g.cash>=15e5,fn:()=>{lifeSpend(15e5);lifeGain('family',10);return 'Đủ vá tạm chỗ dột nặng nhất. Mẹ dặn con đừng lo.'}},
+    {l:'ĐỂ SAU, CON ĐANG KHÓ',fn:()=>{lifeGain('family',-12);return 'Mẹ nói "ừ, con lo công việc". Bạn nghe tiếng mưa bên kia đầu dây mà thấy nghẹn.'}},
+   ]},
+  {id:'sibling',ic:'phone',ti:'EM ĐÓNG HỌC PHÍ',when:()=>false,p:()=>0,
+   text:()=>'Em gái nhắn tin: trường báo đóng học phí kỳ mới 2 triệu, em đang tính nghỉ đi làm phụ quán.',
+   choices:[
+    {l:'GỬI 2TR CHO EM',ok:()=>g.cash>=2e6,fn:()=>{lifeSpend(2e6);lifeGain('family',15);return 'Em nhắn lại một chữ "cảm ơn anh/chị" và hình trường lớp. Bạn nhìn mãi.'}},
+    {l:'GỬI 800K',ok:()=>g.cash>=8e5,fn:()=>{lifeSpend(8e5);lifeGain('family',5);return 'Em nói sẽ xin hoãn phần còn lại. Bạn hứa tháng sau bù.'}},
+    {l:'"EM TỰ LO NHÉ"',fn:()=>{lifeGain('family',-10);return 'Em không nhắn lại. Một lúc sau bạn mới nghĩ lại câu mình vừa nói.'}},
+   ]},
+  {id:'momSick',ic:'pill',ti:'MẸ NHẬP VIỆN',when:()=>false,p:()=>0,
+   text:()=>'Cậu gọi giữa trưa: mẹ nhập viện tuyến huyện, cần ứng viện phí khoảng 6 triệu. Bạn đứng khựng giữa đường.',
+   choices:[
+    {l:'GỬI 6TR',ok:()=>g.cash>=6e6,fn:()=>{lifeSpend(6e6);lifeGain('family',30);return 'Viện phí được đóng đủ. Vài ngày sau mẹ xuất viện, gọi bảo con đừng lo.'}},
+    {l:'GỬI 3TR',ok:()=>g.cash>=3e6,fn:()=>{lifeSpend(3e6);lifeGain('family',12);return 'Cậu xoay thêm phần còn lại. Bạn nợ gia đình thêm một lần ơn.'}},
+    {l:'VAY NÓNG 6TR GỬI VỀ',fn:()=>{borrow(6e6,.15);lifeSpend(6e6);lifeGain('family',30);return 'Mẹ khỏe lại, nhưng bạn giờ mang món nợ lãi cao trên vai.'}},
+    {l:'KHÔNG GỬI NỔI',fn:()=>{lifeGain('family',-25);lifeGain('health',-10);return 'Cậu im lặng rồi cúp máy. Bạn không ngủ nổi nhiều đêm sau đó.'}},
+   ]},
+  {id:'friendBiz',ic:'shop',ti:'BẠN RỦ GÓP VỐN',when:()=>false,p:()=>0,
+   text:()=>'Người bạn cùng quê mở quán cà phê nhỏ ở khu trọ và rủ bạn góp vốn: "Chia lời theo tháng, không lo đâu". Bạn không biết quán sẽ ra sao.',
+   choices:[
+    {l:'KHÔNG GÓP',fn:()=>'Bạn nói sẽ cổ vũ bằng cách ghé uống cà phê. Bạn bè vẫn vui.'},
+    {l:'GÓP 2TR',ok:()=>g.cash>=2e6,fn:()=>bizBet(2e6,.5)},
+    {l:'GÓP 5TR',ok:()=>g.cash>=5e6,fn:()=>bizBet(5e6,.45)},
+   ]},
 ];
+const STORY={3:'roof',9:'sibling',15:'momSick',21:'friendBiz'};
+const CHAPTERS={
+  7:{ti:'CHƯƠNG 2: BÁM TRỤ',tx:'Nửa năm đã trôi qua kể từ ngày bạn từ quê lên phố. Đường xá đã quen, khách quen cũng có. Nhưng phố không để ai yên: tiền phòng, tiền xăng, và những cuộc gọi về quê.'},
+  13:{ti:'CHƯƠNG 3: NGÃ RẼ',tx:'Một năm. Có người bạn đã bỏ nghề, có người khá lên, có người sa vào chuyện không đâu. Bạn đang đứng ở một ngã rẽ: giữ thói quen tốt hay buông mình.'},
+  19:{ti:'CHƯƠNG 4: VỀ ĐÍCH',tx:'Còn sáu tháng. Con số tiết kiệm đã đủ để bạn nhìn thấy ngày về quê. Chỉ cần đừng để mệt mỏi, nợ nần hay một phút yếu lòng kéo lùi.'},
+};
+function chapterNote(){
+  const n=[];
+  if(g.debt>0)n.push(`Bạn đang nợ ${ff(g.debt)}.`);
+  if(g.health<40)n.push('Sức khỏe bạn đang yếu.');
+  if(g.family<30)n.push('Gia đình đang rất lo cho bạn.');
+  else if(g.family>=70)n.push('Mẹ luôn yên tâm về bạn.');
+  if(g.drink>=40||g.gamble>=40)n.push('Có những thói quen bạn biết là cần bớt.');
+  if(g.savings>=C.winTarget*.5)n.push('Tiết kiệm đã được một nửa chặng đường.');
+  return n.join(' ');
+}
+function bizBet(amt,p){
+  lifeSpend(amt);
+  if(Math.random()<p){const back=Math.round(amt*1.7);g.cash+=back;g.fin.life=Math.max(0,(g.fin.life||0)-back);return `Quán đông khách, chia lời đều đặn: bạn nhận lại ${ff(back)}.`}
+  return 'Quán vắng khách rồi đóng cửa sau vài tháng. Số vốn góp coi như mất. Bạn bè xin lỗi rối rít.';
+}
+// Ending text for the win/lose screen: depends on how the player lived, not only on the money.
+function endingInfo(win){
+  if(win){
+    if(g.drink>=50||g.gamble>=50)return{t:'ĐẾN ĐÍCH, NHƯNG THÓI QUEN CÒN BÁM',l:'Bạn đã có đủ tiền, nhưng những thói quen cũ vẫn theo bạn về quê.'};
+    if(g.health<40)return{t:'ĐẾN ĐÍCH TRONG KIỆT SỨC',l:'Bạn đạt mục tiêu, cơ thể thì đã trả giá đắt. Giờ là lúc nghỉ ngơi.'};
+    if(g.family<30)return{t:'GIÀU HƠN, XA NHÀ HƠN',l:'Số tiền có rồi, nhưng quê nhà đã xa hơn bạn tưởng. Hãy gọi về cho mẹ.'};
+    if(g.family>=70&&g.health>=70)return{t:'VỀ QUÊ VẸN TOÀN',l:'Bạn về quê với tiền tiết kiệm, sức khỏe tốt và nụ cười của mẹ ở cổng nhà.'};
+    return{t:'HOÀN THÀNH MỤC TIÊU',l:'Hai năm vất vả đã đổi lấy một khoản tiết kiệm xứng đáng.'};
+  }
+  if(g.endWhy==='debt')return{t:'NỢ NẦN SIẾT CỔ',l:'Lãi mẹ đẻ lãi con, chủ nợ đến tận cửa. Lần sau, hãy tránh xa vay nóng.'};
+  if(g.month<=C.maxMonths)return{t:'HẾT VỐN NƠI PHỐ',l:'Bạn hết tiền trước khi kịp đứng vững. Bài học: giữ lại một khoản dự phòng.'};
+  const r=g.savings/C.winTarget;
+  if(r>=.7)return{t:'THIẾU MỘT CHÚT',l:'Bạn chỉ còn cách đích một đoạn ngắn. Phố vẫn còn đó, thử lại nhé.'};
+  if(g.family<30)return{t:'LẠC NHỊP',l:'Bạn tiết kiệm được ít và cũng xa gia đình. Có lẽ đã đến lúc về nhà.'};
+  return{t:'CHƯA ĐỦ SỨC',l:'Hai năm trôi qua nhanh hơn bạn nghĩ. Hãy thử cách khác: ít chi tiêu lặt vặt, nhiều đơn hợp lý.'};
+}
 function borrow(amt,rate){
   g.cash+=amt;g.debt+=amt;g.debtRate=Math.max(g.debtRate,rate);addLog('Vay '+ff(amt)+(rate?` (lãi ${Math.round(rate*100)}%/tháng)`:' (không lãi)'),'warn');
 }
@@ -161,7 +228,13 @@ function lifeNewDay(){
 }
 // Roll at most one life event for the new day; returns true if a modal was opened.
 function lifeRoll(){
-  if(g.lifeCd>0||modal)return false;
+  if(modal)return false;
+  if(g.day===1){
+    const sid=STORY[g.month],k='s'+g.month;
+    if(sid&&!g.lifeSeen[k]){g.lifeSeen[k]=1;modal={type:'life',id:sid,res:null};return true}
+    if(CHAPTERS[g.month]&&!g.lifeSeen['c'+g.month]){g.lifeSeen['c'+g.month]=1;modal={type:'chapter',n:g.month};return true}
+  }
+  if(g.lifeCd>0)return false;
   const order=LIFE_EVTS.map(e=>[Math.random(),e]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
   for(const e of order){
     if(e.when()&&Math.random()<e.p()){

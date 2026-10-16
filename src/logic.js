@@ -10,8 +10,8 @@ const C={
     {n:'Điện thoại',c:2e5},{n:'Bảo hiểm xe',c:3e5},{n:'Trả góp xe',c:16e5},
   ],
   jobs:{
-    food:{id:'food',icon:'bowl',name:'ĐỒ ĂN',earn:'25k-50k',sta:15,fuel:5,min:25e3,max:5e4},
-    goods:{id:'goods',icon:'box',name:'HÀNG HÓA',earn:'50k-110k',sta:20,fuel:9,min:5e4,max:11e4},
+    food:{id:'food',icon:'bowl',name:'ĐỒ ĂN',earn:'30k-60k',sta:15,fuel:5,min:3e4,max:6e4},
+    goods:{id:'goods',icon:'box',name:'HÀNG HÓA',earn:'60k-130k',sta:20,fuel:9,min:6e4,max:13e4},
   },
 };
 const BILLS=C.monthly.reduce((s,b)=>s+b.c,0);

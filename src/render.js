@@ -354,6 +354,14 @@ function rModal(){
       <button class="btn b-cy blk" onclick="modal=null;render()">ĐÓNG</button>
     </div></div>`;
   }
+  if(type==='chapter'){
+    const c=CHAPTERS[modal.n],note=chapterNote();
+    return`<div class="overlay"><div class="pxf2 modal">
+      <div class="m-title" style="color:var(--gold)">${ic('cal',28)} ${c.ti}</div>
+      <div class="m-body">${c.tx}${note?`<br><br>${esc(note)}`:''}</div>
+      <button class="btn b-gr blk" onclick="modal=null;save();render()">TIẾP TỤC</button>
+    </div></div>`;
+  }
   if(type==='confirmEnd'){
     return`<div class="overlay"><div class="pxf2 modal">
       <div class="m-title" style="color:var(--or)">${ic('flag',28)} KẾT THÚC NGÀY?</div>
@@ -468,6 +476,7 @@ function rEnd(win){
     ${ic('trophy',88)}
     <h1 style="color:var(--gold);font-family:var(--f-tx);font-size:44px">CHIẾN THẮNG!</h1>
     <div class="lbl">${esc(pname())} đã đạt mục tiêu 100 triệu</div>
+    <div class="end-t" style="color:var(--gold)">${endingInfo(true).t}</div><div class="lbl">${endingInfo(true).l}</div>
     <div class="pxf end-stats">
       <div class="month-row"><span>Tiết kiệm</span><span style="color:var(--gold)">${ff(g.savings)}</span></div>
       <div class="month-row"><span>Mức khắc nghiệt</span><span style="color:${HARDS[g.hard].c}">${HARDS[g.hard].n}</span></div>
@@ -482,6 +491,7 @@ function rEnd(win){
     ${ic('skull',88)}
     <h1 style="color:var(--red);font-family:var(--f-tx);font-size:44px">THẤT BẠI</h1>
     <div class="lbl">${g.endWhy==='debt'?'Nợ nần chồng chất, chủ nợ siết hết!':g.month>C.maxMonths?(g.debt>0?'Hết 24 tháng, còn nợ!':'Hết 24 tháng!'):'Hết tiền!'}</div>
+    <div class="end-t" style="color:var(--red)">${endingInfo(false).t}</div><div class="lbl">${endingInfo(false).l}</div>
     <div class="pxf end-stats">
       <div class="month-row"><span>Mức khắc nghiệt</span><span style="color:${HARDS[g.hard].c}">${HARDS[g.hard].n}</span></div>
       ${g.debt>0?`<div class="month-row"><span>Còn nợ</span><span style="color:var(--red)">${ff(g.debt)}</span></div>`:''}

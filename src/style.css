@@ -458,3 +458,4 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 .hub .sec-t{margin-top:10px}
 .inv-row{display:flex;flex-direction:column;gap:6px;margin:8px 0}
 .life-btn{margin-top:0;padding:6px 10px;font-size:20px}
+.end-t{font-family:var(--f-tx);font-size:26px;margin:8px 0 2px;text-align:center}

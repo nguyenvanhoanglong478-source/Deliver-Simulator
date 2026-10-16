@@ -4,6 +4,9 @@ A retro 8-bit motorbike delivery-driver simulation that runs entirely in the bro
 
 **Goal:** save 100 million VND within 24 in-game months while still paying your monthly living costs.
 
+## Life simulation
+The run is a story of a rider who moved from the countryside to the city. A hidden difficulty is rolled at the start and shown on the end screen. Health, family worry, debt and two habits (drinking, gambling) are tracked; daily choice events (`src/life.js`) and four story events (months 3, 9, 15, 21) shape the run. Family remittance, gold/stock investments and loans (friend, hot loan 15%/month, app loan 25%/month) live in the LIFE panel. Winning needs 100M VND in savings and no debt; the ending text depends on health, family and habits.
+
 ## How to play
 
 Open `index.html` in a browser. Progress is saved in `localStorage`.
