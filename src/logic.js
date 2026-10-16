@@ -352,7 +352,7 @@ function doSave(a){
   if(amt<=0||amt>g.cash){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
   g.cash-=amt;g.savings+=amt;
   addLog('Gửi tiết kiệm: +'+ff(amt),'save');
-  if(g.savings>=C.winTarget){finish(true);return;}
+  if(netWin()){finish(true);return;}
   const ms=checkMilestones();if(ms.length)modal={type:'milestone',list:ms};
   save();render();
 }
@@ -683,7 +683,7 @@ function triggerDayEnd(){
   if(g.phase==='anim-sleep'){stopT(animTmr);g.activeAnim=null;g.phase='game';addLog('Hết ngày khi đang nghỉ ngơi','info');}
   const interest=Math.floor(g.savings*C.dailyInterest);
   g.savings+=interest;
-  if(g.savings>=C.winTarget){finish(true);return;}
+  if(netWin()){finish(true);return;}
   const ms=checkMilestones();
   modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day,ms};
   render();
@@ -712,18 +712,18 @@ function confirmMonthEnd(){
   const {bonus}=modal;
   const bills=billsTotal();
   g.cash+=bonus;g.cash-=bills;g.fin.bills+=bills;
-  invMonthEnd();familyMonthEnd();
+  invMonthEnd();familyMonthEnd();debtMonthEnd();
   if(bonus>0)addLog('Thưởng Be: +'+ff(bonus),'earn');
   addLog('Chi phí tháng '+g.month+': -'+ff(bills),'cost');
   if(g.cash<0&&g.savings>0){   // bills come out of savings before the player is declared broke
     const t=Math.min(g.savings,-g.cash);g.savings-=t;g.cash+=t;
     addLog('Rút tiết kiệm '+ff(t)+' để trả chi phí tháng','info');
   }
-  if(g.cash<-2e6){finish(false);return;}
+  if(g.cash<-2e6||g.endWhy==='debt'){finish(false);return;}
   g.month++;g.day=1;g.earned=0;g.delivered=0;
   g.dailyEarned=0;g.dailySpent=0;g.dayTimeLeft=C.dayDuration;
   modal=null;
-  if(g.month>C.maxMonths){invLiquidate();finish(g.savings>=C.winTarget);return;}
+  if(g.month>C.maxMonths){invLiquidate();const t=Math.min(g.debt,g.savings);g.savings-=t;g.debt-=t;finish(netWin());return;}
   lifeNewDay();lifeRoll();
   save();startDayTimer();render();
 }

@@ -342,6 +342,11 @@ function rModal(){
       ${g.drink>0||g.gamble>0?`<div class="sec-t">${ic('heart',20)}THÓI QUEN</div>
       <div class="m-body">${g.drink>0?`${ic('beer',20)} Rượu bia ${g.drink}/100 `:''}${g.gamble>0?`${ic('dice',20)} Cờ bạc ${g.gamble}/100`:''}</div>
       <button class="btn b-dim sm" onclick="quitHabits()" ${g.quitM===g.month?'disabled':''}>${g.quitM===g.month?'ĐÃ TỰ NHỦ THÁNG NÀY':'TỰ NHỦ BỚT LẠI (-15)'}</button>`:''}
+      <div class="sec-t">${ic('bag',20)}VAY & TRẢ NỢ</div>
+      <div class="m-body">Nợ: <b style="color:${g.debt?'var(--red)':'inherit'}">${ff(g.debt)}</b>${g.debt?` · lãi ${Math.round(g.debtRate*100)}%/tháng`:''}</div>
+      <div class="save-grid">${g.debt>0?`<button class="btn b-gr sm" onclick="repay(1e6);render()" ${g.cash<1e6?'disabled':''}>TRẢ 1TR</button><button class="btn b-gr sm" onclick="repay(5e6);render()" ${g.cash<5e6?'disabled':''}>TRẢ 5TR</button><button class="btn b-gr sm" onclick="repay(g.debt);render()" ${g.cash<=0?'disabled':''}>TRẢ HẾT</button>`:''}
+      <button class="btn b-red sm" onclick="takeLoan('hot')" ${g.debt>=2e7?'disabled':''}>VAY NÓNG 3TR (15%)</button><button class="btn b-red sm" onclick="takeLoan('app')" ${g.debt>=2e7?'disabled':''}>VAY APP 5TR (PHÍ 10%, LÃI 25%)</button></div>
+      <div class="sub">Vay nóng lãi cộng dồn mỗi tháng. Nợ từ 30TR là bị siết nhà. Phải hết nợ mới được tính là thắng.</div>
       <div class="sec-t">${ic('chart',20)}ĐẦU TƯ (SỔ THEO THÁNG)</div>
       ${INVS.map(x=>`<div class="inv-row"><div>${ic(x.ic,28)} <b>${x.n}</b> ${fm(invOf(x.id))}<div class="sub">${x.d}</div></div>
         <div class="save-grid"><button class="btn b-gr sm" onclick="invBuy('${x.id}',1e6)" ${g.cash<1e6?'disabled':''}>MUA 1TR</button><button class="btn b-gr sm" onclick="invBuy('${x.id}',5e6)" ${g.cash<5e6?'disabled':''}>MUA 5TR</button><button class="btn b-red sm" onclick="invSell('${x.id}','all')" ${invOf(x.id)<=0?'disabled':''}>BÁN HẾT</button></div></div>`).join('')}
@@ -455,10 +460,10 @@ function rModal(){
 // END
 function finRows(){
   const f=g.fin,r=(n,v,c)=>`<div class="month-row"><span>${n}</span><span style="color:var(--${c})">${c==='gr'?'+':'-'}${ff(v)}</span></div>`;
-  return`<div class="sec-t" style="margin-top:12px">TIỀN ĐI ĐÂU?</div>`+r('Thu từ giao hàng',f.earn,'gr')+r('Xăng',f.fuel,'red')+r('Sửa xe',f.repair,'red')+r('Nâng cấp',f.upg,'red')+r('Tai nạn & phạt',f.accident,'red')+r('Hóa đơn tháng',f.bills,'red')+(f.life?r('Gia đình & đời sống',f.life,'red'):'');
+  return`<div class="sec-t" style="margin-top:12px">TIỀN ĐI ĐÂU?</div>`+r('Thu từ giao hàng',f.earn,'gr')+r('Xăng',f.fuel,'red')+r('Sửa xe',f.repair,'red')+r('Nâng cấp',f.upg,'red')+r('Tai nạn & phạt',f.accident,'red')+r('Hóa đơn tháng',f.bills,'red')+(f.life?r('Gia đình & đời sống',f.life,'red'):'')+(f.loan?r('Lãi vay',f.loan,'red'):'');
 }
 function rEnd(win){
-  const m=g.month,lack=Math.max(0,C.winTarget-g.savings);
+  const m=g.month,lack=Math.max(0,C.winTarget-g.savings+g.debt);
   if(win)return`<div class="end">
     ${ic('trophy',88)}
     <h1 style="color:var(--gold);font-family:var(--f-tx);font-size:44px">CHIẾN THẮNG!</h1>
@@ -476,9 +481,10 @@ function rEnd(win){
   return`<div class="end">
     ${ic('skull',88)}
     <h1 style="color:var(--red);font-family:var(--f-tx);font-size:44px">THẤT BẠI</h1>
-    <div class="lbl">${g.month>C.maxMonths?'Hết 24 tháng!':'Hết tiền!'}</div>
+    <div class="lbl">${g.endWhy==='debt'?'Nợ nần chồng chất, chủ nợ siết hết!':g.month>C.maxMonths?(g.debt>0?'Hết 24 tháng, còn nợ!':'Hết 24 tháng!'):'Hết tiền!'}</div>
     <div class="pxf end-stats">
       <div class="month-row"><span>Mức khắc nghiệt</span><span style="color:${HARDS[g.hard].c}">${HARDS[g.hard].n}</span></div>
+      ${g.debt>0?`<div class="month-row"><span>Còn nợ</span><span style="color:var(--red)">${ff(g.debt)}</span></div>`:''}
       <div class="month-row"><span>Đã tiết kiệm</span><span>${ff(g.savings)}</span></div>
       <div class="month-row"><span>Còn thiếu</span><span style="color:var(--red)">${ff(lack)}</span></div>
       <div class="month-row"><span>Tổng đơn</span><span>${g.totalDelivered}</span></div>
