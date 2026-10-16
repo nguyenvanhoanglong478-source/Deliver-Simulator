@@ -97,6 +97,10 @@ function rGame(){
     <div class="pxf strip">
       <span>${ic('cal',20)}NGÀY ${g.day}/${C.daysPerMonth}</span>
       <span>${ic('box',20)}${g.delivered} ĐƠN</span>
+      <span style="${g.health<35?'color:var(--red)':''}">${ic('heart',20)}${g.health}</span>
+      <span style="${g.family<25?'color:var(--red)':''}">${ic('house',20)}${g.family}</span>
+      ${g.debt>0?`<span style="color:var(--red)">${ic('bag',20)}NỢ ${fm(g.debt)}</span>`:''}
+      ${isSick()?`<span class="rain-tag" style="color:var(--red)">${ic('pill',20)}ỐM ${g.sickDays} NGÀY</span>`:''}
       ${g.rainToday?`<span class="rain-tag">${ic('cloud',20)}MƯA</span>`:''}
     </div>
     ${g.reviews[0]?`<div class="pxf2 review show static" style="display:block;cursor:pointer" onclick="goProfile()"><div class="lbl" style="margin-bottom:8px">ĐÁNH GIÁ MỚI NHẤT</div>${reviewHTML(g.reviews[0])}</div>`:''}
@@ -316,6 +320,16 @@ function rModal(){
       <button class="btn b-gr blk" onclick="modal=null;render()">TIẾP TỤC</button>
     </div></div>`;
   }
+  if(type==='life'){
+    const e=lifeEvt();if(!e){modal=null;return''}
+    const done=modal.res!==null;
+    return`<div class="overlay"><div class="pxf2 modal">
+      <div class="m-title" style="color:var(--or)">${ic(e.ic,28)} ${e.ti}</div>
+      <div class="m-body">${done?esc(modal.res):esc(e.text())}</div>
+      ${done?`<button class="btn b-gr blk" onclick="lifeClose()">TIẾP TỤC</button>`
+        :`<div class="life-ch">${e.choices.map((c,i)=>`<button class="btn ${i?'b-dim':'b-gr'} blk" ${c.ok&&!c.ok()?'disabled':''} onclick="lifeChoose(${i})">${c.l}</button>`).join('')}</div>`}
+    </div></div>`;
+  }
   if(type==='confirmEnd'){
     return`<div class="overlay"><div class="pxf2 modal">
       <div class="m-title" style="color:var(--or)">${ic('flag',28)} KẾT THÚC NGÀY?</div>
@@ -422,7 +436,7 @@ function rModal(){
 // END
 function finRows(){
   const f=g.fin,r=(n,v,c)=>`<div class="month-row"><span>${n}</span><span style="color:var(--${c})">${c==='gr'?'+':'-'}${ff(v)}</span></div>`;
-  return`<div class="sec-t" style="margin-top:12px">TIỀN ĐI ĐÂU?</div>`+r('Thu từ giao hàng',f.earn,'gr')+r('Xăng',f.fuel,'red')+r('Sửa xe',f.repair,'red')+r('Nâng cấp',f.upg,'red')+r('Tai nạn & phạt',f.accident,'red')+r('Hóa đơn tháng',f.bills,'red');
+  return`<div class="sec-t" style="margin-top:12px">TIỀN ĐI ĐÂU?</div>`+r('Thu từ giao hàng',f.earn,'gr')+r('Xăng',f.fuel,'red')+r('Sửa xe',f.repair,'red')+r('Nâng cấp',f.upg,'red')+r('Tai nạn & phạt',f.accident,'red')+r('Hóa đơn tháng',f.bills,'red')+(f.life?r('Gia đình & đời sống',f.life,'red'):'');
 }
 function rEnd(win){
   const m=g.month,lack=Math.max(0,C.winTarget-g.savings);
@@ -432,6 +446,7 @@ function rEnd(win){
     <div class="lbl">${esc(pname())} đã đạt mục tiêu 100 triệu</div>
     <div class="pxf end-stats">
       <div class="month-row"><span>Tiết kiệm</span><span style="color:var(--gold)">${ff(g.savings)}</span></div>
+      <div class="month-row"><span>Mức khắc nghiệt</span><span style="color:${HARDS[g.hard].c}">${HARDS[g.hard].n}</span></div>
       <div class="month-row"><span>Số tháng</span><span>${m}/24</span></div>
       <div class="month-row"><span>Tổng đơn</span><span>${g.totalDelivered}</span></div>
       <div class="month-row"><span>Đánh giá</span><span>${g.stars.toFixed(1)}/5.0</span></div>
@@ -444,6 +459,7 @@ function rEnd(win){
     <h1 style="color:var(--red);font-family:var(--f-tx);font-size:44px">THẤT BẠI</h1>
     <div class="lbl">${g.month>C.maxMonths?'Hết 24 tháng!':'Hết tiền!'}</div>
     <div class="pxf end-stats">
+      <div class="month-row"><span>Mức khắc nghiệt</span><span style="color:${HARDS[g.hard].c}">${HARDS[g.hard].n}</span></div>
       <div class="month-row"><span>Đã tiết kiệm</span><span>${ff(g.savings)}</span></div>
       <div class="month-row"><span>Còn thiếu</span><span style="color:var(--red)">${ff(lack)}</span></div>
       <div class="month-row"><span>Tổng đơn</span><span>${g.totalDelivered}</span></div>

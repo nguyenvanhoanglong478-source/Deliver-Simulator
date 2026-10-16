@@ -64,8 +64,9 @@ function init(){
     phase:'start',activeAnim:null,
     rainToday:false,
     profile:defProfile(),reviews:[],
-    drive:1,offers:[],ms:[],fin:{earn:0,fuel:0,repair:0,accident:0,bills:0,upg:0},
+    drive:1,offers:[],ms:[],fin:{earn:0,fuel:0,repair:0,accident:0,bills:0,upg:0,life:0},
   };
+  Object.assign(g,lifeDefaults());
   g.offers=genOffers();
   modal=null;
   clearTmrs();
@@ -104,7 +105,7 @@ let _saveWarned=false;
 function canPersist(){
   if(!g||!g.phase)return false;
   if(['start','win','lose','minigame','anim-deliver','anim-refuel'].includes(g.phase))return false;
-  if(modal&&(modal.type==='dayEnd'||modal.type==='monthEnd'))return false;
+  if(modal&&(modal.type==='dayEnd'||modal.type==='monthEnd'))return false;   // life modals are saved with their pending choice discarded by restore()
   return true;
 }
 function save(){
@@ -137,7 +138,8 @@ function restore(s){
   g.upgrades=nu;
   g.drive=[0,1,2].includes(g.drive)?g.drive:1;
   if(!Array.isArray(g.ms))g.ms=MS.filter(m=>g.savings>=m.at).map(m=>m.at);
-  g.fin=Object.assign({earn:0,fuel:0,repair:0,accident:0,bills:0,upg:0},g.fin&&typeof g.fin==='object'?g.fin:{});
+  lifeFix(g);
+  g.fin=Object.assign({earn:0,fuel:0,repair:0,accident:0,bills:0,upg:0,life:0},g.fin&&typeof g.fin==='object'?g.fin:{});
   if(!Array.isArray(g.offers)||!g.offers.length||!g.offers.every(o=>o&&C.jobs[o.type]&&DIST[o.dist]&&Number.isFinite(o.base)))g.offers=genOffers();
   clearTmrs();modal=null;mgData=null;g.activeAnim=null;g.phase='game';
 }
@@ -170,9 +172,10 @@ function offerPay(o){
   if(up('vip'))e*=1.15;
   return Math.floor(e*earnMult());
 }
-function canDoOffer(o){const c=offerCost(o);return g.stamina>=c.sta&&g.fuel>=c.fuel&&g.vehicleHp>0}
+function canDoOffer(o){const c=offerCost(o);return !isSick()&&g.stamina>=c.sta&&g.fuel>=c.fuel&&g.vehicleHp>0}
 function offerWhy(o){
   const c=offerCost(o);
+  if(isSick())return`đang ốm, còn nghỉ ${g.sickDays} ngày`;
   if(g.vehicleHp<=0)return'xe hỏng, cần sửa ở mục Nâng cấp';
   const lack=[];
   if(g.fuel<c.fuel)lack.push(`xăng (cần ${c.fuel}%, còn ${g.fuel}%)`);
@@ -339,6 +342,7 @@ function doEndDay(){
 function advanceDay(){
   if(g.day<C.daysPerMonth)g.day++;
   g.dayTimeLeft=C.dayDuration;g.offers=genOffers();
+  lifeNewDay();lifeRoll();
   startDayTimer();render();
 }
 
@@ -719,6 +723,7 @@ function confirmMonthEnd(){
   g.dailyEarned=0;g.dailySpent=0;g.dayTimeLeft=C.dayDuration;
   modal=null;
   if(g.month>C.maxMonths){finish(g.savings>=C.winTarget);return;}
+  lifeNewDay();lifeRoll();
   save();startDayTimer();render();
 }
 

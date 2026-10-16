@@ -452,3 +452,5 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 .upg-act .owned{box-shadow:0 -4px 0 0 var(--gr),0 4px 0 0 var(--gr),-4px 0 0 0 var(--gr),4px 0 0 0 var(--gr)}
 .upg-act .owned.lock{box-shadow:0 -4px 0 0 #3a3180,0 4px 0 0 #3a3180,-4px 0 0 0 #3a3180,4px 0 0 0 #3a3180}
 .upg-act .cur{margin-left:2px;font-size:inherit}
+.life-ch{display:flex;flex-direction:column;gap:8px}
+.life-ch .btn[disabled]{opacity:.4;pointer-events:none}

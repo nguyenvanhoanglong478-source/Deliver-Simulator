@@ -1,0 +1,62 @@
+"""Life-sim phase 1 tests. Run: python3 tests/test_life.py"""
+import os
+URL="file://"+os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),"..","index.html"))
+from playwright.sync_api import sync_playwright
+res=[]
+def ok(n,c,x=''): res.append(('PASS' if c else 'FAIL',n,x))
+with sync_playwright() as p:
+    b=p.chromium.launch(); pg=b.new_page(); errs=[]
+    pg.on('pageerror',lambda e:errs.append(str(e)))
+    pg.goto(URL); pg.evaluate("localStorage.clear();localStorage.setItem('btd_tut','1')"); pg.reload()
+    pg.evaluate("startGame(true)")
+    ok('life fields exist and valid',pg.evaluate("g.health===100&&g.family===60&&g.debt===0&&g.sickDays===0&&stateProblems(g).length===0"))
+    seen=pg.evaluate("(()=>{const s=new Set();for(let i=0;i<300;i++){init();s.add(g.hard)}return[...s].sort()})()")
+    ok('difficulty random over 3 levels',seen==[0,1,2],str(seen))
+    pg.evaluate("startGame(true)")
+    ok('difficulty not shown while playing','KHẮC NGHIỆT' not in pg.inner_text('body') and 'DỄ THỞ' not in pg.inner_text('body'))
+    ok('life strip shows heart/house',pg.evaluate("document.body.innerHTML.includes('ĐƠN')")and pg.evaluate("g.health")==100)
+    # cold event
+    pg.evaluate("g.sickDays=0;g.cash=1e6;modal={type:'life',id:'cold',res:null};render()")
+    ok('life modal renders choices',pg.locator('.life-ch .btn').count()==2)
+    pg.evaluate("lifeChoose(0)")
+    ok('medicine: -80k, sick 1 day',pg.evaluate("g.cash===1e6-8e4&&g.sickDays===1"))
+    ok('result text then continue',pg.locator('text=TIẾP TỤC').count()>=1)
+    pg.evaluate("lifeClose()")
+    ok('modal closed',pg.evaluate("modal===null"))
+    ok('sick blocks orders',pg.evaluate("!canDoOffer(g.offers[0])&&offerWhy(g.offers[0]).includes('ốm')"))
+    pg.evaluate("lifeNewDay()")
+    ok('sickness ends after a day',pg.evaluate("g.sickDays===0&&canDoOffer(g.offers[0])"))
+    pg.evaluate("g.cash=1000;modal={type:'life',id:'cold',res:null};render()")
+    ok('unaffordable choice disabled',pg.locator('.life-ch .btn[disabled]').count()==1)
+    pg.evaluate("lifeChoose(0)"); ok('disabled choice does nothing',pg.evaluate("modal.res===null"))
+    pg.evaluate("lifeChoose(1)"); ok('tough it out: sick>=2',pg.evaluate("g.sickDays>=2&&g.health<=90"))
+    pg.evaluate("lifeClose()")
+    # mom
+    pg.evaluate("g.sickDays=0;g.cash=1e6;g.family=50;modal={type:'life',id:'mom',res:null};render();lifeChoose(0)")
+    ok('send money raises family',pg.evaluate("g.family===62&&g.cash===5e5&&g.fin.life===5.8e5"))
+    pg.evaluate("lifeClose();modal={type:'life',id:'mom',res:null};lifeChoose(2)")
+    ok('refuse lowers family',pg.evaluate("g.family===54"))
+    pg.evaluate("lifeClose()")
+    # save/load
+    pg.evaluate("g.hard=2;g.health=77;g.debt=123456;save()"); pg.reload()
+    pg.evaluate("startGame(false)")
+    ok('life fields persist',pg.evaluate("g.hard===2&&g.health===77&&g.debt===123456"))
+    pg.evaluate("localStorage.setItem('btd_v2',JSON.stringify(Object.assign(JSON.parse(localStorage.getItem('btd_v2')),{hard:undefined,health:undefined,family:undefined})))")
+    pg.evaluate("startGame(false)")
+    ok('old save gets defaults',pg.evaluate("g.health===100&&g.family===60&&[0,1,2].includes(g.hard)&&stateProblems(g).length===0"))
+    # validation
+    for patch,f in [("g.health=300","health"),("g.debt=-1","debt"),("g.hard=9","hard"),("g.lifeSeen=[]","lifeSeen")]:
+        pg.evaluate("startGame(true)"); pg.evaluate(patch)
+        ok('detect '+f,f in pg.evaluate("stateProblems(g)"))
+        pg.evaluate("repairState(g)"); ok('repair '+f,pg.evaluate("stateProblems(g).length===0"))
+    # end screens
+    for ph,win in (('win',True),('lose',False)):
+        pg.evaluate("startGame(true);g.hard=2");pg.evaluate(f"finish({'true' if win else 'false'})")
+        ok(f'{ph} screen shows difficulty','KHẮC NGHIỆT' in pg.inner_text('body'))
+    # a day advance can trigger events, and never breaks state
+    pg.evaluate("startGame(true)")
+    n=pg.evaluate("(()=>{let c=0;for(let i=0;i<400;i++){g.rainToday=true;g.lifeCd=0;modal=null;if(lifeRoll())c++;modal=null}return c})()")
+    ok('events fire on rainy days',n>5,str(n))
+    ok('no page errors',not errs,str(errs)); b.close()
+for r in res: print(*r)
+print(sum(r[0]=='PASS' for r in res),'/',len(res))

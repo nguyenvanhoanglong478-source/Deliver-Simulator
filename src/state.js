@@ -45,7 +45,7 @@ function stateProblems(s){
   if(!Array.isArray(s.ms))p.push('ms');
   if(!Array.isArray(s.offers)||!s.offers.length||!s.offers.every(offerOk))p.push('offers');
   if(!s.fin||typeof s.fin!=='object')p.push('fin');
-  return p;
+  return p.concat(lifeBad(s));
 }
 // Fix a live state in place (clamp numbers, rebuild broken containers). Returns the list of repaired fields.
 function repairState(s){
@@ -61,5 +61,6 @@ function repairState(s){
   if(!Array.isArray(s.ms))s.ms=[];
   if(!s.fin||typeof s.fin!=='object')s.fin={earn:0,fuel:0,repair:0,accident:0,bills:0,upg:0};
   if(!Array.isArray(s.offers)||!s.offers.length||!s.offers.every(offerOk))s.offers=genOffers();
+  lifeFix(s);
   return bad;
 }

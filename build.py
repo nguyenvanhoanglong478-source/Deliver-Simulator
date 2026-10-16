@@ -12,7 +12,7 @@ BIKE=b64('src/bike.png','image/png')
 AUDIO=(('__MUSIC__','src/music.mp3'),('__T1__','src/track1.mp3'),('__T2__','src/track2.mp3'),('__T3__','src/track3.mp3'),('__T4__','src/track4.mp3'))
 FONTS=(('__F_VT_LATIN__','src/fonts/vt323-latin-400-normal.woff2'),('__F_VT_EXT__','src/fonts/vt323-latin-ext-400-normal.woff2'),
        ('__F_VT_VI__','src/fonts/vt323-vietnamese-400-normal.woff2'),('__F_PS_LATIN__','src/fonts/press-start-2p-latin-400-normal.woff2'))
-JS_FILES=['src/loop.js','src/icons.js','src/audio.js','src/profile.js','src/logic.js','src/state.js','src/render.js']
+JS_FILES=['src/loop.js','src/icons.js','src/audio.js','src/profile.js','src/logic.js','src/state.js','src/life.js','src/render.js']
 CSS=rd('src/style.css')
 
 def make(embed):
