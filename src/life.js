@@ -6,13 +6,14 @@ const HARDS=[
   {n:'KHẮC NGHIỆT',m:1.4,c:'var(--red)'},
 ];
 function hardM(){return(HARDS[g.hard]||HARDS[1]).m}
-function lifeDefaults(){return{hard:Math.floor(Math.random()*HARDS.length),health:100,family:60,debt:0,sickDays:0,lifeCd:0,lifeSeen:{},inv:{},drink:0,gamble:0,quitM:0,debtRate:0,endWhy:''}}
+function lifeDefaults(){return{hard:Math.floor(Math.random()*HARDS.length),health:100,family:60,debt:0,sickDays:0,lifeCd:0,lifeSeen:{},wasRain:false,pend:'',inv:{},drink:0,gamble:0,quitM:0,debtRate:0,endWhy:''}}
 function lifeFix(s){   // fill / clamp life fields (older saves, repair)
   const d=lifeDefaults(),cl=(v,lo,hi,x)=>Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):x;
   s.hard=[0,1,2].includes(s.hard)?s.hard:1;
   s.health=cl(s.health,0,100,100);s.family=cl(s.family,0,100,60);s.debt=Math.round(cl(s.debt,0,1e12,0));
   s.sickDays=Math.round(cl(s.sickDays,0,30,0));s.lifeCd=Math.round(cl(s.lifeCd,0,60,0));
   if(!s.lifeSeen||typeof s.lifeSeen!=='object'||Array.isArray(s.lifeSeen))s.lifeSeen={};
+  s.wasRain=!!s.wasRain;s.pend=typeof s.pend==='string'?s.pend:'';
   s.debtRate=cl(s.debtRate,0,1,0);if(!s.debt)s.debtRate=0;s.endWhy=typeof s.endWhy==='string'?s.endWhy:'';
   s.drink=cl(s.drink,0,100,0);s.gamble=cl(s.gamble,0,100,0);s.quitM=Math.round(cl(s.quitM,0,99,0));
   if(!s.inv||typeof s.inv!=='object'||Array.isArray(s.inv))s.inv={};
@@ -39,15 +40,15 @@ function lifeSpend(n){g.cash-=n;g.fin.life=(g.fin.life||0)+n}
 // Each event: when() gates it, p is the daily chance, choices apply their effect and return the result text.
 const LIFE_EVTS=[
   {id:'cold',ic:'pill',ti:'CẢM LẠNH',
-   when:()=>!isSick()&&(g.rainToday||g.health<45),p:()=>(g.rainToday?.14:.06)*hardM()*(g.health<45?1.6:1),
-   text:()=>g.rainToday?'Dầm mưa cả buổi, bạn thấy người nóng ran, đầu nặng trịu.':'Chạy nhiều quá, cơ thể bắt đầu báo động: sốt, ho, mệt rã rời.',
+   when:()=>!isSick()&&(g.wasRain||g.health<45),p:()=>(g.wasRain?.14:.06)*hardM()*(g.health<45?1.6:1),
+   text:()=>g.wasRain?'Hôm qua dầm mưa cả buổi, sáng nay bạn thấy người nóng ran, đầu nặng trịu.':'Chạy nhiều quá, cơ thể bắt đầu báo động: sốt, ho, mệt rã rời.',
    choices:[
     {l:'MUA THUỐC (80K)',ok:()=>g.cash>=8e4,fn:()=>{lifeSpend(8e4);g.sickDays=1;lifeGain('health',-4);return 'Uống thuốc, ngủ một giấc. Mai sẽ khá hơn, hôm nay chỉ nghỉ.'}},
     {l:'CHỊU ĐỰNG',fn:()=>{g.sickDays=Math.max(2,Math.round(2*hardM()+Math.random()));lifeGain('health',-10);return `Cố chịu không mua thuốc. Bạn nằm bẹp ${g.sickDays} ngày, không chạy xe được.`}},
    ]},
   {id:'mom',ic:'phone',ti:'MẸ GỌI TỪ QUÊ',
    when:()=>g.month>=1&&g.day>=3,p:()=>.05,
-   text:()=>'Mẹ gọi: "Con ăn uống đủ chưa? Ở nhà mưa dột, mẹ đang tính sửa lại mái..."',
+   text:()=>'Mẹ gọi hỏi thăm: "Con ăn uống đủ chưa? Dạo này trời trở lạnh, nhớ mặc ấm. Mẹ nhớ con lắm."',
    choices:[
     {l:'GỬI MẸ 500K',ok:()=>g.cash>=5e5,fn:()=>{lifeSpend(5e5);lifeGain('family',12);return 'Mẹ mừng rơi nước mắt. Bạn thấy lòng nhẹ đi.'}},
     {l:'GỬI MẸ 200K',ok:()=>g.cash>=2e5,fn:()=>{lifeSpend(2e5);lifeGain('family',5);return 'Ít thôi nhưng là tấm lòng. Mẹ dặn con giữ sức khỏe.'}},
@@ -107,7 +108,7 @@ const LIFE_EVTS=[
    ]},
   // --- money trouble and luck ---
   {id:'broke',ic:'bag',ti:'HẾT TIỀN ĂN',
-   when:()=>g.day>=5&&g.cash<3e5&&g.debt<2e7,p:()=>.35,
+   when:()=>g.day>=5&&g.cash<3e5&&g.savings<2e6&&invTotal()<2e6&&g.debt<2e7,p:()=>.35,
    text:()=>'Trong túi chỉ còn lẻ tẻ, xăng cũng sắp hết. Bạn bè xung quanh cũng đều chật vật.',
    choices:[
     {l:'MƯỢN BẠN 1TR (KHÔNG LÃI)',fn:()=>{borrow(1e6,0);return 'Bạn quê cho mượn, dặn bao giờ có thì trả. Bạn thấy ngại nhưng nhẹ người.'}},
@@ -149,7 +150,7 @@ const LIFE_EVTS=[
    choices:[
     {l:'GỬI 6TR',ok:()=>g.cash>=6e6,fn:()=>{lifeSpend(6e6);lifeGain('family',30);return 'Viện phí được đóng đủ. Vài ngày sau mẹ xuất viện, gọi bảo con đừng lo.'}},
     {l:'GỬI 3TR',ok:()=>g.cash>=3e6,fn:()=>{lifeSpend(3e6);lifeGain('family',12);return 'Cậu xoay thêm phần còn lại. Bạn nợ gia đình thêm một lần ơn.'}},
-    {l:'VAY NÓNG 6TR GỬI VỀ',fn:()=>{borrow(6e6,.15);lifeSpend(6e6);lifeGain('family',30);return 'Mẹ khỏe lại, nhưng bạn giờ mang món nợ lãi cao trên vai.'}},
+    {l:'VAY NÓNG 6TR GỬI VỀ',ok:()=>g.debt<=2.4e7,fn:()=>{borrow(6e6,.15);lifeSpend(6e6);lifeGain('family',30);return 'Mẹ khỏe lại, nhưng bạn giờ mang món nợ lãi cao trên vai.'}},
     {l:'KHÔNG GỬI NỔI',fn:()=>{lifeGain('family',-25);lifeGain('health',-10);return 'Cậu im lặng rồi cúp máy. Bạn không ngủ nổi nhiều đêm sau đó.'}},
    ]},
   {id:'friendBiz',ic:'shop',ti:'BẠN RỦ GÓP VỐN',when:()=>false,p:()=>0,
@@ -203,6 +204,7 @@ function borrow(amt,rate){
 function repay(amt){
   amt=Math.min(amt,g.debt,Math.max(0,g.cash));if(amt<=0)return;
   g.cash-=amt;g.debt-=amt;if(g.debt<=0){g.debt=0;g.debtRate=0}addLog('Trả nợ '+ff(amt),'save');
+  if(g.phase==='game'&&netWin()){modal=null;finish(true)}
 }
 // Lottery: expected return a little under the ticket price, rare big prizes (drawn per ticket).
 function lotto(n){
@@ -231,23 +233,26 @@ function lifeRoll(){
   if(modal)return false;
   if(g.day===1){
     const sid=STORY[g.month],k='s'+g.month;
-    if(sid&&!g.lifeSeen[k]){g.lifeSeen[k]=1;modal={type:'life',id:sid,res:null};return true}
-    if(CHAPTERS[g.month]&&!g.lifeSeen['c'+g.month]){g.lifeSeen['c'+g.month]=1;modal={type:'chapter',n:g.month};return true}
+    if(sid&&!g.lifeSeen[k]){g.pend=sid;modal={type:'life',id:sid,res:null};return true}
+    if(CHAPTERS[g.month]&&!g.lifeSeen['c'+g.month]){modal={type:'chapter',n:g.month};return true}
   }
   if(g.lifeCd>0)return false;
   const order=LIFE_EVTS.map(e=>[Math.random(),e]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
   for(const e of order){
     if(e.when()&&Math.random()<e.p()){
       g.lifeCd=3;g.lifeSeen[e.id]=(g.lifeSeen[e.id]||0)+1;
-      modal={type:'life',id:e.id,res:null};return true;
+      g.pend=e.id;modal={type:'life',id:e.id,res:null};return true;
     }
   }
   return false;
 }
+// a reload while an event is open brings the same event back (no dodging a bad event by refreshing)
+function lifeResume(){if(g.pend&&LIFE_EVTS.some(e=>e.id===g.pend))modal={type:'life',id:g.pend,res:null};else g.pend=''}
 function lifeEvt(){return modal&&modal.type==='life'?LIFE_EVTS.find(e=>e.id===modal.id):null}
 function lifeChoose(i){
   const e=lifeEvt();if(!e||modal.res!==null)return;
   const c=e.choices[i];if(!c||(c.ok&&!c.ok()))return;
+  g.pend='';if(STORY[g.month]===e.id)g.lifeSeen['s'+g.month]=1;
   modal.res=c.fn();addLog(e.ti+': '+modal.res.split('.')[0],'info');save();render();
 }
 function lifeClose(){modal=null;render()}

@@ -1,9 +1,10 @@
 let foldOpen={sav:false,log:false};
 const TUT=[
  {ic:'flag',t:'MỤC TIÊU',b:'Tiết kiệm 100 triệu trong 24 tháng. Cuối mỗi tháng có hóa đơn 6,5 triệu phải trả, nên đừng tiêu hết tiền mặt.'},
- {ic:'box',t:'NHẬN ĐƠN',b:'Chọn một trong các đơn hàng rồi chơi minigame: bắt gói hoặc né vật cản. Bắt đủ gói thì nhận đủ tiền. Đơn xa trả cao nhưng tốn thể lực, xăng và thời gian.'},
+ {ic:'box',t:'NHẬN ĐƠN',b:'Chọn một trong các đơn hàng rồi chơi minigame: bắt gói, né vật cản hoặc tìm đường. Bắt đủ gói thì nhận đủ tiền. Đơn xa trả cao nhưng tốn thể lực, xăng và thời gian.'},
  {ic:'fuel',t:'THỂ LỰC VÀ XĂNG',b:'Hết xăng hoặc thể lực thì không giao được. Dùng NẠP XĂNG và NGỦ NGHỈ, nhưng ngủ tốn thời gian trong ngày.'},
  {ic:'cal',t:'MỘT NGÀY GAME',b:'Mỗi ngày chạy từ 06:00 đến 22:00. Giờ cao điểm (11-13h, 17-19h) đơn trả thêm 25% nhưng dễ kẹt xe. Bấm ⏸ hoặc phím P để tạm dừng.'},
+ {ic:'house',t:'ĐỜI SỐNG',b:'Bạn là người từ quê lên phố. Sức khỏe, gia đình và nợ nần cũng ảnh hưởng ván chơi: ốm thì không chạy xe, gia đình lo thì tinh thần xuống. Mở mục ĐỜI SỐNG để gửi tiền về quê, đầu tư hoặc trả nợ. Thỉnh thoảng sẽ có lời rủ rê, hãy cân nhắc.'},
  {ic:'gear',t:'NÂNG CẤP',b:'Mua phụ tùng, túi giao hàng và động cơ ở mục NÂNG CẤP. Một số món loại trừ nhau, GPS và bảo hiểm tính phí hàng tháng. Gửi tiền tiết kiệm để nhận lãi mỗi ngày.'}
 ];
 // ===== RENDER =====
@@ -359,7 +360,7 @@ function rModal(){
     return`<div class="overlay"><div class="pxf2 modal">
       <div class="m-title" style="color:var(--gold)">${ic('cal',28)} ${c.ti}</div>
       <div class="m-body">${c.tx}${note?`<br><br>${esc(note)}`:''}</div>
-      <button class="btn b-gr blk" onclick="modal=null;save();render()">TIẾP TỤC</button>
+      <button class="btn b-gr blk" onclick="g.lifeSeen['c'+modal.n]=1;modal=null;save();render()">TIẾP TỤC</button>
     </div></div>`;
   }
   if(type==='confirmEnd'){

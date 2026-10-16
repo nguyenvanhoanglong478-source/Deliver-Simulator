@@ -216,7 +216,7 @@ function fmT(s){const m=Math.floor(s/60);const sc=s%60;return`${m}:${sc<10?'0':'
 const HOLD_MS=1500;   // how long a finished refuel / sleep screen stays before returning to the game
 // ===== ACTIONS =====
 function startGame(fresh){
-  if(!fresh){const s=load();if(saneSave(s)&&!['start','win','lose'].includes(s.phase)){restore(s);startDayTimer();render();toast('GAME CŨ ĐÃ TẢI!');return;}}
+  if(!fresh){const s=load();if(saneSave(s)&&!['start','win','lose'].includes(s.phase)){restore(s);lifeResume();startDayTimer();render();toast('GAME CŨ ĐÃ TẢI!');return;}}
   if(fresh){const old=load(),keep=(old&&old.profile)||g.profile;init();g.profile=Object.assign(defProfile(),keep);}   // every stat back to its starting value, driver profile kept
   g.phase='game';addLog('Bắt đầu hành trình!','info');
   startDayTimer();save();render();   // save now so a reload cannot bring the old game back
@@ -690,7 +690,7 @@ function triggerDayEnd(){
 }
 
 function confirmDayEnd(){
-  g.dailyEarned=0;g.dailySpent=0;g.rainToday=false;modal=null;
+  g.dailyEarned=0;g.dailySpent=0;g.wasRain=g.rainToday;g.rainToday=false;modal=null;
   if(g.day>=C.daysPerMonth){triggerMonthEnd();return;}
   advanceDay();save();
 }
@@ -723,7 +723,7 @@ function confirmMonthEnd(){
   g.month++;g.day=1;g.earned=0;g.delivered=0;
   g.dailyEarned=0;g.dailySpent=0;g.dayTimeLeft=C.dayDuration;
   modal=null;
-  if(g.month>C.maxMonths){invLiquidate();const t=Math.min(g.debt,g.savings);g.savings-=t;g.debt-=t;finish(netWin());return;}
+  if(g.month>C.maxMonths){invLiquidate();const c=Math.min(g.debt,Math.max(0,g.cash));g.cash-=c;g.debt-=c;const t=Math.min(g.debt,g.savings);g.savings-=t;g.debt-=t;finish(netWin());return;}
   lifeNewDay();lifeRoll();
   save();startDayTimer();render();
 }

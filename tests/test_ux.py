@@ -11,7 +11,7 @@ with sync_playwright() as p:
     pg.click("text=BẮT ĐẦU!")
     ok('tutorial opens on first start',pg.evaluate("modal&&modal.type==='tut'"))
     t=pg.evaluate("g.dayTimeLeft"); pg.wait_for_timeout(1500); ok('clock frozen during tutorial',pg.evaluate("g.dayTimeLeft")==t)
-    for _ in range(4): pg.click("text=TIẾP ▶")
+    for _ in range(5): pg.click("text=TIẾP ▶")
     pg.click("text=XONG"); ok('tutorial closes and is remembered',pg.evaluate("modal===null&&localStorage.getItem('btd_tut')==='1'"))
     pg.reload(); pg.click("text=TIẾP TỤC"); ok('no tutorial on later starts',pg.evaluate("modal===null"))
     pg.keyboard.press('p'); pg.click("text=HƯỚNG DẪN"); ok('tutorial reachable from pause',pg.evaluate("modal.type==='tut'"))
