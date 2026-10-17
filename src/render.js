@@ -135,8 +135,8 @@ function rGame(){
       <button class="btn b-dim blk life-btn" onclick="openHub()">${ic('house',24)}ĐỜI SỐNG${invTotal()>0||g.debt>0?` <small>(${[invTotal()>0?'ĐT '+fm(invTotal()):'',g.debt>0?'NỢ '+fm(g.debt):''].filter(Boolean).join(' · ')})</small>`:''}</button>
       <button class="btn b-cy blk endday" onclick="askEndDay()">${ic('flag',24)}KẾT THÚC NGÀY ${g.day}</button>
     </div>
-    <details class="fold" ${foldOpen.sav||innerWidth>=860?'open':''} ontoggle="foldOpen.sav=this.open">
-      <summary class="sec-t">${ic('bank',22)}TIẾT KIỆM <span class="fold-hint">(${money(g.savings)})</span></summary>
+    <div class="save-sec">
+      <div class="sec-t">${ic('bank',22)}TIẾT KIỆM <span class="fold-hint">(${money(g.savings)})</span></div>
       <div class="save-grid">
         <button class="btn b-gold sm" onclick="doSave(5e5)" ${g.cash<5e5?'disabled':''}>GỬI 500K</button>
         <button class="btn b-gold sm" onclick="doSave(1e6)" ${g.cash<1e6?'disabled':''}>GỬI 1TR</button>
@@ -146,7 +146,7 @@ function rGame(){
         <button class="btn b-red sm" onclick="doWd('all')" ${!g.savings?'disabled':''}>RÚT HẾT</button>
       </div>
       <div class="lbl save-note">"Gửi tất cả" giữ lại 500K tiền mặt.${g.cash<5e5?'<br>Chưa đủ tiền mặt để gửi (cần ít nhất 500K).':''}${!g.savings?'<br>Chưa có tiết kiệm để rút.':g.savings<1e6?'<br>Cần ít nhất 1TR tiết kiệm để rút từng phần.':''}</div>
-    </details>
+    </div>
     <details class="fold" ${foldOpen.log||innerWidth>=860?'open':''} ontoggle="foldOpen.log=this.open">
       <summary class="sec-t">NHẬT KÝ</summary>
       <div class="log">${logs}</div>

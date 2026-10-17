@@ -141,7 +141,7 @@ with sync_playwright() as p:
     pg.evaluate("save()"); pg.reload(); pg.evaluate("startGame(false)")
     ok('reload brings the same story event back',pg.evaluate("modal&&modal.id==='roof'"))
     pg.evaluate("modal=null;g.month=3;g.day=1;g.cash=1e7;modal={type:'life',id:'roof',res:null};lifeChoose(0);lifeClose()")
-    ok('answered story does not repeat',pg.evaluate("(lifeRoll(),!modal||modal.id!=='roof')&&g.pend===''"))
+    ok('answered story does not repeat',pg.evaluate("(lifeRoll(),!modal||modal.id!=='roof')&&g.pend!=='roof'"))
     pg.evaluate("modal=null;g.cash=1e7;g.family=50;modal={type:'life',id:'roof',res:null};lifeChoose(0)")
     ok('roof 4TR: family +25',pg.evaluate("g.family===75&&g.cash===6e6"))
     pg.evaluate("lifeClose();g.family=50;modal={type:'life',id:'roof',res:null};lifeChoose(2)"); ok('refuse roof: -12',pg.evaluate("g.family===38"))

@@ -52,7 +52,7 @@ with sync_playwright() as p:
     pg.keyboard.press('ArrowUp'); ok('keyboard works',pg.evaluate("mgData.idx+mgData.mistakes")>=mi+0 and pg.evaluate("mgData.mistakes+mgData.idx")>=1)
     # layout
     pg.evaluate("stopT(mgTmr);mgData=null;modal=null"); pg.evaluate("localStorage.clear();localStorage.setItem('btd_tut','1')"); pg.reload(); pg.evaluate("startGame(true)")
-    ok('main screen compact (<1560px, incl. life meters)',pg.evaluate("document.documentElement.scrollHeight")<1560,str(pg.evaluate("document.documentElement.scrollHeight")))
+    ok('main screen compact (<1750px, incl. life meters and open savings)',pg.evaluate("document.documentElement.scrollHeight")<1750,str(pg.evaluate("document.documentElement.scrollHeight")))
     ok('meters 3 per row',pg.evaluate("new Set([...document.querySelectorAll('.meters .meter')].map(e=>Math.round(e.getBoundingClientRect().top))).size")==1)
     pg.evaluate("g.cash=9e6;g.phase='upgrade';render()")
     ok('shop buttons inside screen',pg.evaluate("[...document.querySelectorAll('.upg-act .btn')].filter(b=>b.getBoundingClientRect().right>innerWidth).length")==0)

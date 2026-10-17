@@ -525,3 +525,4 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 .day-sec .m-h{margin-bottom:6px;display:flex;align-items:center;gap:6px}
 .day-row small{color:var(--dim);margin-left:4px}
 .day-sub{display:flex;justify-content:space-between;gap:8px;color:var(--dim);font-size:.9em;margin:2px 0 8px}
+.save-sec .fold-hint{margin-left:auto}.save-sec{margin-top:4px}
