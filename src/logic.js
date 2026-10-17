@@ -608,7 +608,11 @@ function mgSpawn(){
 
 function catchPkg(i){
   if(!mgData||mgData.done||!mgData.spots[i])return;
-  mgData.spots[i]=null;mgData.caught++;mgPaint();
+  mgData.spots[i]=null;mgData.caught++;
+  if(mgData.caught>=mgData.full){   // all packages caught: finish at once, no need to wait for the timer
+    mgData.done=true;stopT(mgTmr);stopT(mgSpw);showMgResult();return;
+  }
+  mgPaint();
 }
 
 function showMgResult(){
