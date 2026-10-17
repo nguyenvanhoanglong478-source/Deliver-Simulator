@@ -1,6 +1,7 @@
 # Nhật ký thay đổi
 
 ## Gần nhất
+- Nghỉ ngơi cộng +5 thể lực mỗi giây (trước là +2). Mô phỏng cân bằng: người giỏi thắng ~65%, khá ~25%, trung bình ~1%.
 - Mục TIẾT KIỆM ở bản mobile luôn hiện, không còn phải mở ra.
 - Vé số mua trong mục ĐỜI SỐNG (tối đa 40 tờ/ngày), xổ vào cuối ngày. Giá vàng/chứng khoán đổi mỗi ngày, bảng cuối ngày hiện lãi/lỗ hôm nay và tổng lãi/lỗ so với vốn. Các mục trong ĐỜI SỐNG tách thành thẻ riêng, cách xa hơn.
 - Menu tạm dừng có thêm "VỀ MÀN HÌNH BẮT ĐẦU" (hỏi xác nhận, game vẫn lưu và bấm TIẾP TỤC để chơi tiếp; đơn đang giao bị hủy, tài nguyên đã dùng không hoàn lại giống như tải lại trang). Có ở cả menu tạm dừng thường và khi đang chạy hoạt ảnh.
