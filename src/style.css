@@ -59,7 +59,8 @@ img{image-rendering:pixelated}
 .bar .gr{background:var(--gr)}.bar .or{background:var(--or)}.bar .red{background:var(--red)}.bar .gold{background:var(--gold)}.bar .cy{background:var(--cy)}
 
 /* ---------- start screen ---------- */
-.start{min-height:100vh;display:flex;flex-direction:column;align-items:stretch;gap:20px;padding-block:20px 32px;max-width:420px;margin-inline:auto}
+.start{min-height:100vh;min-height:100dvh;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:20px;padding-block:20px;max-width:420px;margin-inline:auto}
+.st-l,.st-r{display:flex;flex-direction:column;gap:inherit}
 .scene{position:relative;height:190px;overflow:hidden;background:linear-gradient(#1a1250 0 28%,#2b1a6b 28% 52%,#4a2488 52% 72%,#7a2f93 72% 100%);
   box-shadow:var(--frame)}
 .sky-far,.sky-near{position:absolute;left:0;right:0;bottom:34px;height:96px;background-repeat:repeat-x;background-size:auto 96px;background-position:bottom left}
@@ -476,3 +477,36 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 @media(max-width:859px){.lmeters{gap:10px}.lmeters .meter{padding:8px 10px}.lmeters .meter-top{margin-bottom:6px}}
 .life-btn{margin-top:14px;padding:8px 10px;font-size:20px;line-height:1.15}
 .life-btn small{font-size:.8em;opacity:.85}
+
+/* ---------- start screen: always fits the window (short windows shrink the art, wide-and-short windows use two columns) ---------- */
+@media(max-height:820px){
+  .start{gap:12px;padding-block:12px}
+  .scene{height:140px}.scene .bike{width:112px;margin-left:-56px;bottom:16px}.scene .cargo{bottom:58px;margin-left:8px}
+  .sky-far{height:72px;background-size:auto 72px}.sky-near{height:54px;background-size:auto 54px}
+  .logo{padding-block:0}.logo h1{font-size:24px}.tagline{margin-top:8px;font-size:20px}
+  .sstat{padding:8px 6px;gap:4px}.start-stats{gap:10px}.sstat .v{font-size:14px}.sstat .l{font-size:16px}
+  .bills-hdr{padding:8px 12px}.start-actions{gap:10px}.start-main{padding:12px;font-size:24px}
+  .st-l,.st-r{gap:12px}
+}
+@media(max-height:600px){
+  .start{gap:8px;padding-block:8px}.st-l,.st-r{gap:8px}
+  .scene{height:104px}.scene .bike{width:84px;margin-left:-42px;bottom:12px}.scene .cargo{bottom:42px;margin-left:6px}.scene .cargo svg,.scene .cargo canvas{width:24px;height:24px}
+  .sky-far{height:54px;background-size:auto 54px;bottom:24px}.sky-near{height:42px;background-size:auto 42px;bottom:24px}.road{height:24px}.road::after{top:8px}
+  .logo h1{font-size:20px;line-height:1.25;text-shadow:3px 3px 0 var(--red-d),6px 6px 0 #000}.tagline{margin-top:6px;font-size:18px}
+  .sstat{flex-direction:row;justify-content:center;padding:6px}.sstat .l{display:none}.sstat .v{font-size:13px}.sstat svg,.sstat canvas{width:22px;height:22px}
+  .bills-hdr{padding:6px 12px}.start-main{padding:10px;font-size:22px}.hi{font-size:18px}
+}
+@media(min-width:640px) and (max-height:640px){
+  .start{max-width:860px;flex-direction:row;align-items:center;gap:24px}
+  .st-l,.st-r{flex:1 1 0;min-width:0;justify-content:center}
+  .scene{height:150px}.scene .bike{width:112px;margin-left:-56px;bottom:16px}.scene .cargo{bottom:56px;margin-left:8px}
+  .sstat{flex-direction:column}.sstat .l{display:block}.sstat .v{font-size:14px}
+  .logo h1{font-size:26px}
+}
+#root:has(.start){padding-bottom:0;min-height:0;max-width:none}
+@media(min-width:640px) and (max-height:430px){
+  .scene{height:90px}.scene .bike{width:72px;margin-left:-36px;bottom:10px}.scene .cargo{bottom:36px;margin-left:4px}
+  .sky-far{height:46px;background-size:auto 46px}.sky-near{height:36px;background-size:auto 36px}
+  .logo h1{font-size:18px}.tagline,.hi{display:none}.sstat{flex-direction:row;padding:5px}.sstat .l{display:none}
+  .start-actions{gap:6px}.start-main{padding:8px;font-size:20px}.start .btn{padding-block:8px}.bills-hdr{padding:5px 10px}
+}

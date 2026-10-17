@@ -42,9 +42,12 @@ function rStart(){
   const nm=saved&&saved.profile&&typeof saved.profile.name==='string'&&saved.profile.name.trim();
   const br=C.monthly.map(b=>`<div class="bill-row"><span>${b.n}</span><span style="color:var(--red)">${ff(b.c)}</span></div>`).join('');
   return`<div class="start">
+    <div class="st-l">
     ${sceneHTML('box')}
     <div class="logo"><h1>BE THE<br>DRIVER</h1><div class="tagline">Mô phỏng tài xế giao hàng</div></div>
     ${nm?`<div class="hi">Chào mừng trở lại, ${esc(nm)}!</div>`:''}
+    </div>
+    <div class="st-r">
     <div class="start-stats">
       <div class="pxf sstat">${ic('coin',28)}<div class="v" style="color:var(--gold)">100TR</div><div class="l">MỤC TIÊU<br>TIẾT KIỆM</div></div>
       <div class="pxf sstat">${ic('cal',28)}<div class="v" style="color:var(--cy)">24</div><div class="l">THÁNG<br>GIỚI HẠN</div></div>
@@ -62,6 +65,7 @@ function rStart(){
         ?`<button class="btn b-gr blk start-main" onclick="startClick(false)">TIẾP TỤC</button>
           <button class="btn b-dim blk" onclick="startClick(true)">BẮT ĐẦU MỚI</button>`
         :`<button class="btn b-gr blk start-main blink" onclick="startClick(false)">BẮT ĐẦU!</button>`}
+    </div>
     </div>
   </div>`;
 }
