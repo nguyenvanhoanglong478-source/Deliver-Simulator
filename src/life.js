@@ -6,13 +6,16 @@ const HARDS=[
   {n:'KHẮC NGHIỆT',m:1.4,c:'var(--red)'},
 ];
 function hardM(){return(HARDS[g.hard]||HARDS[1]).m}
-function lifeDefaults(){return{hard:Math.floor(Math.random()*HARDS.length),health:100,family:60,debt:0,sickDays:0,lifeCd:0,lifeSeen:{},wasRain:false,pend:'',inv:{},drink:0,gamble:0,quitM:0,debtRate:0,endWhy:''}}
+function lifeDefaults(){return{hard:Math.floor(Math.random()*HARDS.length),health:100,family:60,debt:0,sickDays:0,lifeCd:0,lifeSeen:{},tickets:0,invCost:{},wasRain:false,pend:'',inv:{},drink:0,gamble:0,quitM:0,debtRate:0,endWhy:''}}
 function lifeFix(s){   // fill / clamp life fields (older saves, repair)
   const d=lifeDefaults(),cl=(v,lo,hi,x)=>Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):x;
   s.hard=[0,1,2].includes(s.hard)?s.hard:1;
   s.health=cl(s.health,0,100,100);s.family=cl(s.family,0,100,60);s.debt=Math.round(cl(s.debt,0,1e12,0));
   s.sickDays=Math.round(cl(s.sickDays,0,30,0));s.lifeCd=Math.round(cl(s.lifeCd,0,60,0));
   if(!s.lifeSeen||typeof s.lifeSeen!=='object'||Array.isArray(s.lifeSeen))s.lifeSeen={};
+  s.tickets=Math.round(cl(s.tickets,0,TICKET_MAX,0));
+  if(!s.invCost||typeof s.invCost!=='object'||Array.isArray(s.invCost))s.invCost={};
+  Object.keys(s.invCost).forEach(k=>{if(!Number.isFinite(s.invCost[k])||s.invCost[k]<0)s.invCost[k]=0});
   s.wasRain=!!s.wasRain;s.pend=typeof s.pend==='string'?s.pend:'';
   s.debtRate=cl(s.debtRate,0,1,0);if(!s.debt)s.debtRate=0;s.endWhy=typeof s.endWhy==='string'?s.endWhy:'';
   s.drink=cl(s.drink,0,100,0);s.gamble=cl(s.gamble,0,100,0);s.quitM=Math.round(cl(s.quitM,0,99,0));
@@ -29,6 +32,8 @@ function lifeBad(s){
   if(!_inR(s.lifeCd,0,60))p.push('lifeCd');
   if(!s.lifeSeen||typeof s.lifeSeen!=='object'||Array.isArray(s.lifeSeen))p.push('lifeSeen');
   if(!_inR(s.debtRate,0,1))p.push('debtRate');
+  if(!_inR(s.tickets,0,TICKET_MAX))p.push('tickets');
+  if(!s.invCost||typeof s.invCost!=='object'||Array.isArray(s.invCost)||Object.values(s.invCost).some(v=>!_inR(v,0,1e12)))p.push('invCost');
   ['drink','gamble'].forEach(k=>{if(!_inR(s[k],0,100))p.push(k)});
   if(!s.inv||typeof s.inv!=='object'||Array.isArray(s.inv)||Object.values(s.inv).some(v=>!_inR(v,0,1e12)))p.push('inv');
   return p;
@@ -127,8 +132,8 @@ const LIFE_EVTS=[
    text:()=>'Bà cụ bán vé số dạo năn nỉ: "Con mua giúp bà tờ vé, biết đâu lại trúng". Vé 20K một tờ.',
    choices:[
     {l:'KHÔNG MUA',fn:()=>'Bạn xin lỗi bà, chúc bà bán đắt.'},
-    {l:'MUA 1 TỜ (20K)',ok:()=>g.cash>=2e4,fn:()=>lotto(1)},
-    {l:'MUA 10 TỜ (200K)',ok:()=>g.cash>=2e5,fn:()=>lotto(10)},
+    {l:'MUA 1 TỜ (20K)',ok:()=>g.cash>=2e4&&g.tickets<TICKET_MAX,fn:()=>lottoBuy(1)},
+    {l:'MUA 10 TỜ (200K)',ok:()=>g.cash>=2e5&&g.tickets<=TICKET_MAX-10,fn:()=>lottoBuy(10)},
    ]},
   // --- story chain: fires once at the start of months 3, 9, 15, 21 (see STORY) ---
   {id:'roof',ic:'house',ti:'CHUYỆN NHÀ: MÁI DỘT',when:()=>false,p:()=>0,
@@ -207,13 +212,20 @@ function repay(amt){
   if(g.phase==='game'&&netWin()){modal=null;finish(true)}
 }
 // Lottery: expected return a little under the ticket price, rare big prizes (drawn per ticket).
-function lotto(n){
-  let prize=0,best=0;
+const TICKET=2e4,TICKET_MAX=40;
+// Tickets are bought during the day and drawn at the end of the day (see lottoDraw, called from triggerDayEnd).
+function lottoBuy(n){
+  n=Math.min(n,TICKET_MAX-g.tickets);if(n<=0)return 'Hôm nay bạn đã mua đủ số vé tối đa rồi.';
+  if(g.cash<n*TICKET)return 'Không đủ tiền mua vé.';
+  lifeSpend(n*TICKET);g.tickets+=n;if(n>=10)g.gamble=Math.min(100,g.gamble+2);
+  return `Bạn cất ${n} tờ vé vào túi. Tối nay sẽ có kết quả xổ số.`;
+}
+function lottoDraw(){
+  const n=g.tickets;let prize=0,best=0;
   for(let i=0;i<n;i++){const r=Math.random();const p=r<.0005?1e7:r<.0085?1e6:r<.0685?1e5:0;prize+=p;best=Math.max(best,p)}
-  lifeSpend(n*2e4);g.cash+=prize;if(n>=10)g.gamble=Math.min(100,g.gamble+2);
-  if(!prize)return 'Dò số xong, không trúng gì. Bạn cười buồn, xếp tờ vé vào túi.';
-  g.fin.life=Math.max(0,(g.fin.life||0)-prize);
-  return best>=1e7?`TRÚNG ĐỘC ĐẮC! +${ff(prize)}. Bạn đứng hình mất mấy giây.`:best>=1e6?`Trúng giải ${ff(best)}! Tổng thưởng ${ff(prize)}.`:`Trúng chút đỉnh: ${ff(prize)}.`;
+  g.tickets=0;
+  if(prize){g.cash+=prize;g.fin.life=Math.max(0,(g.fin.life||0)-prize)}
+  return{n,prize,best,cost:n*TICKET};
 }
 // Gambling: a first small win ("beginner's luck") hooks, afterwards the house wins more often. Hard mode tilts it further.
 function gamble(stake,hook){
@@ -268,21 +280,24 @@ const INV_FEE=.01;
 function invOf(id){return(g.inv&&g.inv[id])||0}
 function invTotal(){return INVS.reduce((n,x)=>n+invOf(x.id),0)}
 function gauss(){let u=0;for(let i=0;i<6;i++)u+=Math.random();return(u-3)/.707}   // ~N(0,1)
-function invMonthEnd(){
+// Prices move every day; returns one row per held asset for the end-of-day summary (change %, VND change, value, profit vs cost).
+function invDayEnd(){
+  const rows=[];
   INVS.forEach(x=>{
     const v=invOf(x.id);if(v<=0)return;
-    const r=Math.max(-.6,x.mu+x.sd*gauss()*(g.hard===2?1.15:1)),nv=Math.round(v*(1+r));
-    g.inv[x.id]=nv;addLog(`${x.n}: ${r>=0?'+':''}${(r*100).toFixed(1)}% (${fm(nv)})`,r>=0?'good':'warn');
+    const r=Math.max(-.25,x.mu/30+x.sd/Math.sqrt(30)*gauss()*(g.hard===2?1.15:1)),nv=Math.round(v*(1+r));
+    g.inv[x.id]=nv;rows.push({id:x.id,n:x.n,ic:x.ic,pct:r*100,delta:nv-v,val:nv,pl:nv-(g.invCost[x.id]||0)});
   });
+  return rows;
 }
 function invBuy(id,amt){
   if(g.phase!=='game'||!(amt>0)||amt>g.cash){toast('KHÔNG ĐỦ TIỀN!','bad');return}
-  g.cash-=amt;g.inv[id]=invOf(id)+amt;addLog(`Mua ${INVS.find(x=>x.id===id).n}: ${ff(amt)}`,'save');save();render();
+  g.cash-=amt;g.inv[id]=invOf(id)+amt;g.invCost[id]=(g.invCost[id]||0)+amt;addLog(`Mua ${INVS.find(x=>x.id===id).n}: ${ff(amt)}`,'save');save();render();
 }
 function invSell(id,amt){
   const v=invOf(id);if(g.phase!=='game'||v<=0)return;
   amt=amt==='all'?v:Math.min(amt,v);const fee=Math.round(amt*INV_FEE);
-  g.inv[id]=v-amt;g.cash+=amt-fee;g.fin.life=(g.fin.life||0)+fee;
+  g.invCost[id]=Math.round((g.invCost[id]||0)*(v-amt)/v);g.inv[id]=v-amt;g.cash+=amt-fee;g.fin.life=(g.fin.life||0)+fee;
   addLog(`Bán ${INVS.find(x=>x.id===id).n}: +${ff(amt-fee)} (phí ${ff(fee)})`,'earn');save();render();
 }
 function remit(amt){
@@ -303,7 +318,7 @@ function familyMonthEnd(){
   else if(g.family<=20){lifeGain('health',-5);addLog('Lo chuyện nhà, ăn ngủ không yên: -5 sức khỏe','warn')}
 }
 function netWin(){return g.debt===0&&g.savings>=C.winTarget}
-function invLiquidate(){const t=invTotal();if(t>0){g.savings+=t;g.inv={};addLog('Bán hết đầu tư vào tiết kiệm: '+ff(t),'save')}}
+function invLiquidate(){const t=invTotal();if(t>0){g.savings+=t;g.inv={};g.invCost={};addLog('Bán hết đầu tư vào tiết kiệm: '+ff(t),'save')}}
 function quitHabits(){
   if(g.phase!=='game'||g.quitM===g.month||(g.drink<=0&&g.gamble<=0))return;
   g.quitM=g.month;g.drink=Math.max(0,g.drink-15);g.gamble=Math.max(0,g.gamble-15);lifeGain('family',2);addLog('Bạn tự nhủ phải bớt lại.','good');save();render();
@@ -313,3 +328,7 @@ function takeLoan(k){
   if(k==='hot')borrow(3e6,.15);else{borrow(5e6,.25);g.cash-=5e5;addLog('Phí làm hồ sơ vay: -500K','cost')}save();render();
 }
 function openHub(){if(modal||g.phase!=='game')return;modal={type:'hub'};render()}
+function lottoHub(n){
+  if(g.phase!=='game')return;
+  const t=lottoBuy(n);toast(t.startsWith('Bạn cất')?`ĐÃ MUA ${n} TỜ VÉ SỐ`:t.toUpperCase(),t.startsWith('Bạn cất')?'':'bad');save();render();
+}

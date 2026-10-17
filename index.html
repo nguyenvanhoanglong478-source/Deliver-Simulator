@@ -532,6 +532,21 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   .logo h1{font-size:18px}.tagline,.hi{display:none}.sstat{flex-direction:row;padding:5px}.sstat .l{display:none}
   .start-actions{gap:6px}.start-main{padding:8px;font-size:20px}.start .btn{padding-block:8px}.bills-hdr{padding:5px 10px}
 }
+
+/* life hub: sections as separate cards */
+.hub{padding:18px 16px}
+.hub-sec{margin-top:22px;padding:14px 12px;background:rgba(0,0,0,.22);box-shadow:inset 0 0 0 2px #3a3180}
+.hub-sec .sec-t{margin:0 0 10px}
+.hub-grid{gap:12px;margin:10px 0}
+.hub .sub{margin-top:8px;line-height:1.2}
+.inv-row{margin:14px 0}
+.inv-row+.inv-row{padding-top:14px;border-top:2px dotted #3a3180}
+.inv-h em{font-style:normal;margin-left:6px}.inv-h em.up{color:var(--gr)}.inv-h em.dn{color:var(--red)}
+.hub>.btn.blk{margin-top:22px}
+.day-sec{margin-top:14px;padding-top:12px;margin-bottom:14px;border-top:2px dotted #3a3180}
+.day-sec .m-h{margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.day-row small{color:var(--dim);margin-left:4px}
+.day-sub{display:flex;justify-content:space-between;gap:8px;color:var(--dim);font-size:.9em;margin:2px 0 8px}
 </style>
 </head>
 <body>
@@ -2117,8 +2132,9 @@ function triggerDayEnd(){
   const interest=Math.floor(g.savings*C.dailyInterest);
   g.savings+=interest;
   if(netWin()){finish(true);return;}
+  const inv=invDayEnd(),lot=lottoDraw();
   const ms=checkMilestones();
-  modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day,ms};
+  modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day,ms,inv,lot};
   render();
 }
 
@@ -2145,7 +2161,7 @@ function confirmMonthEnd(){
   const {bonus}=modal;
   const bills=billsTotal();
   g.cash+=bonus;g.cash-=bills;g.fin.bills+=bills;
-  invMonthEnd();familyMonthEnd();debtMonthEnd();
+  familyMonthEnd();debtMonthEnd();
   if(bonus>0)addLog('Thưởng Be: +'+ff(bonus),'earn');
   addLog('Chi phí tháng '+g.month+': -'+ff(bills),'cost');
   if(g.cash<0&&g.savings>0){   // bills come out of savings before the player is declared broke
@@ -2360,13 +2376,16 @@ const HARDS=[
   {n:'KHẮC NGHIỆT',m:1.4,c:'var(--red)'},
 ];
 function hardM(){return(HARDS[g.hard]||HARDS[1]).m}
-function lifeDefaults(){return{hard:Math.floor(Math.random()*HARDS.length),health:100,family:60,debt:0,sickDays:0,lifeCd:0,lifeSeen:{},wasRain:false,pend:'',inv:{},drink:0,gamble:0,quitM:0,debtRate:0,endWhy:''}}
+function lifeDefaults(){return{hard:Math.floor(Math.random()*HARDS.length),health:100,family:60,debt:0,sickDays:0,lifeCd:0,lifeSeen:{},tickets:0,invCost:{},wasRain:false,pend:'',inv:{},drink:0,gamble:0,quitM:0,debtRate:0,endWhy:''}}
 function lifeFix(s){   // fill / clamp life fields (older saves, repair)
   const d=lifeDefaults(),cl=(v,lo,hi,x)=>Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):x;
   s.hard=[0,1,2].includes(s.hard)?s.hard:1;
   s.health=cl(s.health,0,100,100);s.family=cl(s.family,0,100,60);s.debt=Math.round(cl(s.debt,0,1e12,0));
   s.sickDays=Math.round(cl(s.sickDays,0,30,0));s.lifeCd=Math.round(cl(s.lifeCd,0,60,0));
   if(!s.lifeSeen||typeof s.lifeSeen!=='object'||Array.isArray(s.lifeSeen))s.lifeSeen={};
+  s.tickets=Math.round(cl(s.tickets,0,TICKET_MAX,0));
+  if(!s.invCost||typeof s.invCost!=='object'||Array.isArray(s.invCost))s.invCost={};
+  Object.keys(s.invCost).forEach(k=>{if(!Number.isFinite(s.invCost[k])||s.invCost[k]<0)s.invCost[k]=0});
   s.wasRain=!!s.wasRain;s.pend=typeof s.pend==='string'?s.pend:'';
   s.debtRate=cl(s.debtRate,0,1,0);if(!s.debt)s.debtRate=0;s.endWhy=typeof s.endWhy==='string'?s.endWhy:'';
   s.drink=cl(s.drink,0,100,0);s.gamble=cl(s.gamble,0,100,0);s.quitM=Math.round(cl(s.quitM,0,99,0));
@@ -2383,6 +2402,8 @@ function lifeBad(s){
   if(!_inR(s.lifeCd,0,60))p.push('lifeCd');
   if(!s.lifeSeen||typeof s.lifeSeen!=='object'||Array.isArray(s.lifeSeen))p.push('lifeSeen');
   if(!_inR(s.debtRate,0,1))p.push('debtRate');
+  if(!_inR(s.tickets,0,TICKET_MAX))p.push('tickets');
+  if(!s.invCost||typeof s.invCost!=='object'||Array.isArray(s.invCost)||Object.values(s.invCost).some(v=>!_inR(v,0,1e12)))p.push('invCost');
   ['drink','gamble'].forEach(k=>{if(!_inR(s[k],0,100))p.push(k)});
   if(!s.inv||typeof s.inv!=='object'||Array.isArray(s.inv)||Object.values(s.inv).some(v=>!_inR(v,0,1e12)))p.push('inv');
   return p;
@@ -2481,8 +2502,8 @@ const LIFE_EVTS=[
    text:()=>'Bà cụ bán vé số dạo năn nỉ: "Con mua giúp bà tờ vé, biết đâu lại trúng". Vé 20K một tờ.',
    choices:[
     {l:'KHÔNG MUA',fn:()=>'Bạn xin lỗi bà, chúc bà bán đắt.'},
-    {l:'MUA 1 TỜ (20K)',ok:()=>g.cash>=2e4,fn:()=>lotto(1)},
-    {l:'MUA 10 TỜ (200K)',ok:()=>g.cash>=2e5,fn:()=>lotto(10)},
+    {l:'MUA 1 TỜ (20K)',ok:()=>g.cash>=2e4&&g.tickets<TICKET_MAX,fn:()=>lottoBuy(1)},
+    {l:'MUA 10 TỜ (200K)',ok:()=>g.cash>=2e5&&g.tickets<=TICKET_MAX-10,fn:()=>lottoBuy(10)},
    ]},
   // --- story chain: fires once at the start of months 3, 9, 15, 21 (see STORY) ---
   {id:'roof',ic:'house',ti:'CHUYỆN NHÀ: MÁI DỘT',when:()=>false,p:()=>0,
@@ -2561,13 +2582,20 @@ function repay(amt){
   if(g.phase==='game'&&netWin()){modal=null;finish(true)}
 }
 // Lottery: expected return a little under the ticket price, rare big prizes (drawn per ticket).
-function lotto(n){
-  let prize=0,best=0;
+const TICKET=2e4,TICKET_MAX=40;
+// Tickets are bought during the day and drawn at the end of the day (see lottoDraw, called from triggerDayEnd).
+function lottoBuy(n){
+  n=Math.min(n,TICKET_MAX-g.tickets);if(n<=0)return 'Hôm nay bạn đã mua đủ số vé tối đa rồi.';
+  if(g.cash<n*TICKET)return 'Không đủ tiền mua vé.';
+  lifeSpend(n*TICKET);g.tickets+=n;if(n>=10)g.gamble=Math.min(100,g.gamble+2);
+  return `Bạn cất ${n} tờ vé vào túi. Tối nay sẽ có kết quả xổ số.`;
+}
+function lottoDraw(){
+  const n=g.tickets;let prize=0,best=0;
   for(let i=0;i<n;i++){const r=Math.random();const p=r<.0005?1e7:r<.0085?1e6:r<.0685?1e5:0;prize+=p;best=Math.max(best,p)}
-  lifeSpend(n*2e4);g.cash+=prize;if(n>=10)g.gamble=Math.min(100,g.gamble+2);
-  if(!prize)return 'Dò số xong, không trúng gì. Bạn cười buồn, xếp tờ vé vào túi.';
-  g.fin.life=Math.max(0,(g.fin.life||0)-prize);
-  return best>=1e7?`TRÚNG ĐỘC ĐẮC! +${ff(prize)}. Bạn đứng hình mất mấy giây.`:best>=1e6?`Trúng giải ${ff(best)}! Tổng thưởng ${ff(prize)}.`:`Trúng chút đỉnh: ${ff(prize)}.`;
+  g.tickets=0;
+  if(prize){g.cash+=prize;g.fin.life=Math.max(0,(g.fin.life||0)-prize)}
+  return{n,prize,best,cost:n*TICKET};
 }
 // Gambling: a first small win ("beginner's luck") hooks, afterwards the house wins more often. Hard mode tilts it further.
 function gamble(stake,hook){
@@ -2622,21 +2650,24 @@ const INV_FEE=.01;
 function invOf(id){return(g.inv&&g.inv[id])||0}
 function invTotal(){return INVS.reduce((n,x)=>n+invOf(x.id),0)}
 function gauss(){let u=0;for(let i=0;i<6;i++)u+=Math.random();return(u-3)/.707}   // ~N(0,1)
-function invMonthEnd(){
+// Prices move every day; returns one row per held asset for the end-of-day summary (change %, VND change, value, profit vs cost).
+function invDayEnd(){
+  const rows=[];
   INVS.forEach(x=>{
     const v=invOf(x.id);if(v<=0)return;
-    const r=Math.max(-.6,x.mu+x.sd*gauss()*(g.hard===2?1.15:1)),nv=Math.round(v*(1+r));
-    g.inv[x.id]=nv;addLog(`${x.n}: ${r>=0?'+':''}${(r*100).toFixed(1)}% (${fm(nv)})`,r>=0?'good':'warn');
+    const r=Math.max(-.25,x.mu/30+x.sd/Math.sqrt(30)*gauss()*(g.hard===2?1.15:1)),nv=Math.round(v*(1+r));
+    g.inv[x.id]=nv;rows.push({id:x.id,n:x.n,ic:x.ic,pct:r*100,delta:nv-v,val:nv,pl:nv-(g.invCost[x.id]||0)});
   });
+  return rows;
 }
 function invBuy(id,amt){
   if(g.phase!=='game'||!(amt>0)||amt>g.cash){toast('KHÔNG ĐỦ TIỀN!','bad');return}
-  g.cash-=amt;g.inv[id]=invOf(id)+amt;addLog(`Mua ${INVS.find(x=>x.id===id).n}: ${ff(amt)}`,'save');save();render();
+  g.cash-=amt;g.inv[id]=invOf(id)+amt;g.invCost[id]=(g.invCost[id]||0)+amt;addLog(`Mua ${INVS.find(x=>x.id===id).n}: ${ff(amt)}`,'save');save();render();
 }
 function invSell(id,amt){
   const v=invOf(id);if(g.phase!=='game'||v<=0)return;
   amt=amt==='all'?v:Math.min(amt,v);const fee=Math.round(amt*INV_FEE);
-  g.inv[id]=v-amt;g.cash+=amt-fee;g.fin.life=(g.fin.life||0)+fee;
+  g.invCost[id]=Math.round((g.invCost[id]||0)*(v-amt)/v);g.inv[id]=v-amt;g.cash+=amt-fee;g.fin.life=(g.fin.life||0)+fee;
   addLog(`Bán ${INVS.find(x=>x.id===id).n}: +${ff(amt-fee)} (phí ${ff(fee)})`,'earn');save();render();
 }
 function remit(amt){
@@ -2657,7 +2688,7 @@ function familyMonthEnd(){
   else if(g.family<=20){lifeGain('health',-5);addLog('Lo chuyện nhà, ăn ngủ không yên: -5 sức khỏe','warn')}
 }
 function netWin(){return g.debt===0&&g.savings>=C.winTarget}
-function invLiquidate(){const t=invTotal();if(t>0){g.savings+=t;g.inv={};addLog('Bán hết đầu tư vào tiết kiệm: '+ff(t),'save')}}
+function invLiquidate(){const t=invTotal();if(t>0){g.savings+=t;g.inv={};g.invCost={};addLog('Bán hết đầu tư vào tiết kiệm: '+ff(t),'save')}}
 function quitHabits(){
   if(g.phase!=='game'||g.quitM===g.month||(g.drink<=0&&g.gamble<=0))return;
   g.quitM=g.month;g.drink=Math.max(0,g.drink-15);g.gamble=Math.max(0,g.gamble-15);lifeGain('family',2);addLog('Bạn tự nhủ phải bớt lại.','good');save();render();
@@ -2667,6 +2698,10 @@ function takeLoan(k){
   if(k==='hot')borrow(3e6,.15);else{borrow(5e6,.25);g.cash-=5e5;addLog('Phí làm hồ sơ vay: -500K','cost')}save();render();
 }
 function openHub(){if(modal||g.phase!=='game')return;modal={type:'hub'};render()}
+function lottoHub(n){
+  if(g.phase!=='game')return;
+  const t=lottoBuy(n);toast(t.startsWith('Bạn cất')?`ĐÃ MUA ${n} TỜ VÉ SỐ`:t.toUpperCase(),t.startsWith('Bạn cất')?'':'bad');save();render();
+}
 
 let foldOpen={sav:false,log:false};
 const TUT=[
@@ -3034,10 +3069,16 @@ function rModal(){
         <div class="sub">Lãi cộng dồn mỗi tháng. Nợ từ 30TR là bị siết nhà. Phải hết nợ mới được tính là thắng.</div>
       </section>
       <section class="hub-sec">
-        <div class="sec-t">${ic('chart',20)}ĐẦU TƯ (SỔ THEO THÁNG)</div>
-        ${INVS.map(x=>`<div class="inv-row"><div class="inv-h">${ic(x.ic,28)}<div><b>${x.n}</b> <span>${fm(invOf(x.id))}</span><div class="sub">${x.d}</div></div></div>
+        <div class="sec-t">${ic('chart',20)}ĐẦU TƯ (GIÁ ĐỔI MỖI NGÀY)</div>
+        ${INVS.map(x=>`<div class="inv-row"><div class="inv-h">${ic(x.ic,28)}<div><b>${x.n}</b> <span>${fm(invOf(x.id))}</span>${invOf(x.id)>0?` <em class="${invOf(x.id)-(g.invCost[x.id]||0)>=0?'up':'dn'}">${invOf(x.id)-(g.invCost[x.id]||0)>=0?'lãi':'lỗ'} ${fm(Math.abs(invOf(x.id)-(g.invCost[x.id]||0)))}</em>`:''}<div class="sub">${x.d}</div></div></div>
           <div class="hub-grid g3">${lb(`invBuy('${x.id}',1e6)`,'b-gr','MUA 1TR',g.cash<1e6)}${lb(`invBuy('${x.id}',5e6)`,'b-gr','MUA 5TR',g.cash<5e6)}${lb(`invSell('${x.id}','all')`,'b-red','BÁN HẾT',invOf(x.id)<=0)}</div></div>`).join('')}
-        <div class="sub">Bán mất phí 1%. Hết 24 tháng, đầu tư tự bán vào tiết kiệm.</div>
+        <div class="sub">Giá thay đổi mỗi ngày, lãi lỗ hiện ở bảng cuối ngày. Bán mất phí 1%. Hết 24 tháng, đầu tư tự bán vào tiết kiệm.</div>
+      </section>
+      <section class="hub-sec">
+        <div class="sec-t">${ic('ticket',20)}VÉ SỐ</div>
+        <div class="hub-debt">Vé hôm nay <b>${g.tickets}</b> tờ <em>(${ff(g.tickets*TICKET)})</em></div>
+        <div class="hub-grid g3">${lb('lottoHub(1)','b-gold','<span>MUA 1 TỜ<small>20K</small></span>',g.cash<TICKET||g.tickets>=TICKET_MAX)}${lb('lottoHub(5)','b-gold','<span>MUA 5 TỜ<small>100K</small></span>',g.cash<5*TICKET||g.tickets>TICKET_MAX-5)}${lb('lottoHub(10)','b-gold','<span>MUA 10 TỜ<small>200K</small></span>',g.cash<10*TICKET||g.tickets>TICKET_MAX-10)}</div>
+        <div class="sub">Vé 20K một tờ, tối nay xổ số, kết quả hiện ở bảng cuối ngày. Giải 100K, 1TR, độc đắc 10TR nhưng rất hiếm. Tối đa ${TICKET_MAX} tờ mỗi ngày. Mua nhiều dễ thành thói quen.</div>
       </section>
       <button class="btn b-cy blk" onclick="modal=null;render()">ĐÓNG</button>
     </div></div>`;
@@ -3138,6 +3179,8 @@ function rModal(){
         <div class="day-row"><span>Kết quả</span><span style="color:${net>=0?'var(--gr)':'var(--red)'}">${net>=0?'+':''}${ff(net)}</span></div>
       </div>
       <div class="interest">${ic('bank',20)} LÃI TIẾT KIỆM ${(C.dailyInterest*100).toFixed(1).replace(/\.0$/,'')}%: +${ff(interest)}<small>Tiết kiệm: ${ff(g.savings)}</small></div>
+      ${(modal.inv&&modal.inv.length)?`<div class="day-sec"><div class="m-h" style="color:var(--cy)">${ic('chart',20)} ĐẦU TƯ HÔM NAY</div>${modal.inv.map(r=>`<div class="day-row"><span>${ic(r.ic,20)} ${r.n} <small>${r.pct>=0?'+':''}${r.pct.toFixed(1)}%</small></span><span style="color:${r.delta>=0?'var(--gr)':'var(--red)'}">${r.delta>=0?'+':'-'}${ff(Math.abs(r.delta))}</span></div><div class="day-sub"><span>Giá trị ${fm(r.val)}</span><span style="color:${r.pl>=0?'var(--gr)':'var(--red)'}">${r.pl>=0?'Lãi':'Lỗ'} tổng ${fm(Math.abs(r.pl))}</span></div>`).join('')}</div>`:''}
+      ${(modal.lot&&modal.lot.n>0)?`<div class="day-sec"><div class="m-h" style="color:var(--gold)">${ic('ticket',20)} XỔ SỐ TỐI NAY</div><div class="day-row"><span>${modal.lot.n} tờ vé <small>(-${fm(modal.lot.cost)})</small></span><span style="color:${modal.lot.prize>0?'var(--gr)':'var(--dim)'}">${modal.lot.prize>0?'TRÚNG +'+fm(modal.lot.prize):'không trúng'}</span></div>${modal.lot.best>=1e7?'<div class="day-sub"><span style="color:var(--gold)">ĐỘC ĐẮC! Bạn không tin vào mắt mình.</span></div>':modal.lot.best>=1e6?'<div class="day-sub"><span style="color:var(--gold)">Trúng giải lớn, may mắn thật.</span></div>':''}</div>`:''}
       ${(modal.ms||[]).map(m=>`<div class="interest">${ic('trophy',20)} MỐC ${fm(m.at)}: thưởng +${ff(m.reward)}</div>`).join('')}
       <button class="btn b-gr blk" onclick="confirmDayEnd()">${day<C.daysPerMonth?'NGÀY '+(day+1):'KẾT THÁNG'}</button>
     </div></div>`;

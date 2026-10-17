@@ -510,3 +510,18 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   .logo h1{font-size:18px}.tagline,.hi{display:none}.sstat{flex-direction:row;padding:5px}.sstat .l{display:none}
   .start-actions{gap:6px}.start-main{padding:8px;font-size:20px}.start .btn{padding-block:8px}.bills-hdr{padding:5px 10px}
 }
+
+/* life hub: sections as separate cards */
+.hub{padding:18px 16px}
+.hub-sec{margin-top:22px;padding:14px 12px;background:rgba(0,0,0,.22);box-shadow:inset 0 0 0 2px #3a3180}
+.hub-sec .sec-t{margin:0 0 10px}
+.hub-grid{gap:12px;margin:10px 0}
+.hub .sub{margin-top:8px;line-height:1.2}
+.inv-row{margin:14px 0}
+.inv-row+.inv-row{padding-top:14px;border-top:2px dotted #3a3180}
+.inv-h em{font-style:normal;margin-left:6px}.inv-h em.up{color:var(--gr)}.inv-h em.dn{color:var(--red)}
+.hub>.btn.blk{margin-top:22px}
+.day-sec{margin-top:14px;padding-top:12px;margin-bottom:14px;border-top:2px dotted #3a3180}
+.day-sec .m-h{margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.day-row small{color:var(--dim);margin-left:4px}
+.day-sub{display:flex;justify-content:space-between;gap:8px;color:var(--dim);font-size:.9em;margin:2px 0 8px}

@@ -684,8 +684,9 @@ function triggerDayEnd(){
   const interest=Math.floor(g.savings*C.dailyInterest);
   g.savings+=interest;
   if(netWin()){finish(true);return;}
+  const inv=invDayEnd(),lot=lottoDraw();
   const ms=checkMilestones();
-  modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day,ms};
+  modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day,ms,inv,lot};
   render();
 }
 
@@ -712,7 +713,7 @@ function confirmMonthEnd(){
   const {bonus}=modal;
   const bills=billsTotal();
   g.cash+=bonus;g.cash-=bills;g.fin.bills+=bills;
-  invMonthEnd();familyMonthEnd();debtMonthEnd();
+  familyMonthEnd();debtMonthEnd();
   if(bonus>0)addLog('Thưởng Be: +'+ff(bonus),'earn');
   addLog('Chi phí tháng '+g.month+': -'+ff(bills),'cost');
   if(g.cash<0&&g.savings>0){   // bills come out of savings before the player is declared broke

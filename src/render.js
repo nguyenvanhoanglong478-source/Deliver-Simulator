@@ -364,10 +364,16 @@ function rModal(){
         <div class="sub">Lãi cộng dồn mỗi tháng. Nợ từ 30TR là bị siết nhà. Phải hết nợ mới được tính là thắng.</div>
       </section>
       <section class="hub-sec">
-        <div class="sec-t">${ic('chart',20)}ĐẦU TƯ (SỔ THEO THÁNG)</div>
-        ${INVS.map(x=>`<div class="inv-row"><div class="inv-h">${ic(x.ic,28)}<div><b>${x.n}</b> <span>${fm(invOf(x.id))}</span><div class="sub">${x.d}</div></div></div>
+        <div class="sec-t">${ic('chart',20)}ĐẦU TƯ (GIÁ ĐỔI MỖI NGÀY)</div>
+        ${INVS.map(x=>`<div class="inv-row"><div class="inv-h">${ic(x.ic,28)}<div><b>${x.n}</b> <span>${fm(invOf(x.id))}</span>${invOf(x.id)>0?` <em class="${invOf(x.id)-(g.invCost[x.id]||0)>=0?'up':'dn'}">${invOf(x.id)-(g.invCost[x.id]||0)>=0?'lãi':'lỗ'} ${fm(Math.abs(invOf(x.id)-(g.invCost[x.id]||0)))}</em>`:''}<div class="sub">${x.d}</div></div></div>
           <div class="hub-grid g3">${lb(`invBuy('${x.id}',1e6)`,'b-gr','MUA 1TR',g.cash<1e6)}${lb(`invBuy('${x.id}',5e6)`,'b-gr','MUA 5TR',g.cash<5e6)}${lb(`invSell('${x.id}','all')`,'b-red','BÁN HẾT',invOf(x.id)<=0)}</div></div>`).join('')}
-        <div class="sub">Bán mất phí 1%. Hết 24 tháng, đầu tư tự bán vào tiết kiệm.</div>
+        <div class="sub">Giá thay đổi mỗi ngày, lãi lỗ hiện ở bảng cuối ngày. Bán mất phí 1%. Hết 24 tháng, đầu tư tự bán vào tiết kiệm.</div>
+      </section>
+      <section class="hub-sec">
+        <div class="sec-t">${ic('ticket',20)}VÉ SỐ</div>
+        <div class="hub-debt">Vé hôm nay <b>${g.tickets}</b> tờ <em>(${ff(g.tickets*TICKET)})</em></div>
+        <div class="hub-grid g3">${lb('lottoHub(1)','b-gold','<span>MUA 1 TỜ<small>20K</small></span>',g.cash<TICKET||g.tickets>=TICKET_MAX)}${lb('lottoHub(5)','b-gold','<span>MUA 5 TỜ<small>100K</small></span>',g.cash<5*TICKET||g.tickets>TICKET_MAX-5)}${lb('lottoHub(10)','b-gold','<span>MUA 10 TỜ<small>200K</small></span>',g.cash<10*TICKET||g.tickets>TICKET_MAX-10)}</div>
+        <div class="sub">Vé 20K một tờ, tối nay xổ số, kết quả hiện ở bảng cuối ngày. Giải 100K, 1TR, độc đắc 10TR nhưng rất hiếm. Tối đa ${TICKET_MAX} tờ mỗi ngày. Mua nhiều dễ thành thói quen.</div>
       </section>
       <button class="btn b-cy blk" onclick="modal=null;render()">ĐÓNG</button>
     </div></div>`;
@@ -468,6 +474,8 @@ function rModal(){
         <div class="day-row"><span>Kết quả</span><span style="color:${net>=0?'var(--gr)':'var(--red)'}">${net>=0?'+':''}${ff(net)}</span></div>
       </div>
       <div class="interest">${ic('bank',20)} LÃI TIẾT KIỆM ${(C.dailyInterest*100).toFixed(1).replace(/\.0$/,'')}%: +${ff(interest)}<small>Tiết kiệm: ${ff(g.savings)}</small></div>
+      ${(modal.inv&&modal.inv.length)?`<div class="day-sec"><div class="m-h" style="color:var(--cy)">${ic('chart',20)} ĐẦU TƯ HÔM NAY</div>${modal.inv.map(r=>`<div class="day-row"><span>${ic(r.ic,20)} ${r.n} <small>${r.pct>=0?'+':''}${r.pct.toFixed(1)}%</small></span><span style="color:${r.delta>=0?'var(--gr)':'var(--red)'}">${r.delta>=0?'+':'-'}${ff(Math.abs(r.delta))}</span></div><div class="day-sub"><span>Giá trị ${fm(r.val)}</span><span style="color:${r.pl>=0?'var(--gr)':'var(--red)'}">${r.pl>=0?'Lãi':'Lỗ'} tổng ${fm(Math.abs(r.pl))}</span></div>`).join('')}</div>`:''}
+      ${(modal.lot&&modal.lot.n>0)?`<div class="day-sec"><div class="m-h" style="color:var(--gold)">${ic('ticket',20)} XỔ SỐ TỐI NAY</div><div class="day-row"><span>${modal.lot.n} tờ vé <small>(-${fm(modal.lot.cost)})</small></span><span style="color:${modal.lot.prize>0?'var(--gr)':'var(--dim)'}">${modal.lot.prize>0?'TRÚNG +'+fm(modal.lot.prize):'không trúng'}</span></div>${modal.lot.best>=1e7?'<div class="day-sub"><span style="color:var(--gold)">ĐỘC ĐẮC! Bạn không tin vào mắt mình.</span></div>':modal.lot.best>=1e6?'<div class="day-sub"><span style="color:var(--gold)">Trúng giải lớn, may mắn thật.</span></div>':''}</div>`:''}
       ${(modal.ms||[]).map(m=>`<div class="interest">${ic('trophy',20)} MỐC ${fm(m.at)}: thưởng +${ff(m.reward)}</div>`).join('')}
       <button class="btn b-gr blk" onclick="confirmDayEnd()">${day<C.daysPerMonth?'NGÀY '+(day+1):'KẾT THÁNG'}</button>
     </div></div>`;

@@ -1,6 +1,7 @@
 # Nhật ký thay đổi
 
 ## Gần nhất
+- Vé số mua trong mục ĐỜI SỐNG (tối đa 40 tờ/ngày), xổ vào cuối ngày. Giá vàng/chứng khoán đổi mỗi ngày, bảng cuối ngày hiện lãi/lỗ hôm nay và tổng lãi/lỗ so với vốn. Các mục trong ĐỜI SỐNG tách thành thẻ riêng, cách xa hơn.
 - Menu tạm dừng có thêm "VỀ MÀN HÌNH BẮT ĐẦU" (hỏi xác nhận, game vẫn lưu và bấm TIẾP TỤC để chơi tiếp; đơn đang giao bị hủy, tài nguyên đã dùng không hoàn lại giống như tải lại trang). Có ở cả menu tạm dừng thường và khi đang chạy hoạt ảnh.
 - Màn bắt đầu luôn vừa khít cửa sổ (không phải kéo xuống để bấm BẮT ĐẦU): bỏ đệm đáy 84px, thu nhỏ ảnh/chữ khi cửa sổ thấp, chia 2 cột khi rộng mà thấp (ví dụ PC thu phóng 150%, điện thoại nằm ngang). Test mới tests/test_startfit.py.
 - Layout: thanh Sức khỏe / Gia đình riêng ở màn chính, bảng ĐỜI SỐNG chia mục rõ ràng (nút không còn tràn trên mobile, rộng hơn trên PC), nút ĐỜI SỐNG tách khỏi khối hành động.
