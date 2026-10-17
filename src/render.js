@@ -407,6 +407,16 @@ function rModal(){
       <button class="btn b-gr blk" onclick="resumeGame()">TIẾP TỤC</button>
       <button class="btn b-dim blk" style="margin-top:8px" onclick="openSettings()">ÂM THANH</button>
       <button class="btn b-dim blk" style="margin-top:8px" onclick="modal={type:'tut',i:0,from:'pause'};render()">HƯỚNG DẪN</button>
+      <button class="btn b-dim blk" style="margin-top:8px" onclick="askHome()">VỀ MÀN HÌNH BẮT ĐẦU</button>
+    </div></div>`;
+  }
+  if(type==='confirmHome'){
+    const mid=g.phase==='minigame'||g.phase==='anim-deliver'||g.phase==='anim-refuel';
+    return`<div class="overlay"><div class="pxf2 modal">
+      <div class="m-title" style="color:var(--or)">${ic('flag',28)} VỀ MÀN HÌNH BẮT ĐẦU?</div>
+      <div class="m-body">Game được lưu lại, bạn có thể bấm TIẾP TỤC để chơi tiếp.${mid?' Đơn hoặc việc đang làm dở sẽ bị hủy, xăng và thể lực đã dùng không được hoàn lại.':''}</div>
+      <div class="rf-btns"><button class="btn b-dim" onclick="cancelHome()">Ở LẠI</button>
+      <button class="btn b-cy" onclick="goHome()">VỀ MÀN HÌNH</button></div>
     </div></div>`;
   }
   if(type==='settings'){

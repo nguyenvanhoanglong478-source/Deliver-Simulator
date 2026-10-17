@@ -773,10 +773,33 @@ function pauseGame(){
   if(!canPause())return;
   setPaused(true);
   if(g.phase==='game'||g.phase==='minigame'){pausedLight=false;modal={type:'pause'};render();return}
-  pausedLight=true;
+  pausedLight=true;showLightPause();
+}
+function showLightPause(){
   const o=document.getElementById('pause-ov');
-  if(o){o.innerHTML=`<div class="pxf2 modal"><div class="m-title" style="color:var(--gold)">${ic('pause',28)} TẠM DỪNG</div><div class="lbl" style="text-align:center">Thời gian đang dừng.</div><button class="btn b-gr blk" onclick="resumeGame()">TIẾP TỤC</button></div>`;o.hidden=false}
+  if(o){o.innerHTML=`<div class="pxf2 modal"><div class="m-title" style="color:var(--gold)">${ic('pause',28)} TẠM DỪNG</div><div class="lbl" style="text-align:center">Thời gian đang dừng.</div><button class="btn b-gr blk" onclick="resumeGame()">TIẾP TỤC</button><button class="btn b-dim blk" style="margin-top:8px" onclick="askHome()">VỀ MÀN HÌNH BẮT ĐẦU</button></div>`;o.hidden=false}
   pauseBtnSync();
+}
+// Back to the start screen from the pause menu. The game stays saved (continue with TIẾP TỤC); an order in progress is cancelled.
+function askHome(){
+  const light=pausedLight;
+  if(light){pausedLight=false;const o=document.getElementById('pause-ov');if(o){o.hidden=true;o.innerHTML=''}}
+  else if(!modal||modal.type!=='pause')return;
+  modal={type:'confirmHome',from:light?'light':'pause'};render();
+}
+function cancelHome(){
+  if(!modal||modal.type!=='confirmHome')return;
+  if(modal.from==='light'){modal=null;pausedLight=true;render();showLightPause()}
+  else{modal={type:'pause'};render()}
+}
+function goHome(){
+  if(!modal||modal.type!=='confirmHome')return;
+  const ph=g.phase;
+  modal=null;pausedLight=false;
+  const o=document.getElementById('pause-ov');if(o){o.hidden=true;o.innerHTML=''}
+  stopAllT();mgData=null;g.activeAnim=null;
+  if(ph==='game'||ph==='anim-sleep')save();   // an unfinished delivery/refuel is not saved, like a reload
+  setPaused(false);g.phase='start';render();pauseBtnSync();
 }
 function resumeGame(){
   if(pausedLight){
@@ -794,6 +817,7 @@ function pauseBtnSync(){
 document.addEventListener('keydown',e=>{
   if(e.key==='p'||e.key==='P'||e.key==='Escape'){
     if(pausedLight||(modal&&modal.type==='pause'))resumeGame();
+    else if(modal&&modal.type==='confirmHome')cancelHome();
     else if(modal&&modal.type==='settings'&&modal.from==='pause')closeSettings();
     else if(canPause())pauseGame();
   }
