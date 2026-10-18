@@ -37,9 +37,12 @@ body{font-family:var(--f-tx);font-size:22px;line-height:1.15;color:var(--tx);dis
   background-color:var(--bg);
   background-image:linear-gradient(rgba(255,255,255,.025) 2px,transparent 2px),linear-gradient(90deg,rgba(255,255,255,.025) 2px,transparent 2px);
   background-size:16px 16px;image-rendering:pixelated}
+body{background-image:radial-gradient(ellipse 70% 45% at 50% -8%,rgba(125,72,255,.28),transparent 70%),linear-gradient(rgba(255,255,255,.025) 2px,transparent 2px),linear-gradient(90deg,rgba(255,255,255,.025) 2px,transparent 2px);background-size:auto,16px 16px,16px 16px;background-attachment:fixed,scroll,scroll}
+body::before{content:'';position:fixed;left:0;right:0;bottom:0;height:150px;pointer-events:none;z-index:0;opacity:.32;
+  background:var(--sky-far) repeat-x left bottom/auto 150px}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:500;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0,rgba(0,0,0,.16) 1px,transparent 1px,transparent 3px)}
-#root{width:100%;max-width:480px;min-height:100vh;overflow-x:hidden;padding-inline:12px;padding-bottom:84px}
+#root{position:relative;z-index:1;width:100%;max-width:480px;min-height:100vh;overflow-x:hidden;padding-inline:12px;padding-bottom:84px}
 img{image-rendering:pixelated}
 .px-ic{display:inline-block;vertical-align:-3px;flex:none}
 .t-px{font-family:var(--f-px);letter-spacing:0}
@@ -525,10 +528,65 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 .day-sub{display:flex;justify-content:space-between;gap:8px;color:var(--dim);font-size:.9em;margin:2px 0 8px}
 .save-sec .fold-hint{margin-left:auto}.save-sec{margin-top:4px}
 
-.offer.delivering{cursor:default;flex-wrap:wrap}
-.dl-track{display:block;width:100%;height:14px;background:#0b1020;box-shadow:inset 0 0 0 3px #000;margin-top:6px}
-.dl-bar{display:block;height:100%;background:var(--gold);transition:width .1s linear}
 .tg.combo{background:var(--pu,#a855f7);color:#fff}
+
+/* ---------- extra detail pass: live scene, richer panels, delivery road ---------- */
+.pxf,.pxf2{background-image:linear-gradient(180deg,rgba(255,255,255,.07),transparent 38%,rgba(0,0,0,.12))}
+.logo h1{animation:neon 2.4s steps(2) infinite}
+@keyframes neon{50%{text-shadow:4px 4px 0 var(--red-d),8px 8px 0 #000,0 0 18px rgba(255,212,59,.55)}}
+.sstars{position:absolute;inset:0 0 40% 0;opacity:.85;animation:twinkle 3s steps(2) infinite;
+  background:radial-gradient(2px 2px at 12% 22%,#fff 50%,transparent 51%),radial-gradient(2px 2px at 31% 58%,#fff 50%,transparent 51%),radial-gradient(3px 3px at 47% 18%,#ffe9a8 50%,transparent 51%),
+  radial-gradient(2px 2px at 63% 46%,#fff 50%,transparent 51%),radial-gradient(2px 2px at 78% 14%,#fff 50%,transparent 51%),radial-gradient(3px 3px at 90% 52%,#cfe9ff 50%,transparent 51%),radial-gradient(2px 2px at 20% 80%,#fff 50%,transparent 51%)}
+@keyframes twinkle{50%{opacity:.35}}
+.hscene{height:150px}
+.hscene .bike{width:112px;margin-left:-56px;bottom:14px}
+.hscene .cargo{bottom:62px;margin-left:8px}
+.hscene .sky-far,.hscene .sky-near{animation-play-state:paused}
+.hscene .road::after{animation-play-state:paused}
+.hscene.go .sky-far{animation:scrollx 9s linear infinite}.hscene.go .sky-near{animation:scrollx 3s linear infinite}.hscene.go .road::after{animation:scrollx .45s linear infinite}
+.hscene:not(.go) .bike{animation-duration:1.2s}
+.sun{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;display:none;
+  clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%)}
+.hscene .sun{display:block}
+.hscene[data-t=day] .sun,.hscene[data-t=dawn] .sun{background:#ffd43b;box-shadow:0 0 0 4px #ff9d2e}
+.hscene[data-t=dusk] .sun{background:#ff9d2e}
+.hscene[data-t=night] .sun{background:linear-gradient(#e8e4ff,#e8e4ff);opacity:.95}
+.hscene[data-t=night] .sun::after{content:'';position:absolute;left:5px;top:6px;width:6px;height:6px;background:#b8b0e8;box-shadow:10px 8px 0 -1px #b8b0e8}
+.hscene[data-t=day]{background:linear-gradient(#3b8fe8 0 30%,#63b0f5 30% 56%,#9bd0fb 56% 78%,#d3ecfd 78% 100%)}
+.hscene[data-t=dawn]{background:linear-gradient(#3a2a8a 0 25%,#8a4aa8 25% 50%,#ff8a6a 50% 75%,#ffc27a 75% 100%)}
+.hscene[data-t=dusk]{background:linear-gradient(#2a1a70 0 25%,#7a2f93 25% 50%,#d9467a 50% 75%,#ff9d2e 75% 100%)}
+.hscene[data-t=day] .sstars{opacity:0;animation:none}
+.hscene[data-t=dawn] .sstars,.hscene[data-t=dusk] .sstars{opacity:.4}
+.hscene[data-t=day] .sky-far{filter:brightness(1.8) saturate(.7);opacity:.7}
+.hscene[data-t=day] .sky-near{filter:brightness(1.5) saturate(.7)}
+.rain{display:none;position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(105deg,transparent 0 9px,rgba(160,210,255,.55) 9px 11px,transparent 11px 22px);background-size:44px 44px;animation:rainfall .35s linear infinite}
+.hscene.rainy .rain{display:block}
+.hscene.rainy::after{content:'';position:absolute;inset:0;background:rgba(10,20,50,.35);pointer-events:none}
+@keyframes rainfall{to{background-position:-12px 44px}}
+.btn.offer.delivering{--c:#1d1740;--cd:#120d2e;color:var(--tx);cursor:default;pointer-events:none;
+  box-shadow:0 -4px 0 0 var(--cy),0 4px 0 0 var(--cy),-4px 0 0 0 var(--cy),4px 0 0 0 var(--cy),inset 0 0 0 4px #000,0 0 22px rgba(56,217,255,.35)}
+.offer.delivering .nm{color:var(--cy)}
+.offer.delivering .er{color:var(--gold)}
+.offer.delivering .co span{font-family:var(--f-px);font-size:15px;color:var(--gr)}
+.dl-track{position:relative;display:block;width:100%;height:30px;margin-top:8px;background:#0a0814;border-top:3px solid #3a3180;border-bottom:3px solid #3a3180}
+.dl-track::before{content:'';position:absolute;left:0;right:26px;top:12px;height:4px;background:repeating-linear-gradient(90deg,#5a4fb0 0 10px,transparent 10px 20px)}
+.dl-bar{position:absolute;left:0;top:0;bottom:0;display:block;background:linear-gradient(90deg,transparent,rgba(255,212,59,.45));box-shadow:inset 0 -3px 0 var(--gold);transition:width .1s linear;max-width:calc(100% - 26px)}
+.dl-bike{position:absolute;right:-18px;bottom:0;height:30px;width:auto;transform:scaleX(-1);animation:bob .4s steps(2) infinite;filter:drop-shadow(2px 2px 0 #000)}
+.dl-flag{position:absolute;right:2px;top:2px;line-height:0;animation:bob 1s steps(2) infinite}
+.offer:disabled{filter:grayscale(.5) brightness(.62)}
+.of-ic{align-items:center;justify-content:center;padding:6px;background:rgba(0,0,0,.28);box-shadow:inset 0 0 0 3px rgba(0,0,0,.4)}
+.pips{display:inline-flex;gap:3px;margin-left:6px;vertical-align:1px}
+.pips i{display:block;width:8px;height:8px;background:rgba(0,0,0,.35)}.pips i.on{background:#000}
+.tg{box-shadow:0 2px 0 rgba(0,0,0,.5)}
+.offer.rush:not(:disabled):not(.delivering){animation:rushpulse 1.2s steps(2) infinite}
+@keyframes rushpulse{50%{outline-color:#ffb3bb}}
+.offer.combo:not(:disabled)::after{content:'';position:absolute;right:6px;top:-8px;width:8px;height:8px;background:var(--pu);box-shadow:-12px 0 0 var(--pu),-24px 0 0 var(--pu-d)}
+.btn.offer{position:relative}
+.bar>i{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.14) 0 6px,transparent 6px 12px)}
+.sec-t{text-shadow:2px 2px 0 #000}
+.stat .v{text-shadow:2px 2px 0 rgba(0,0,0,.6)}
+@media(max-width:859px){.hscene{height:112px}.hscene .bike{width:84px;margin-left:-42px;bottom:10px}.hscene .cargo{bottom:46px}.hscene .cargo .px-ic{width:24px;height:24px}}
+@media(prefers-reduced-motion:reduce){.sstars,.logo h1,.rain,.hscene.go .sky-far,.hscene.go .sky-near{animation:none}}
 </style>
 </head>
 <body>
@@ -1452,8 +1510,8 @@ const UPGS=[
   {id:'insure',name:'Bảo hiểm mở rộng',  icon:'bank',  cost:2e6, desc:'-60% chi phí tai nạn. Phí 300K/tháng',cat:'Phụ tùng',fee:3e5},
   {id:'heat',  name:'Túi giữ nhiệt',     icon:'bowl',  cost:8e5, desc:'Đồ ăn +25%, hàng hóa -10% (chọn 1 trong 2 túi)',cat:'Túi giao hàng',grp:'bag'},
   {id:'crate', name:'Thùng hàng lớn',    icon:'box',   cost:12e5,desc:'Hàng hóa +20%, đồ ăn -10% (chọn 1 trong 2 túi)',cat:'Túi giao hàng',grp:'bag'},
-  {id:'eco',   name:'Động cơ tiết kiệm', icon:'fuel',  cost:2e6, desc:'Xăng -35%, mỗi đơn chậm thêm 3 giây (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
-  {id:'turbo', name:'Động cơ mạnh',      icon:'bolt',  cost:5e6, desc:'Thể lực -20%, nhanh hơn 3 giây/đơn, xăng +25% (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
+  {id:'eco',   name:'Động cơ tiết kiệm', icon:'fuel',  cost:2e6, desc:'Xăng -35%, giao chậm hơn 30% (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
+  {id:'turbo', name:'Động cơ mạnh',      icon:'bolt',  cost:5e6, desc:'Thể lực -20%, giao nhanh hơn 25%, xăng +25% (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
   {id:'tire2', name:'Lốp chống thủng',   icon:'gear',  cost:3e6, desc:'Tai nạn làm mất ít độ bền hơn 40%',cat:'Mở khóa 25TR',req:25e6},
   {id:'prio',  name:'Ứng dụng ưu tiên',  icon:'star',  cost:6e6, desc:'Thấy 4 đơn mỗi lượt, nhiều đơn gấp hơn',cat:'Mở khóa 50TR',req:5e7},
   {id:'vip',   name:'Thẻ đối tác vàng',  icon:'trophy',cost:1e7, desc:'+15% thu nhập mọi đơn',cat:'Mở khóa 75TR',req:75e6},
@@ -1577,6 +1635,13 @@ function earnMult(){return g.vehicleHp>=70?1:g.vehicleHp>=50?.85:g.vehicleHp>=30
 // ===== ORDERS =====
 function hourOf(){return 6+16*(1-g.dayTimeLeft/C.dayDuration)}   // a game day runs 06:00-22:00
 function isPeak(){const h=hourOf();return(h>=11&&h<13)||(h>=17&&h<19)}
+function dayPart(){const h=hourOf();return h<8?'dawn':h<17?'day':h<19.5?'dusk':'night'}
+// sun / moon travel along an arc over the day; returns inline position for #hscene .sun
+function sunPos(){const p=Math.min(1,Math.max(0,(hourOf()-6)/16)),y=62-Math.sin(p*Math.PI)*46;return`left:${(6+p*80).toFixed(1)}%;top:${y.toFixed(0)}px`}
+function sceneSync(){
+  const sc=document.getElementById('hscene');if(!sc)return;
+  sc.dataset.t=dayPart();const s=sc.querySelector('.sun');if(s)s.style.cssText=sunPos();
+}
 function fmH(){const h=hourOf(),H=Math.floor(h),M=Math.floor((h-H)*6)*10;return(H<10?'0':'')+H+':'+(M<10?'0':'')+M}
 function genOffer(peak){
   const type=Math.random()<.5?'food':'goods',job=C.jobs[type];
@@ -1636,6 +1701,7 @@ function dayStep(){
   if(el)el.textContent=fmT(g.dayTimeLeft);
   const ck=document.getElementById('clk');
   if(ck){const pk=isPeak();ck.textContent=fmH();ck.classList.toggle('peak',pk)}
+  if(g.dayTimeLeft%5===0)sceneSync();
   if(g.dayTimeLeft>0&&g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
   if(g.dayTimeLeft<=0&&!busy){stopT(dayTmr);triggerDayEnd();return false}   // a delivery in progress finishes first
   return true;
@@ -2474,20 +2540,26 @@ function offerCard(o,i){
     return`<div class="btn ${DLV.o.type==='food'?'b-gr':'b-cy'} offer delivering${DLV.o.rush?' rush':''}" aria-live="polite">
     <span class="of-ic">${ic(job.icon,32)}</span>
     <span class="of-main"><span class="nm">ĐANG GIAO · ${job.name}</span><span class="er">${money(DLV.earn)}</span>
-      <span class="dl-track"><span class="dl-bar" id="dl-bar" style="width:${pc}%"></span></span></span>
+      <span class="dl-track"><span class="dl-bar" id="dl-bar" style="width:${pc}%"><img class="dl-bike" src="${BIKE}" alt=""></span><span class="dl-flag">${ic('flag',20)}</span></span></span>
     <span class="co"><span id="dl-t">${Math.ceil(left)}s</span></span>
   </div>`;
   }
   const c=offerCost(o),d=DIST[o.dist],job=C.jobs[o.type],ok=canDoOffer(o)&&!DLV;
   return`<button class="btn ${o.type==='food'?'b-gr':'b-cy'} offer${o.rush?' rush':''}${o.combo?' combo':''}" ${ok?'':'disabled'} onclick="doDelivery(${i})">
     <span class="of-ic">${ic(job.icon,32)}</span>
-    <span class="of-main"><span class="nm">${job.name} · ${d.n}</span><span class="er">${money(offerPay(o))}</span>
+    <span class="of-main"><span class="nm">${job.name} · ${d.n} <span class="pips" aria-hidden="true">${[0,1,2].map(k=>`<i${k<=o.dist?' class="on"':''}></i>`).join('')}</span></span><span class="er">${money(offerPay(o))}</span>
       <span class="of-tags">${o.combo?'<b class="tg combo">ĐƠN GHÉP</b>':''}${o.rush?'<b class="tg rush">GẤP</b>':''}${o.peak?'<b class="tg peak">CAO ĐIỂM</b>':''}</span></span>
     <span class="co"><span>${ic('bolt',16)}${c.sta}</span><span>${ic('fuel',16)}${c.fuel}%</span><span>${ic('flag',16)}${offerTime(o)}s</span></span>
   </button>`;
 }
+// live street scene on the main screen: sun/moon follow the clock, rain when it rains, scenery only moves while delivering
+function hscene(){
+  return`<div id="hscene" class="scene hscene${DLV?' go':''}${g.rainToday?' rainy':''}" data-t="${dayPart()}" aria-hidden="true">
+    <div class="sun" style="${sunPos()}"></div><div class="sstars"></div><div class="sky-far"></div><div class="sky-near"></div>
+    <div class="road"></div><img class="bike" src="${BIKE}" alt="">${DLV?`<div class="cargo">${ic(C.jobs[DLV.o.type].icon,32)}</div>`:''}<div class="rain"></div></div>`;
+}
 function sceneHTML(cargo){
-  return`<div class="scene"><div class="sky-far"></div><div class="sky-near"></div><div class="road"></div>
+  return`<div class="scene"><div class="sstars"></div><div class="sky-far"></div><div class="sky-near"></div><div class="road"></div>
     <img class="bike" src="${BIKE}" alt="Xe Honda Cub">${cargo?`<div class="cargo">${ic(cargo,32)}</div>`:''}</div>`;
 }
 function reviewHTML(r){
@@ -2552,6 +2624,7 @@ function rGame(){
   </div>
   <div class="game-body">
   <div class="pc-col">
+    ${hscene()}
     <div class="stat-row">
       <div class="pxf stat${cashLow?' warn':''}"><div class="l">${ic('coin',20)}TIỀN MẶT</div><div class="v ${cashLow?'red':'gr'}">${money(g.cash)}</div></div>
       <div class="pxf stat"><div class="l">${ic('bank',20)}TIẾT KIỆM</div><div class="v gold">${money(g.savings)}</div>

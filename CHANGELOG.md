@@ -1,6 +1,7 @@
 # Nhật ký thay đổi
 
 ## Gần nhất
+- Vẽ thêm chi tiết giao diện: cảnh phố sống động ở màn chính (mặt trời/trăng đi theo giờ trong ngày, bình minh/hoàng hôn/ban đêm, mưa rơi khi trời mưa, cảnh chỉ chạy khi đang giao), ô đơn đang giao có đường chạy với xe máy tiến về lá cờ, chấm báo độ xa, đơn gấp nhấp nháy viền, nền có ánh sáng, đường chân trời và sao, panel có chuyển sắc nổi khối, thanh chỉ số có sọc chéo, logo nhấp nháy neon.
 - Đánh giá mới ở màn chính nhấp nháy viền vàng ~3 giây; hồ sơ tài xế chỉ hiện 10 đánh giá gần nhất.
 - Đang giao hàng vẫn mở được Nâng cấp / Đời sống / Hồ sơ; nâng cấp mua giữa chừng chỉ có hiệu lực từ đơn kế tiếp (đơn đang giao tính theo nâng cấp lúc bắt đầu). Đơn xong khi đang mở popup thì chờ đóng popup rồi mới tính.
 - Chữ in nghiêng (THỂ LỰC, XĂNG...) về bình thường. Nút âm thanh luôn hiển thị.

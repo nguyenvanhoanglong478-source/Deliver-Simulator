@@ -16,20 +16,26 @@ function offerCard(o,i){
     return`<div class="btn ${DLV.o.type==='food'?'b-gr':'b-cy'} offer delivering${DLV.o.rush?' rush':''}" aria-live="polite">
     <span class="of-ic">${ic(job.icon,32)}</span>
     <span class="of-main"><span class="nm">ĐANG GIAO · ${job.name}</span><span class="er">${money(DLV.earn)}</span>
-      <span class="dl-track"><span class="dl-bar" id="dl-bar" style="width:${pc}%"></span></span></span>
+      <span class="dl-track"><span class="dl-bar" id="dl-bar" style="width:${pc}%"><img class="dl-bike" src="${BIKE}" alt=""></span><span class="dl-flag">${ic('flag',20)}</span></span></span>
     <span class="co"><span id="dl-t">${Math.ceil(left)}s</span></span>
   </div>`;
   }
   const c=offerCost(o),d=DIST[o.dist],job=C.jobs[o.type],ok=canDoOffer(o)&&!DLV;
   return`<button class="btn ${o.type==='food'?'b-gr':'b-cy'} offer${o.rush?' rush':''}${o.combo?' combo':''}" ${ok?'':'disabled'} onclick="doDelivery(${i})">
     <span class="of-ic">${ic(job.icon,32)}</span>
-    <span class="of-main"><span class="nm">${job.name} · ${d.n}</span><span class="er">${money(offerPay(o))}</span>
+    <span class="of-main"><span class="nm">${job.name} · ${d.n} <span class="pips" aria-hidden="true">${[0,1,2].map(k=>`<i${k<=o.dist?' class="on"':''}></i>`).join('')}</span></span><span class="er">${money(offerPay(o))}</span>
       <span class="of-tags">${o.combo?'<b class="tg combo">ĐƠN GHÉP</b>':''}${o.rush?'<b class="tg rush">GẤP</b>':''}${o.peak?'<b class="tg peak">CAO ĐIỂM</b>':''}</span></span>
     <span class="co"><span>${ic('bolt',16)}${c.sta}</span><span>${ic('fuel',16)}${c.fuel}%</span><span>${ic('flag',16)}${offerTime(o)}s</span></span>
   </button>`;
 }
+// live street scene on the main screen: sun/moon follow the clock, rain when it rains, scenery only moves while delivering
+function hscene(){
+  return`<div id="hscene" class="scene hscene${DLV?' go':''}${g.rainToday?' rainy':''}" data-t="${dayPart()}" aria-hidden="true">
+    <div class="sun" style="${sunPos()}"></div><div class="sstars"></div><div class="sky-far"></div><div class="sky-near"></div>
+    <div class="road"></div><img class="bike" src="${BIKE}" alt="">${DLV?`<div class="cargo">${ic(C.jobs[DLV.o.type].icon,32)}</div>`:''}<div class="rain"></div></div>`;
+}
 function sceneHTML(cargo){
-  return`<div class="scene"><div class="sky-far"></div><div class="sky-near"></div><div class="road"></div>
+  return`<div class="scene"><div class="sstars"></div><div class="sky-far"></div><div class="sky-near"></div><div class="road"></div>
     <img class="bike" src="${BIKE}" alt="Xe Honda Cub">${cargo?`<div class="cargo">${ic(cargo,32)}</div>`:''}</div>`;
 }
 function reviewHTML(r){
@@ -94,6 +100,7 @@ function rGame(){
   </div>
   <div class="game-body">
   <div class="pc-col">
+    ${hscene()}
     <div class="stat-row">
       <div class="pxf stat${cashLow?' warn':''}"><div class="l">${ic('coin',20)}TIỀN MẶT</div><div class="v ${cashLow?'red':'gr'}">${money(g.cash)}</div></div>
       <div class="pxf stat"><div class="l">${ic('bank',20)}TIẾT KIỆM</div><div class="v gold">${money(g.savings)}</div>

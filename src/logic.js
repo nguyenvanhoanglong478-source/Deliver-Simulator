@@ -22,8 +22,8 @@ const UPGS=[
   {id:'insure',name:'Bảo hiểm mở rộng',  icon:'bank',  cost:2e6, desc:'-60% chi phí tai nạn. Phí 300K/tháng',cat:'Phụ tùng',fee:3e5},
   {id:'heat',  name:'Túi giữ nhiệt',     icon:'bowl',  cost:8e5, desc:'Đồ ăn +25%, hàng hóa -10% (chọn 1 trong 2 túi)',cat:'Túi giao hàng',grp:'bag'},
   {id:'crate', name:'Thùng hàng lớn',    icon:'box',   cost:12e5,desc:'Hàng hóa +20%, đồ ăn -10% (chọn 1 trong 2 túi)',cat:'Túi giao hàng',grp:'bag'},
-  {id:'eco',   name:'Động cơ tiết kiệm', icon:'fuel',  cost:2e6, desc:'Xăng -35%, mỗi đơn chậm thêm 3 giây (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
-  {id:'turbo', name:'Động cơ mạnh',      icon:'bolt',  cost:5e6, desc:'Thể lực -20%, nhanh hơn 3 giây/đơn, xăng +25% (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
+  {id:'eco',   name:'Động cơ tiết kiệm', icon:'fuel',  cost:2e6, desc:'Xăng -35%, giao chậm hơn 30% (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
+  {id:'turbo', name:'Động cơ mạnh',      icon:'bolt',  cost:5e6, desc:'Thể lực -20%, giao nhanh hơn 25%, xăng +25% (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
   {id:'tire2', name:'Lốp chống thủng',   icon:'gear',  cost:3e6, desc:'Tai nạn làm mất ít độ bền hơn 40%',cat:'Mở khóa 25TR',req:25e6},
   {id:'prio',  name:'Ứng dụng ưu tiên',  icon:'star',  cost:6e6, desc:'Thấy 4 đơn mỗi lượt, nhiều đơn gấp hơn',cat:'Mở khóa 50TR',req:5e7},
   {id:'vip',   name:'Thẻ đối tác vàng',  icon:'trophy',cost:1e7, desc:'+15% thu nhập mọi đơn',cat:'Mở khóa 75TR',req:75e6},
@@ -147,6 +147,13 @@ function earnMult(){return g.vehicleHp>=70?1:g.vehicleHp>=50?.85:g.vehicleHp>=30
 // ===== ORDERS =====
 function hourOf(){return 6+16*(1-g.dayTimeLeft/C.dayDuration)}   // a game day runs 06:00-22:00
 function isPeak(){const h=hourOf();return(h>=11&&h<13)||(h>=17&&h<19)}
+function dayPart(){const h=hourOf();return h<8?'dawn':h<17?'day':h<19.5?'dusk':'night'}
+// sun / moon travel along an arc over the day; returns inline position for #hscene .sun
+function sunPos(){const p=Math.min(1,Math.max(0,(hourOf()-6)/16)),y=62-Math.sin(p*Math.PI)*46;return`left:${(6+p*80).toFixed(1)}%;top:${y.toFixed(0)}px`}
+function sceneSync(){
+  const sc=document.getElementById('hscene');if(!sc)return;
+  sc.dataset.t=dayPart();const s=sc.querySelector('.sun');if(s)s.style.cssText=sunPos();
+}
 function fmH(){const h=hourOf(),H=Math.floor(h),M=Math.floor((h-H)*6)*10;return(H<10?'0':'')+H+':'+(M<10?'0':'')+M}
 function genOffer(peak){
   const type=Math.random()<.5?'food':'goods',job=C.jobs[type];
@@ -206,6 +213,7 @@ function dayStep(){
   if(el)el.textContent=fmT(g.dayTimeLeft);
   const ck=document.getElementById('clk');
   if(ck){const pk=isPeak();ck.textContent=fmH();ck.classList.toggle('peak',pk)}
+  if(g.dayTimeLeft%5===0)sceneSync();
   if(g.dayTimeLeft>0&&g.dayTimeLeft%10===0)save();   // keeps the clock when the tab is closed mid-day
   if(g.dayTimeLeft<=0&&!busy){stopT(dayTmr);triggerDayEnd();return false}   // a delivery in progress finishes first
   return true;
