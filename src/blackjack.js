@@ -23,7 +23,7 @@ function bjFixBet(){
   if(!BJ)return;const cap=bjCap();
   if(BJ.bet>cap||BJ.bet<BJ_MIN){const fit=BJ_CHIPS.filter(v=>v<=cap);BJ.bet=fit.length?fit[fit.length-1]:Math.max(BJ_MIN,Math.min(cap,BJ.bet))}
 }
-function bjBet(v){if(BJ&&BJ.phase==='bet'&&v>=BJ_MIN&&v<=bjCap()){BJ.bet=v;render()}}
+function bjBet(v){if(BJ&&(BJ.phase==='bet'||BJ.phase==='done')&&v>=BJ_MIN&&v<=bjCap()){BJ.bet=v;render()}}
 function bjCanPlay(){return g.bjToday<BJ_MAX&&g.dayTimeLeft>BJ_TIME&&g.cash>=BJ_MIN}
 function bjDeal(){
   if(!BJ||BJ.phase!=='bet'&&BJ.phase!=='done')return;

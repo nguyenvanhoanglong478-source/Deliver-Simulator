@@ -94,6 +94,8 @@ with sync_playwright() as p:
     E("stk([10,10,6,9])"); pg.click('.modal.bj button:has-text("CHIA BÀI")'); pg.click('.modal.bj button:has-text("DẰN")'); pg.wait_for_function("BJ.phase==='done'",timeout=6000)
     ok('after the loss the bet follows the lower cap',E("BJ.bet")<=E("bjCap()") and E("BJ.bet")>0,str(E("[g.cash,bjCap(),BJ.bet]")))
     ok('new-hand button enabled and label matches the bet',not pg.locator('.modal.bj button:has-text("VÁN MỚI")').is_disabled() and ('VÁN MỚI · '+E("fm(BJ.bet)")) in pg.inner_text('.modal.bj'))
+    pg.click('.modal.bj .bj-chips button:has-text("50K")'); ok('after a hand: chip click changes the bet',E("BJ.phase")=='done' and E("BJ.bet")==5e4 and 'VÁN MỚI · 50K' in pg.inner_text('.modal.bj'),str(E("BJ.bet")))
+    pg.click('.modal.bj .bj-chips button:has-text("200K")'); ok('after a hand: raise the bet again',E("BJ.bet")==2e5)
     E("stk([10,10,9,7,2,2,2,2,2,2])"); pg.click('.modal.bj button:has-text("VÁN MỚI")'); ok('new hand starts by click',E("BJ.phase")=='play')
     ok('split / double buttons only shown when usable',pg.locator('.modal.bj button:has-text("TÁCH ĐÔI")').count()==0 and pg.locator('.modal.bj button:has-text("GẤP ĐÔI")').count()==1 and pg.locator('.modal.bj button:disabled').count()==0)
     pg.click('.modal.bj button:has-text("RÚT THÊM")'); ok('hit by click',E("BJ.hands[0].cards.length")>=3 or E("BJ.phase")!='play')
