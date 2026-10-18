@@ -1,3 +1,4 @@
+const BUILD='__BUILD__';   // content hash filled in by build.py; shown in the sound settings so a stale cached copy is easy to spot
 // ===== GAME CLOCK: one loop drives every timer in the game =====
 // All game timing (day clock, mini-games, animations, delays) runs on this clock, so pausing is a single switch:
 // while GT.paused the clock does not advance and nothing scheduled with every()/after() fires.

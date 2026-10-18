@@ -28,6 +28,13 @@ with sync_playwright() as p:
     ok('page controlled by the service worker',pg.evaluate("!!navigator.serviceWorker.controller"))
     keys=pg.evaluate("caches.keys().then(async ks=>{const c=await caches.open(ks[0]);return (await c.keys()).map(r=>new URL(r.url).pathname)})")
     ok('shell + fonts precached',any(k.endswith('index.html') or k=='/' for k in keys) and any('vt323-latin' in k for k in keys),str(len(keys)))
+    # a new release must show up on the next reload (page is network-first, not stuck on the cached copy)
+    idx=os.path.join(ROOT,'index.html'); orig=open(idx,encoding='utf8').read()
+    try:
+        open(idx,'w',encoding='utf8').write(orig+'<!--NEWRELEASE-->'); pg.reload(); pg.wait_for_timeout(800)
+        ok('new index.html is served after one reload',pg.evaluate("fetch('index.html').then(r=>r.text()).then(t=>t.includes('NEWRELEASE'))"))
+    finally: open(idx,'w',encoding='utf8').write(orig)
+    pg.reload(); pg.wait_for_timeout(800)
     srv.shutdown()   # take the server away: the game must still load from the cache
     pg.reload(); pg.wait_for_timeout(1500)
     ok('loads with the server stopped (offline)',pg.locator('text=BẮT ĐẦU!').count()==1)

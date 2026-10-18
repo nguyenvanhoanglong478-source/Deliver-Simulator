@@ -410,6 +410,7 @@ function rModal(){
       <div class="lbl trk-name">${g.phase==='start'?'Màn hình bắt đầu: nhạc cố định':`${AUD.track+1}/${TRACKS.length} · ${TRACKS[AUD.track].n}`}</div>
       <div class="set-row"><span>Âm lượng</span><b id="vol-lbl">${Math.round(AUD.vol*100)}%</b></div>
       <input id="vol-slider" type="range" min="0" max="100" step="5" value="${Math.round(AUD.vol*100)}" oninput="setVolume(this.value)" aria-label="Âm lượng nhạc nền">
+      <div class="lbl" style="text-align:center;font-size:16px">Phiên bản ${BUILD}</div>
       <button class="btn b-gr blk" onclick="closeSettings()">ĐÓNG</button>
     </div></div>`;
   }
