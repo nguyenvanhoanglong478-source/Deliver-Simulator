@@ -34,7 +34,7 @@ with sync_playwright() as p:
     E("AUD.el.currentTime=AUD.el.duration-.6"); pg.wait_for_timeout(1800)
     ok('song end auto-plays the next (wraps to first)',E("AUD.key==='t0'&&!AUD.el.paused"),str(E("[AUD.key,AUD.el.paused]")))
     E("g.offers[0]={type:'food',dist:1,rush:false,peak:false,base:50000};doDelivery(0)")
-    ok('music keeps playing during a delivery, button hidden',E("!AUD.el.paused&&document.getElementById('snd-btn').hidden"))
+    ok('music keeps playing during a delivery, sound button stays visible',E("!AUD.el.paused&&!document.getElementById('snd-btn').hidden"))
     E("clearTmrs();DLV=null;g.activeAnim=null;g.phase='game';render()")
     pg.click('#snd-btn'); t0=E("g.dayTimeLeft"); pg.wait_for_timeout(2300)
     ok('settings dialog pauses the day clock',E("g.dayTimeLeft")==t0)

@@ -184,6 +184,9 @@ img{image-rendering:pixelated}
 .review{width:100%;padding:14px;text-align:left;display:none}
 .review.show{display:block;animation:pop .25s steps(3)}
 .review.static{animation:none}
+@keyframes rvglow{50%{outline-color:transparent;background:var(--bg2,#1a1f3a)}}
+.review.static.rv-new{outline:4px solid var(--gold);outline-offset:4px;background:#3a2a00;animation:rvglow .6s steps(2) infinite}
+em,i{font-style:normal}
 @keyframes pop{from{transform:scale(.9);opacity:0}}
 .review .who{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;color:var(--dim)}
 .review .txt{font-size:22px;line-height:1.2;color:var(--tx)}
@@ -1297,7 +1300,7 @@ function setVolume(v){
 // the floating button is outside #root, so it survives re-renders; shown only on calm screens
 function sndBtnSync(){
   const b=document.getElementById('snd-btn');if(!b||!g)return;
-  const show=['start','game','upgrade','profile'].includes(g.phase)&&!DLV;
+  const show=true;   // always visible
   b.hidden=!show;
   b.innerHTML=ic(AUD.on&&AUD.vol>0?'sound':'mute',24);
   b.setAttribute('aria-label','Cài đặt âm thanh');
@@ -1414,7 +1417,7 @@ function addReview(ok,job){
 }
 
 // ---- profile screen actions ----
-function goProfile(){if(g.phase==='game'&&!DLV){g.phase='profile';render();getSample().then(()=>{if(g.phase==='profile')render()})}}
+function goProfile(){if(g.phase==='game'){g.phase='profile';render();getSample().then(()=>{if(g.phase==='profile')render()})}}
 function setName(v){g.profile.name=String(v).slice(0,16);save()}
 function setHobbyText(v){g.profile.hobbyText=String(v).slice(0,24);save()}
 function toggleHobby(id){
@@ -1531,7 +1534,7 @@ let _saveWarned=false;
 // day/month summary is pending (interest is already applied but not yet confirmed), never after the game ended.
 function canPersist(){
   if(!g||!g.phase)return false;
-  if(['start','win','lose','anim-refuel'].includes(g.phase)||DLV)return false;
+  if(['start','win','lose','anim-refuel'].includes(g.phase))return false;
   if(modal&&(modal.type==='dayEnd'||modal.type==='monthEnd'))return false;   // life modals are saved with their pending choice discarded by restore()
   return true;
 }
@@ -1798,7 +1801,7 @@ function doWd(a){
   save();render();
 }
 
-function goUpgrade(){if(g.phase==='game'&&!DLV){g.phase='upgrade';render();}}
+function goUpgrade(){if(g.phase==='game'){g.phase='upgrade';render();}}
 function goGame(){if(g.phase==='upgrade'||g.phase==='profile'){g.phase='game';render();}}
 
 function buyUpgrade(id){
@@ -1823,10 +1826,11 @@ function buyUpgrade(id){
 
 // ===== DELIVERY (progress bar inside the order card; no mini-games) =====
 // One order at a time. Costs are paid at the start (and persisted), the pay and any random event arrive at the end.
-let DLV=null;   // {i,o,earn,start,dur} — module state only, never saved: a reload cannot refund the order
+let DLV=null,RVNEW=null;   // RVNEW: the review that just arrived (highlighted for 3 s)
+let DLV_ups=null;   // {i,o,earn,start,dur} — module state only, never saved: a reload cannot refund the order
 function dlvLeft(){return DLV?Math.max(0,DLV.dur-(gnow()-DLV.start)/1000):0}
 function startDelivery(i,o,earn){
-  DLV={i,o,earn,start:gnow(),dur:offerTime(o)};
+  DLV={i,o,earn,start:gnow(),dur:offerTime(o),ups:Object.assign({},g.upgrades)};   // upgrades bought mid-delivery only count from the next order
   g.activeAnim={type:'deliver'};
   render();
   mgTmr=every(100,dlvTick);
@@ -1837,15 +1841,16 @@ function dlvTick(){
   const b=document.getElementById('dl-bar'),t=document.getElementById('dl-t');
   if(b)b.style.width=p+'%';
   if(t)t.textContent=Math.ceil(left)+'s';
-  if(left<=0){stopT(mgTmr);completeDelivery()}
+  if(left<=0){if(modal)return;stopT(mgTmr);completeDelivery()}   // wait while a popup (life hub, settings) is open
 }
 function completeDelivery(){
   const{o,earn}=DLV,job=C.jobs[o.type];
+  const nowUps=g.upgrades;g.upgrades=DLV.ups;   // the order is settled with the upgrades it started with
   const evt=rollEvtFor(earn),res=evt?evt.fn(earn):null;
   if(res&&res.hp&&up('tire2'))res.hp=Math.round(res.hp*.6);
   const paid=res&&res.skip?0:earn;          // "khách hủy" means no income for this order
   const ok=(g.vehicleHp<30||(evt&&evt.t==='bad'))?1:2;
-  if(!(res&&res.skip))addReview(ok,job);
+  RVNEW=(res&&res.skip)?null:addReview(ok,job);
   if(paid>0){g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;g.fin.earn+=paid;burst(26,FX_COIN)}
   g.delivered++;g.totalDelivered++;
   if(evt){
@@ -1860,10 +1865,12 @@ function completeDelivery(){
     modal={type:'event',evt,res};
   }
   addLog(`${job.name}${o.combo?' ghép':''}: ${paid>0?'+'+ff(paid):'không có thu nhập'}`,paid>0?'earn':'cost');
-  DLV=null;g.activeAnim=null;g.phase='game';
+  g.upgrades=nowUps;
+  DLV=null;g.activeAnim=null;
   save();
   if(g.vehicleHp<=0)toast('XE HỎNG NẶNG! CẦN SỬA NGAY!','bad');
   render();
+  if(RVNEW){const r=RVNEW;after(3000,()=>{if(RVNEW===r){RVNEW=null;const e=document.getElementById('rv-last');if(e)e.classList.remove('rv-new')}})}
 }
 
 
@@ -2443,7 +2450,7 @@ function takeLoan(k){
   if(g.phase!=='game'||g.debt>=2e7)return;
   if(k==='hot')borrow(3e6,.15);else{borrow(5e6,.25);g.cash-=5e5;addLog('Phí làm hồ sơ vay: -500K','cost')}save();render();
 }
-function openHub(){if(modal||DLV||g.phase!=='game')return;modal={type:'hub'};render()}
+function openHub(){if(modal||g.phase!=='game')return;modal={type:'hub'};render()}
 function lottoHub(n){
   if(g.phase!=='game')return;
   const t=lottoBuy(n);toast(t.startsWith('Bạn cất')?`ĐÃ MUA ${n} TỜ VÉ SỐ`:t.toUpperCase(),t.startsWith('Bạn cất')?'':'bad');save();render();
@@ -2572,7 +2579,7 @@ function rGame(){
       ${isSick()?`<span class="rain-tag" style="color:var(--red)">${ic('pill',20)}ỐM ${g.sickDays} NGÀY</span>`:''}
       ${g.rainToday?`<span class="rain-tag">${ic('cloud',20)}MƯA</span>`:''}
     </div>
-    ${g.reviews[0]?`<div class="pxf2 review show static" style="display:block;cursor:pointer" onclick="goProfile()"><div class="lbl" style="margin-bottom:8px">ĐÁNH GIÁ MỚI NHẤT</div>${reviewHTML(g.reviews[0])}</div>`:''}
+    ${g.reviews[0]?`<div id="rv-last" class="pxf2 review show static${RVNEW&&RVNEW===g.reviews[0]?' rv-new':''}" style="display:block;cursor:pointer" onclick="goProfile()"><div class="lbl" style="margin-bottom:8px">ĐÁNH GIÁ MỚI NHẤT</div>${reviewHTML(g.reviews[0])}</div>`:''}
   </div>
   <div class="pc-col">
     <div>
@@ -2691,7 +2698,7 @@ function rProfile(){
   const sws=HELMETS.map((c,i)=>`<button class="sw${c===p.helmet?' on':''}" style="--c:${c}" aria-label="Màu mũ ${i+1}" onclick="setHelmet(${i})"></button>`).join('');
   const ai=`<div class="pxf ai-row"><div class="t">Bật đánh giá<small>Khách để lại số sao và một câu nhận xét sau mỗi đơn.</small></div>
         <button class="btn sm ${p.reviewsOn?'b-gr':'b-dim'}" onclick="toggleReviews()" aria-pressed="${p.reviewsOn}">${p.reviewsOn?'BẬT':'TẮT'}</button></div>`;
-  const revs=g.reviews.length?g.reviews.map(r=>`<div class="pxf2 rev">
+  const revs=g.reviews.length?g.reviews.slice(0,10).map(r=>`<div class="pxf2 rev">
       <div class="rev-top"><span class="rev-who">${esc(r.who)}</span>${starsFixed(r.stars,16)}</div>
       <div class="rev-txt">${esc(r.text)}</div>
       <div class="rev-who" style="margin-top:8px">${ic(r.job==='food'?'bowl':'box',16)} Ngày ${r.day}, tháng ${r.month}</div></div>`).join('')
@@ -2701,7 +2708,7 @@ function rProfile(){
     <div class="pxf prof-top"><div class="avatar">${avatarHTML(p.helmet,96)}</div>
       <div class="prof-info"><div class="prof-name">${esc(pname())}</div>
         <div class="prof-avg">${starsHTML(g.stars,20)}<b>${g.stars.toFixed(1)}</b></div>
-        <div class="lbl">${g.reviews.length} đánh giá gần đây</div></div></div>
+        <div class="lbl">${Math.min(10,g.reviews.length)} đánh giá gần nhất</div></div></div>
     <div class="prof-nums">
       <div class="pxf pn"><div class="v">${g.totalDelivered}</div><div class="l">ĐƠN ĐÃ GIAO</div></div>
       <div class="pxf pn"><div class="v">${g.month}/${C.maxMonths}</div><div class="l">THÁNG</div></div>

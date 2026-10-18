@@ -121,7 +121,7 @@ function rGame(){
       ${isSick()?`<span class="rain-tag" style="color:var(--red)">${ic('pill',20)}ỐM ${g.sickDays} NGÀY</span>`:''}
       ${g.rainToday?`<span class="rain-tag">${ic('cloud',20)}MƯA</span>`:''}
     </div>
-    ${g.reviews[0]?`<div class="pxf2 review show static" style="display:block;cursor:pointer" onclick="goProfile()"><div class="lbl" style="margin-bottom:8px">ĐÁNH GIÁ MỚI NHẤT</div>${reviewHTML(g.reviews[0])}</div>`:''}
+    ${g.reviews[0]?`<div id="rv-last" class="pxf2 review show static${RVNEW&&RVNEW===g.reviews[0]?' rv-new':''}" style="display:block;cursor:pointer" onclick="goProfile()"><div class="lbl" style="margin-bottom:8px">ĐÁNH GIÁ MỚI NHẤT</div>${reviewHTML(g.reviews[0])}</div>`:''}
   </div>
   <div class="pc-col">
     <div>
@@ -240,7 +240,7 @@ function rProfile(){
   const sws=HELMETS.map((c,i)=>`<button class="sw${c===p.helmet?' on':''}" style="--c:${c}" aria-label="Màu mũ ${i+1}" onclick="setHelmet(${i})"></button>`).join('');
   const ai=`<div class="pxf ai-row"><div class="t">Bật đánh giá<small>Khách để lại số sao và một câu nhận xét sau mỗi đơn.</small></div>
         <button class="btn sm ${p.reviewsOn?'b-gr':'b-dim'}" onclick="toggleReviews()" aria-pressed="${p.reviewsOn}">${p.reviewsOn?'BẬT':'TẮT'}</button></div>`;
-  const revs=g.reviews.length?g.reviews.map(r=>`<div class="pxf2 rev">
+  const revs=g.reviews.length?g.reviews.slice(0,10).map(r=>`<div class="pxf2 rev">
       <div class="rev-top"><span class="rev-who">${esc(r.who)}</span>${starsFixed(r.stars,16)}</div>
       <div class="rev-txt">${esc(r.text)}</div>
       <div class="rev-who" style="margin-top:8px">${ic(r.job==='food'?'bowl':'box',16)} Ngày ${r.day}, tháng ${r.month}</div></div>`).join('')
@@ -250,7 +250,7 @@ function rProfile(){
     <div class="pxf prof-top"><div class="avatar">${avatarHTML(p.helmet,96)}</div>
       <div class="prof-info"><div class="prof-name">${esc(pname())}</div>
         <div class="prof-avg">${starsHTML(g.stars,20)}<b>${g.stars.toFixed(1)}</b></div>
-        <div class="lbl">${g.reviews.length} đánh giá gần đây</div></div></div>
+        <div class="lbl">${Math.min(10,g.reviews.length)} đánh giá gần nhất</div></div></div>
     <div class="prof-nums">
       <div class="pxf pn"><div class="v">${g.totalDelivered}</div><div class="l">ĐƠN ĐÃ GIAO</div></div>
       <div class="pxf pn"><div class="v">${g.month}/${C.maxMonths}</div><div class="l">THÁNG</div></div>

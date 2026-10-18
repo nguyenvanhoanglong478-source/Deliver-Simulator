@@ -104,7 +104,7 @@ let _saveWarned=false;
 // day/month summary is pending (interest is already applied but not yet confirmed), never after the game ended.
 function canPersist(){
   if(!g||!g.phase)return false;
-  if(['start','win','lose','anim-refuel'].includes(g.phase)||DLV)return false;
+  if(['start','win','lose','anim-refuel'].includes(g.phase))return false;
   if(modal&&(modal.type==='dayEnd'||modal.type==='monthEnd'))return false;   // life modals are saved with their pending choice discarded by restore()
   return true;
 }
@@ -371,7 +371,7 @@ function doWd(a){
   save();render();
 }
 
-function goUpgrade(){if(g.phase==='game'&&!DLV){g.phase='upgrade';render();}}
+function goUpgrade(){if(g.phase==='game'){g.phase='upgrade';render();}}
 function goGame(){if(g.phase==='upgrade'||g.phase==='profile'){g.phase='game';render();}}
 
 function buyUpgrade(id){
@@ -396,10 +396,11 @@ function buyUpgrade(id){
 
 // ===== DELIVERY (progress bar inside the order card; no mini-games) =====
 // One order at a time. Costs are paid at the start (and persisted), the pay and any random event arrive at the end.
-let DLV=null;   // {i,o,earn,start,dur} — module state only, never saved: a reload cannot refund the order
+let DLV=null,RVNEW=null;   // RVNEW: the review that just arrived (highlighted for 3 s)
+let DLV_ups=null;   // {i,o,earn,start,dur} — module state only, never saved: a reload cannot refund the order
 function dlvLeft(){return DLV?Math.max(0,DLV.dur-(gnow()-DLV.start)/1000):0}
 function startDelivery(i,o,earn){
-  DLV={i,o,earn,start:gnow(),dur:offerTime(o)};
+  DLV={i,o,earn,start:gnow(),dur:offerTime(o),ups:Object.assign({},g.upgrades)};   // upgrades bought mid-delivery only count from the next order
   g.activeAnim={type:'deliver'};
   render();
   mgTmr=every(100,dlvTick);
@@ -410,15 +411,16 @@ function dlvTick(){
   const b=document.getElementById('dl-bar'),t=document.getElementById('dl-t');
   if(b)b.style.width=p+'%';
   if(t)t.textContent=Math.ceil(left)+'s';
-  if(left<=0){stopT(mgTmr);completeDelivery()}
+  if(left<=0){if(modal)return;stopT(mgTmr);completeDelivery()}   // wait while a popup (life hub, settings) is open
 }
 function completeDelivery(){
   const{o,earn}=DLV,job=C.jobs[o.type];
+  const nowUps=g.upgrades;g.upgrades=DLV.ups;   // the order is settled with the upgrades it started with
   const evt=rollEvtFor(earn),res=evt?evt.fn(earn):null;
   if(res&&res.hp&&up('tire2'))res.hp=Math.round(res.hp*.6);
   const paid=res&&res.skip?0:earn;          // "khách hủy" means no income for this order
   const ok=(g.vehicleHp<30||(evt&&evt.t==='bad'))?1:2;
-  if(!(res&&res.skip))addReview(ok,job);
+  RVNEW=(res&&res.skip)?null:addReview(ok,job);
   if(paid>0){g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;g.fin.earn+=paid;burst(26,FX_COIN)}
   g.delivered++;g.totalDelivered++;
   if(evt){
@@ -433,10 +435,12 @@ function completeDelivery(){
     modal={type:'event',evt,res};
   }
   addLog(`${job.name}${o.combo?' ghép':''}: ${paid>0?'+'+ff(paid):'không có thu nhập'}`,paid>0?'earn':'cost');
-  DLV=null;g.activeAnim=null;g.phase='game';
+  g.upgrades=nowUps;
+  DLV=null;g.activeAnim=null;
   save();
   if(g.vehicleHp<=0)toast('XE HỎNG NẶNG! CẦN SỬA NGAY!','bad');
   render();
+  if(RVNEW){const r=RVNEW;after(3000,()=>{if(RVNEW===r){RVNEW=null;const e=document.getElementById('rv-last');if(e)e.classList.remove('rv-new')}})}
 }
 
 

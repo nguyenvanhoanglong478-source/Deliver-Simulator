@@ -162,6 +162,9 @@ img{image-rendering:pixelated}
 .review{width:100%;padding:14px;text-align:left;display:none}
 .review.show{display:block;animation:pop .25s steps(3)}
 .review.static{animation:none}
+@keyframes rvglow{50%{outline-color:transparent;background:var(--bg2,#1a1f3a)}}
+.review.static.rv-new{outline:4px solid var(--gold);outline-offset:4px;background:#3a2a00;animation:rvglow .6s steps(2) infinite}
+em,i{font-style:normal}
 @keyframes pop{from{transform:scale(.9);opacity:0}}
 .review .who{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;color:var(--dim)}
 .review .txt{font-size:22px;line-height:1.2;color:var(--tx)}

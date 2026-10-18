@@ -1,6 +1,9 @@
 # Nhật ký thay đổi
 
 ## Gần nhất
+- Đánh giá mới ở màn chính nhấp nháy viền vàng ~3 giây; hồ sơ tài xế chỉ hiện 10 đánh giá gần nhất.
+- Đang giao hàng vẫn mở được Nâng cấp / Đời sống / Hồ sơ; nâng cấp mua giữa chừng chỉ có hiệu lực từ đơn kế tiếp (đơn đang giao tính theo nâng cấp lúc bắt đầu). Đơn xong khi đang mở popup thì chờ đóng popup rồi mới tính.
+- Chữ in nghiêng (THỂ LỰC, XĂNG...) về bình thường. Nút âm thanh luôn hiển thị.
 - Bỏ hẳn 3 minigame (bắt gói, né xe, tìm đường). Bấm đơn nào thì ô đơn đó hiện "ĐANG GIAO", thời gian còn lại và thanh tiến độ (gần ~6s, vừa ~10s, xa ~15s; lái chậm lâu hơn, lái nhanh/đơn gấp nhanh hơn). Mỗi lần chỉ giao 1 đơn, các ô khác khóa. Thêm ĐƠN GHÉP (trả x1,75, lâu x1,6, tốn x1,5 thể lực/xăng). Tập trung vào sự kiện, cốt truyện, ending.
 - Cân bằng lại vì giao nhanh gấp ~2,4 lần: tiền công đơn x0,55, mốc thưởng tháng 240/360/480 đơn (trước 100/150/200). Đã xóa `test_route.py`, `test_catch.py`.
 - Minigame bắt gói tự hoàn thành ngay khi bắt đủ gói, không phải đợi hết giờ (đơn gấp cũng vậy).
