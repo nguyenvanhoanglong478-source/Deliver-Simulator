@@ -18,12 +18,17 @@ function bjLeave(){
   if(g.bjLoss>=3)g.bjLoss=0;   // walking away resets the streak
   BJ=null;modal={type:'hub'};save();render();
 }
+// The table limit follows the cash on hand, so after a loss the chosen bet can exceed it: drop to the biggest chip that fits.
+function bjFixBet(){
+  if(!BJ)return;const cap=bjCap();
+  if(BJ.bet>cap||BJ.bet<BJ_MIN){const fit=BJ_CHIPS.filter(v=>v<=cap);BJ.bet=fit.length?fit[fit.length-1]:Math.max(BJ_MIN,Math.min(cap,BJ.bet))}
+}
 function bjBet(v){if(BJ&&BJ.phase==='bet'&&v>=BJ_MIN&&v<=bjCap()){BJ.bet=v;render()}}
 function bjCanPlay(){return g.bjToday<BJ_MAX&&g.dayTimeLeft>BJ_TIME&&g.cash>=BJ_MIN}
 function bjDeal(){
   if(!BJ||BJ.phase!=='bet'&&BJ.phase!=='done')return;
   if(!bjCanPlay()){return}
-  const bet=Math.min(BJ.bet,bjCap());if(bet<BJ_MIN||g.cash<bet)return;
+  bjFixBet();const bet=BJ.bet;if(bet<BJ_MIN||g.cash<bet)return;
   BJ.deck=bjCards();BJ.bet=bet;BJ.chase=BJ.chase||false;
   lifeSpend(bet);g.bjToday++;g.dayTimeLeft-=BJ_TIME;g.gamble=Math.min(100,g.gamble+BJ_HOOK);
   BJ.hands=[{cards:[bjDraw()],bet,done:false}];BJ.dealer=[bjDraw()];
@@ -119,6 +124,7 @@ function bjHandHTML(cards,hideSecond){
 const BJ_OUT={bj:['BLACKJACK!','gr'],win:['THẮNG','gr'],push:['HÒA','gold'],lose:['THUA','red'],bust:['QUẮC','red']};
 function bjHTML(){
   if(!BJ)return'';
+  if(BJ.phase==='bet'||BJ.phase==='done')bjFixBet();
   const hide=BJ.phase==='play',dv=bjVal(BJ.dealer||[]);
   const left=BJ_MAX-g.bjToday;
   let h=`<div class="overlay"><div class="pxf2 modal bj">
@@ -134,8 +140,8 @@ function bjHTML(){
   }else h+=`<div class="bj-empty">Bộ bài mới mỗi ván. Nhà cái dừng ở 17, blackjack trả 3:2.</div>`;
   h+='</div>';
   if(BJ.phase==='play'){
-    h+=`<div class="hub-grid g2"><button class="btn b-gr sm" onclick="bjHit()">RÚT</button><button class="btn b-or sm" onclick="bjStand()">DẰN</button>
-      <button class="btn b-cy sm" onclick="bjDouble()" ${bjCanDouble()?'':'disabled'}>GẤP ĐÔI</button><button class="btn b-pu sm" onclick="bjSplit()" ${bjCanSplit()?'':'disabled'}>CHIA BÀI</button></div>`;
+    h+=`<div class="hub-grid g2"><button class="btn b-gr sm" onclick="bjHit()">RÚT THÊM</button><button class="btn b-or sm" onclick="bjStand()">DẰN</button>
+      ${bjCanDouble()?`<button class="btn b-cy sm" onclick="bjDouble()">GẤP ĐÔI</button>`:''}${bjCanSplit()?`<button class="btn b-pu sm" onclick="bjSplit()">TÁCH ĐÔI BÀI</button>`:''}</div>`;
   }else if(BJ.phase==='dealer'){
     h+=`<div class="sub" style="text-align:center">Nhà cái đang rút bài...</div>`;
   }else{
@@ -154,7 +160,7 @@ function bjHTML(){
       const why=g.bjToday>=BJ_MAX?'Hôm nay đủ ván rồi, mai chơi tiếp.':g.dayTimeLeft<=BJ_TIME?'Không đủ thời gian trong ngày.':g.cash<BJ_MIN?'Không đủ tiền cược.':'';
       if(why)h+=`<div class="bj-warn">${why}</div>`;
       if(g.cash<BJ_MIN&&g.bjLoss>=4&&g.debt<2e7)h+=`<button class="btn b-red sm blk" onclick="bjLoan()"><span>VAY NÓNG 3TR<small>lãi 15%/tháng</small></span></button>`;
-      h+=`<div class="hub-grid g2"><button class="btn b-dim sm" onclick="bjLeave()">ĐỨNG DẬY</button><button class="btn b-gr sm" onclick="bjDeal()" ${bjCanPlay()&&BJ.bet<=bjCap()?'':'disabled'}>${BJ.phase==='done'?'VÁN MỚI':'CHIA BÀI'} · ${fm(Math.min(BJ.bet,bjCap()))}</button></div>`;
+      h+=`<div class="hub-grid g2"><button class="btn b-dim sm" onclick="bjLeave()">ĐỨNG DẬY</button><button class="btn b-gr sm" onclick="bjDeal()" ${bjCanPlay()&&BJ.bet<=bjCap()?'':'disabled'}>${BJ.phase==='done'?'VÁN MỚI':'CHIA BÀI'} · ${fm(BJ.bet)}</button></div>`;
     }
   }
   return h+'</div></div>';

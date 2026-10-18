@@ -88,6 +88,25 @@ with sync_playwright() as p:
       }
       window.after=A;window.render=R;return net/st})()""")
     ok('fair odds: stand-on-17 player loses roughly 4-8%, no hidden bias',-.09<edge<-.02,str(edge))
+    # --- real mouse clicks (regression: after a loss the bet could exceed the new 20% cap and lock the deal button)
+    E("bjCards=window.bjReal;g.dayTimeLeft=300;g.phase='game';modal=null;g.cash=5e6;g.bjToday=0;g.bjLoss=0;openHub();bjOpen()")
+    pg.click('.modal.bj button:has-text("1TR")'); ok('chip click sets bet',E("BJ.bet")==1e6)
+    E("stk([10,10,6,9])"); pg.click('.modal.bj button:has-text("CHIA BÀI")'); pg.click('.modal.bj button:has-text("DẰN")'); pg.wait_for_function("BJ.phase==='done'",timeout=6000)
+    ok('after the loss the bet follows the lower cap',E("BJ.bet")<=E("bjCap()") and E("BJ.bet")>0,str(E("[g.cash,bjCap(),BJ.bet]")))
+    ok('new-hand button enabled and label matches the bet',not pg.locator('.modal.bj button:has-text("VÁN MỚI")').is_disabled() and ('VÁN MỚI · '+E("fm(BJ.bet)")) in pg.inner_text('.modal.bj'))
+    E("stk([10,10,9,7,2,2,2,2,2,2])"); pg.click('.modal.bj button:has-text("VÁN MỚI")'); ok('new hand starts by click',E("BJ.phase")=='play')
+    ok('split / double buttons only shown when usable',pg.locator('.modal.bj button:has-text("TÁCH ĐÔI")').count()==0 and pg.locator('.modal.bj button:has-text("GẤP ĐÔI")').count()==1 and pg.locator('.modal.bj button:disabled').count()==0)
+    pg.click('.modal.bj button:has-text("RÚT THÊM")'); ok('hit by click',E("BJ.hands[0].cards.length")>=3 or E("BJ.phase")!='play')
+    for i in range(30):
+        if E("BJ.phase")=='play':pg.click('.modal.bj button:has-text("DẰN")')
+        try: pg.wait_for_function("BJ.phase==='done'",timeout=6000)
+        except Exception: print('STUCK',E("JSON.stringify({ph:BJ.phase,hi:BJ.hi,h:BJ.hands.map(h=>[h.cards.map(c=>c.k),h.done]),d:BJ.dealer.map(c=>c.k),paused:GT.paused,mod:modal&&modal.type})"));raise
+        if E("g.bjToday")>=5 or E("g.cash")<5e4:break
+        if pg.locator('.modal.bj button:has-text("GỠ LẠI")').count():pg.click('.modal.bj button:has-text("GỠ LẠI")')
+        if pg.locator('.modal.bj button:has-text("VÁN MỚI")').count():
+            ok(f'new-hand button usable (hand {i})',not pg.locator('.modal.bj button:has-text("VÁN MỚI")').is_disabled())
+            E("bjCards=window.bjReal");pg.click('.modal.bj button:has-text("VÁN MỚI")')
+        else:break
     ok('no page errors',not errs,str(errs)); b.close()
 for r in res: print(*r)
 print(sum(r[0]=='PASS' for r in res),'/',len(res))

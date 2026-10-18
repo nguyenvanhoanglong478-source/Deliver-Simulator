@@ -1,6 +1,7 @@
 # Nhật ký thay đổi
 
 ## Gần nhất
+- Sửa lỗi nút blackjack: sau khi thua, hạn mức cược (20% tiền mặt) giảm nhưng mức cược cũ vẫn giữ nên nút "VÁN MỚI" bị khóa mà nhãn vẫn ghi số tiền. Giờ mức cược tự hạ xuống chip lớn nhất còn hợp lệ. Nút tách bài đổi tên "TÁCH ĐÔI BÀI" (trước trùng tên "CHIA BÀI" với nút chia bài), nút gấp đôi / tách chỉ hiện khi dùng được, nút rút đổi thành "RÚT THÊM". Test bằng chuột thật (51 kiểm tra).
 - Thêm SÒNG BÀI blackjack trong mục ĐỜI SỐNG, chơi được ngay từ đầu game. Luật chuẩn: bộ bài mới xáo mỗi ván, nhà cái dừng ở 17, blackjack trả 3:2, có rút / dằn / gấp đôi / chia bài. Tối đa 5 ván mỗi ngày, mỗi ván tốn 10 giây trong ngày, cược tối đa 20% tiền mặt (từ 50K), mỗi ván tăng chỉ số cờ bạc +2. Thắng thua hoàn toàn ngẫu nhiên và công bằng (không phụ thuộc độ khó hay chỉ số). Thua 3 ván liền thì hỏi "đứng dậy hay gỡ lại"; gỡ lại mà thua tiếp thì gia đình -3 mỗi lần, hết tiền thì hiện nút vay nóng. Tiền cược trừ ngay khi chia bài (tải lại trang không hoàn). Test mới `tests/test_blackjack.py`.
 - Vẽ thêm chi tiết giao diện: cảnh phố sống động ở màn chính (mặt trời/trăng đi theo giờ trong ngày, bình minh/hoàng hôn/ban đêm, mưa rơi khi trời mưa, cảnh chỉ chạy khi đang giao), ô đơn đang giao có đường chạy với xe máy tiến về lá cờ, chấm báo độ xa, đơn gấp nhấp nháy viền, nền có ánh sáng, đường chân trời và sao, panel có chuyển sắc nổi khối, thanh chỉ số có sọc chéo, logo nhấp nháy neon.
 - Đánh giá mới ở màn chính nhấp nháy viền vàng ~3 giây; hồ sơ tài xế chỉ hiện 10 đánh giá gần nhất.
