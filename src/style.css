@@ -565,3 +565,20 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 .stat .v{text-shadow:2px 2px 0 rgba(0,0,0,.6)}
 @media(max-width:859px){.hscene{height:112px}.hscene .bike{width:84px;margin-left:-42px;bottom:10px}.hscene .cargo{bottom:46px}.hscene .cargo .px-ic{width:24px;height:24px}}
 @media(prefers-reduced-motion:reduce){.sstars,.logo h1,.rain,.hscene.go .sky-far,.hscene.go .sky-near{animation:none}}
+
+/* ---------- blackjack ---------- */
+.modal.bj{max-width:460px}
+.bj-table{background:#0f5a34;background-image:radial-gradient(ellipse at 50% 40%,#1a7a47,#0b4427);box-shadow:inset 0 0 0 4px #062a17,inset 0 0 0 8px #8a5a1a;padding:18px 14px;margin:12px 0;display:flex;flex-direction:column;gap:14px;min-height:150px}
+.bj-row{display:flex;flex-direction:column;gap:6px;padding:4px}
+.bj-row.act{outline:3px dashed var(--gold);outline-offset:2px}
+.bj-who{font-size:19px;color:#cfeedd}.bj-who b{color:var(--gold)}.bj-who b.gr{color:var(--gr)}.bj-who b.red{color:#ff8b95}.bj-who b.gold{color:var(--gold)}
+.bj-cards{display:flex;gap:6px;flex-wrap:wrap}
+.bj-card{position:relative;width:46px;height:64px;background:#f5f1e6;color:#111;box-shadow:0 -3px 0 #000,0 3px 0 #000,-3px 0 0 #000,3px 0 0 #000,inset -3px -3px 0 rgba(0,0,0,.12);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:3px 0 5px;animation:pop .2s steps(3)}
+.bj-card b{font-family:var(--f-px);font-weight:400;font-size:13px;line-height:1}
+.bj-card.red{color:#d02a3a}
+.bj-su{display:block}
+.bj-card.back{background:repeating-linear-gradient(45deg,#3a2aa0 0 6px,#6b57e0 6px 12px);box-shadow:0 -3px 0 #000,0 3px 0 #000,-3px 0 0 #000,3px 0 0 #000,inset 0 0 0 4px #f5f1e6}
+.bj-empty{color:#cfeedd;text-align:center;padding:30px 8px;line-height:1.2}
+.bj-res{text-align:center;font-size:26px;margin-bottom:8px}.bj-res.gr{color:var(--gr)}.bj-res.red{color:var(--red)}.bj-res.gold{color:var(--gold)}
+.bj-warn{color:var(--or);text-align:center;margin:8px 0}
+.bj-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0}

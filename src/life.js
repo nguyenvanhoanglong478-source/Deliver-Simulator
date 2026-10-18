@@ -6,7 +6,7 @@ const HARDS=[
   {n:'KHẮC NGHIỆT',m:1.4,c:'var(--red)'},
 ];
 function hardM(){return(HARDS[g.hard]||HARDS[1]).m}
-function lifeDefaults(){return{hard:Math.floor(Math.random()*HARDS.length),health:100,family:60,debt:0,sickDays:0,lifeCd:0,lifeSeen:{},tickets:0,invCost:{},wasRain:false,pend:'',inv:{},drink:0,gamble:0,quitM:0,debtRate:0,endWhy:''}}
+function lifeDefaults(){return{hard:Math.floor(Math.random()*HARDS.length),health:100,family:60,debt:0,sickDays:0,lifeCd:0,lifeSeen:{},tickets:0,invCost:{},wasRain:false,pend:'',inv:{},drink:0,gamble:0,bjToday:0,bjLoss:0,bjNet:0,quitM:0,debtRate:0,endWhy:''}}
 function lifeFix(s){   // fill / clamp life fields (older saves, repair)
   const d=lifeDefaults(),cl=(v,lo,hi,x)=>Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):x;
   s.hard=[0,1,2].includes(s.hard)?s.hard:1;
@@ -18,7 +18,8 @@ function lifeFix(s){   // fill / clamp life fields (older saves, repair)
   Object.keys(s.invCost).forEach(k=>{if(!Number.isFinite(s.invCost[k])||s.invCost[k]<0)s.invCost[k]=0});
   s.wasRain=!!s.wasRain;s.pend=typeof s.pend==='string'?s.pend:'';
   s.debtRate=cl(s.debtRate,0,1,0);if(!s.debt)s.debtRate=0;s.endWhy=typeof s.endWhy==='string'?s.endWhy:'';
-  s.drink=cl(s.drink,0,100,0);s.gamble=cl(s.gamble,0,100,0);s.quitM=Math.round(cl(s.quitM,0,99,0));
+  s.drink=cl(s.drink,0,100,0);s.gamble=cl(s.gamble,0,100,0);
+  s.bjToday=Math.round(cl(s.bjToday,0,BJ_MAX,0));s.bjLoss=Math.round(cl(s.bjLoss,0,99,0));s.bjNet=Math.round(cl(s.bjNet,-1e12,1e12,0));s.quitM=Math.round(cl(s.quitM,0,99,0));
   if(!s.inv||typeof s.inv!=='object'||Array.isArray(s.inv))s.inv={};
   Object.keys(s.inv).forEach(k=>{if(!Number.isFinite(s.inv[k])||s.inv[k]<0)s.inv[k]=0});
   return s;
@@ -35,9 +36,11 @@ function lifeBad(s){
   if(!_inR(s.tickets,0,TICKET_MAX))p.push('tickets');
   if(!s.invCost||typeof s.invCost!=='object'||Array.isArray(s.invCost)||Object.values(s.invCost).some(v=>!_inR(v,0,1e12)))p.push('invCost');
   ['drink','gamble'].forEach(k=>{if(!_inR(s[k],0,100))p.push(k)});
+  if(!_inR(s.bjToday,0,BJ_MAX))p.push('bjToday');if(!_inR(s.bjLoss,0,99))p.push('bjLoss');if(!_inR(s.bjNet,-1e12,1e12))p.push('bjNet');
   if(!s.inv||typeof s.inv!=='object'||Array.isArray(s.inv)||Object.values(s.inv).some(v=>!_inR(v,0,1e12)))p.push('inv');
   return p;
 }
+const BJ_MAX=5;   // blackjack hands per day (see blackjack.js)
 function isSick(){return g.sickDays>0}
 function lifeGain(k,d){g[k]=Math.min(100,Math.max(0,g[k]+d))}
 function lifeSpend(n){g.cash-=n;g.fin.life=(g.fin.life||0)+n}
@@ -238,6 +241,7 @@ function lifeNewDay(){
   if(g.sickDays>0){g.sickDays--;lifeGain('health',2);if(!g.sickDays)addLog('Đã khỏe lại, có thể chạy xe!','good');else addLog(`Còn ốm ${g.sickDays} ngày.`,'warn')}
   else lifeGain('health',3);
   if(g.lifeCd>0)g.lifeCd--;
+  g.bjToday=0;g.bjLoss=0;
   if(Math.random()<.5)g.drink=Math.max(0,g.drink-1);if(Math.random()<.5)g.gamble=Math.max(0,g.gamble-1);
 }
 // Roll at most one life event for the new day; returns true if a modal was opened.

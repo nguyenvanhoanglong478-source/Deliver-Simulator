@@ -342,9 +342,16 @@ function rModal(){
         <div class="hub-grid g3">${lb('lottoHub(1)','b-gold','<span>MUA 1 TỜ<small>20K</small></span>',g.cash<TICKET||g.tickets>=TICKET_MAX)}${lb('lottoHub(5)','b-gold','<span>MUA 5 TỜ<small>100K</small></span>',g.cash<5*TICKET||g.tickets>TICKET_MAX-5)}${lb('lottoHub(10)','b-gold','<span>MUA 10 TỜ<small>200K</small></span>',g.cash<10*TICKET||g.tickets>TICKET_MAX-10)}</div>
         <div class="sub">Vé 20K một tờ, tối nay xổ số, kết quả hiện ở bảng cuối ngày. Giải 100K, 1TR, độc đắc 10TR nhưng rất hiếm. Tối đa ${TICKET_MAX} tờ mỗi ngày. Mua nhiều dễ thành thói quen.</div>
       </section>
+      <section class="hub-sec">
+        <div class="sec-t">${ic('dice',20)}SÒNG BÀI · BLACKJACK</div>
+        <div class="hub-debt">Hôm nay còn <b>${BJ_MAX-g.bjToday}</b>/${BJ_MAX} ván <em>(tổng ${g.bjNet>=0?'+':''}${ff(g.bjNet)})</em></div>
+        <div class="hub-grid g1">${lb('bjOpen()','b-gold','VÀO BÀN',false)}</div>
+        <div class="sub">Blackjack chuẩn, bộ bài mới mỗi ván, trả 3:2. Tối đa ${BJ_MAX} ván mỗi ngày, mỗi ván tốn ${BJ_TIME} giây và tăng chỉ số cờ bạc. Thắng thua hoàn toàn do may rủi, bạn tự chịu trách nhiệm.</div>
+      </section>
       <button class="btn b-cy blk" onclick="modal=null;render()">ĐÓNG</button>
     </div></div>`;
   }
+  if(type==='bj')return bjHTML();
   if(type==='chapter'){
     const c=CHAPTERS[modal.n],note=chapterNote();
     return`<div class="overlay"><div class="pxf2 modal">

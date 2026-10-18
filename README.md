@@ -33,11 +33,11 @@ Open `index.html` in a browser. Progress is saved in `localStorage`.
 - `src/`: source files.
   - `loop.js`: the game clock. One loop drives every timer (day clock, deliveries, animations, delays); pausing freezes it.
   - `icons.js`, `style.css`, `fonts.css`, `fonts/`: pixel icons (SVG for the UI, canvas sprites), styles, bundled VT323 and Press Start 2P fonts.
-  - `logic.js`, `state.js`, `render.js`, `profile.js`, `audio.js`, `life.js` (hidden difficulty, health/family/debt, choice events): game rules and deliverys, state shape + validation (`stateProblems`, `repairState`), screens, driver profile and reviews, music.
+  - `logic.js`, `state.js`, `render.js`, `profile.js`, `audio.js`, `life.js`, `blackjack.js` (blackjack table in the life hub: standard rules, 5 hands a day) (hidden difficulty, health/family/debt, choice events): game rules and deliverys, state shape + validation (`stateProblems`, `repairState`), screens, driver profile and reviews, music.
   - `bike.png`, `music.mp3`, `track1-4.mp3`, `icon-192.png`, `icon-512.png`.
 - `build.py`: `python3 build.py` builds `index.html`, `sw.js` and the manifest. `python3 build.py --artifact FILE.html` also writes a fully self-contained page (music, fonts and bike embedded) for Claude artifacts.
 - `tests/`: browser tests using Playwright (`pip install playwright && playwright install chromium`). Run each file separately:
-  `python3 tests/test_gameplay.py`, `test_save_load.py`, `test_features.py`, `test_audio.py`, `test_pause.py`, `test_ux.py`, `test_loop.py`, `test_state.py`, `test_offline.py`, `test_life.py`, `test_startfit.py`, `test_catch.py`.
+  `python3 tests/test_gameplay.py`, `test_save_load.py`, `test_features.py`, `test_audio.py`, `test_pause.py`, `test_ux.py`, `test_loop.py`, `test_state.py`, `test_offline.py`, `test_blackjack.py`, `test_life.py`, `test_startfit.py`, `test_catch.py`.
 - `CHANGELOG.md`: history of changes and current settings.
 
 Winning triggers a canvas particle effect. The management screens stay plain HTML/CSS.
