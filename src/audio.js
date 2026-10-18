@@ -58,7 +58,7 @@ function setVolume(v){
 // the floating button is outside #root, so it survives re-renders; shown only on calm screens
 function sndBtnSync(){
   const b=document.getElementById('snd-btn');if(!b||!g)return;
-  const show=['start','game','upgrade','profile'].includes(g.phase);
+  const show=['start','game','upgrade','profile'].includes(g.phase)&&!DLV;
   b.hidden=!show;
   b.innerHTML=ic(AUD.on&&AUD.vol>0?'sound':'mute',24);
   b.setAttribute('aria-label','Cài đặt âm thanh');

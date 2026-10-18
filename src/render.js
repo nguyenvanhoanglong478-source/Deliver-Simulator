@@ -1,7 +1,7 @@
 let foldOpen={sav:false,log:false};
 const TUT=[
  {ic:'flag',t:'MỤC TIÊU',b:'Tiết kiệm 100 triệu trong 24 tháng. Cuối mỗi tháng có hóa đơn 6,5 triệu phải trả, nên đừng tiêu hết tiền mặt.'},
- {ic:'box',t:'NHẬN ĐƠN',b:'Chọn một trong các đơn hàng rồi chơi minigame: bắt gói, né vật cản hoặc tìm đường. Bắt đủ gói thì nhận đủ tiền. Đơn xa trả cao nhưng tốn thể lực, xăng và thời gian.'},
+ {ic:'box',t:'NHẬN ĐƠN',b:'Chọn một trong các đơn hàng rồi chờ giao xong: thanh tiến độ chạy ngay trong ô đơn, mỗi lần chỉ giao một đơn. Đơn xa trả cao nhưng tốn thể lực, xăng và thời gian. Đơn ghép trả nhiều hơn nhưng lâu và tốn hơn.'},
  {ic:'fuel',t:'THỂ LỰC VÀ XĂNG',b:'Hết xăng hoặc thể lực thì không giao được. Dùng NẠP XĂNG và NGỦ NGHỈ, nhưng ngủ tốn thời gian trong ngày.'},
  {ic:'cal',t:'MỘT NGÀY GAME',b:'Mỗi ngày chạy từ 06:00 đến 22:00. Giờ cao điểm (11-13h, 17-19h) đơn trả thêm 25% nhưng dễ kẹt xe. Bấm ⏸ hoặc phím P để tạm dừng.'},
  {ic:'house',t:'ĐỜI SỐNG',b:'Bạn là người từ quê lên phố. Sức khỏe, gia đình và nợ nần cũng ảnh hưởng ván chơi: ốm thì không chạy xe, gia đình lo thì tinh thần xuống. Mở mục ĐỜI SỐNG để gửi tiền về quê, đầu tư hoặc trả nợ. Thỉnh thoảng sẽ có lời rủ rê, hãy cân nhắc.'},
@@ -11,11 +11,20 @@ const TUT=[
 function money(n){n=Math.round(n);return(n<0?'-':'')+Math.abs(n).toLocaleString('vi-VN')+'<span class="cur">đ</span>'}
 function meterColor(v,lo,mid){return v<lo?'red':v<mid?'or':'gr'}
 function offerCard(o,i){
-  const c=offerCost(o),d=DIST[o.dist],job=C.jobs[o.type],ok=canDoOffer(o);
-  return`<button class="btn ${o.type==='food'?'b-gr':'b-cy'} offer${o.rush?' rush':''}" ${ok?'':'disabled'} onclick="doDelivery(${i})">
+  if(DLV&&DLV.i===i){
+    const job=C.jobs[DLV.o.type],left=dlvLeft(),pc=Math.min(100,(1-left/DLV.dur)*100);
+    return`<div class="btn ${DLV.o.type==='food'?'b-gr':'b-cy'} offer delivering${DLV.o.rush?' rush':''}" aria-live="polite">
+    <span class="of-ic">${ic(job.icon,32)}</span>
+    <span class="of-main"><span class="nm">ĐANG GIAO · ${job.name}</span><span class="er">${money(DLV.earn)}</span>
+      <span class="dl-track"><span class="dl-bar" id="dl-bar" style="width:${pc}%"></span></span></span>
+    <span class="co"><span id="dl-t">${Math.ceil(left)}s</span></span>
+  </div>`;
+  }
+  const c=offerCost(o),d=DIST[o.dist],job=C.jobs[o.type],ok=canDoOffer(o)&&!DLV;
+  return`<button class="btn ${o.type==='food'?'b-gr':'b-cy'} offer${o.rush?' rush':''}${o.combo?' combo':''}" ${ok?'':'disabled'} onclick="doDelivery(${i})">
     <span class="of-ic">${ic(job.icon,32)}</span>
     <span class="of-main"><span class="nm">${job.name} · ${d.n}</span><span class="er">${money(offerPay(o))}</span>
-      <span class="of-tags">${o.rush?'<b class="tg rush">GẤP</b>':''}${o.peak?'<b class="tg peak">CAO ĐIỂM</b>':''}<b class="tg">${o.mg==='dodge'?'NÉ XE':o.mg==='route'?'TÌM ĐƯỜNG':'BẮT GÓI'}</b></span></span>
+      <span class="of-tags">${o.combo?'<b class="tg combo">ĐƠN GHÉP</b>':''}${o.rush?'<b class="tg rush">GẤP</b>':''}${o.peak?'<b class="tg peak">CAO ĐIỂM</b>':''}</span></span>
     <span class="co"><span>${ic('bolt',16)}${c.sta}</span><span>${ic('fuel',16)}${c.fuel}%</span><span>${ic('flag',16)}${offerTime(o)}s</span></span>
   </button>`;
 }
@@ -156,55 +165,6 @@ function rGame(){
 }
 
 // MINI-GAME
-function rMG(){
-  if(!mgData)return'';
-  if(mgData.result){
-    const{ok,earn}=mgData.result;
-    const msgs=['THẤT BẠI','GIAO TRỄ','XUẤT SẮC!'],cols=['var(--red)','var(--or)','var(--gr)'];
-    return`<div class="mg"><div class="pxf mg-res">
-      <h2 style="color:${cols[ok]};font-size:40px">${msgs[ok]}</h2>
-      <p>${mgData.kind==='route'?(mgData.rtOk?`Đến nơi, rẽ sai ${mgData.mistakes} lần`:'Hết giờ, đi lạc mất rồi'):mgData.kind==='dodge'?`Va chạm ${mgData.hits} lần`:`Bắt được ${mgData.caught}/${mgData.full} gói hàng`}<br>${earn>0?'+'+ff(earn):'Không có thu nhập'}</p>
-      <p class="blink">Đang giao hàng...</p></div></div>`;
-  }
-  if(mgData.kind==='route'){
-    return`<div class="mg">
-    <div class="mg-hdr"><span class="mg-timer" id="mg-timer">${Math.ceil(mgData.timeLeft)}s</span><span class="lbl">DẪN ĐƯỜNG!</span><span class="mg-score" id="mg-score">0/${RT_N}</span></div>
-    <div class="rt-field" id="rt-field" aria-label="Đường đi">${rtHTML()}</div>
-    <div class="dg-btns rt-btns"><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(-1)" aria-label="Rẽ trái">◀</button><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(0)" aria-label="Đi thẳng">▲</button><button class="btn b-dim" onpointerdown="event.preventDefault();rtMove(1)" aria-label="Rẽ phải">▶</button></div>
-    <div class="mg-hint">Nhớ thứ tự rẽ, rồi bấm đúng hướng trước khi xe tới ngã tư. ${up('gps')?'GPS: luôn thấy 3 ngã tiếp theo.':'Không có GPS: bạn phải nhớ cả 5 ngã.'} Sai là mất 2s.</div>
-  </div>`;
-  }
-  if(mgData.kind==='dodge'){
-    return`<div class="mg">
-    <div class="mg-hdr"><span class="mg-timer" id="mg-timer">${Math.ceil(mgData.timeLeft)}s</span><span class="lbl">NÉ VẬT CẢN!</span><span class="mg-score" id="mg-score">VA 0/3</span></div>
-    <div class="bar"><i id="mg-bar" class="gr" style="width:0%"></i></div>
-    <canvas class="dg-field" id="dg-field" width="192" height="256" onpointerdown="dgTap(event)" aria-label="Đường 3 làn"></canvas>
-    <div class="dg-btns"><button class="btn b-dim" onpointerdown="event.preventDefault();dgMove(-1)" aria-label="Sang trái">◀</button><button class="btn b-dim" onpointerdown="event.preventDefault();dgMove(1)" aria-label="Sang phải">▶</button></div>
-    <div class="mg-hint">Chạm làn hoặc bấm ◀ ▶ (phím mũi tên). Va tối đa 2 lần để nhận đủ tiền.</div>
-  </div>`;
-  }
-  const cells=Array.from({length:9},(_,i)=>`<button class="mg-cell" id="mgc-${i}" data-s="e" disabled onclick="catchPkg(${i})" aria-label="Bắt gói hàng"></button>`).join('');
-  return`<div class="mg">
-    <div class="mg-hdr"><span class="mg-timer" id="mg-timer">${Math.ceil(mgData.timeLeft)}s</span><span class="lbl">BẮT GÓI HÀNG!</span><span class="mg-score" id="mg-score">0/${C.mgFull}</span></div>
-    <div class="bar"><i id="mg-bar" class="gr" style="width:0%"></i></div>
-    <div class="mg-grid" id="mg-grid">${cells}</div>
-    <div class="mg-hint">Chạm vào gói hàng trước khi biến mất!</div>
-    <div class="mg-hint" style="color:var(--or)">Cần ${mgData.full} gói để nhận đủ tiền${mgData.offer.rush?' (đơn gấp: 15 giây)':''}</div>
-  </div>`;
-}
-
-// DELIVERY / REFUEL / SLEEP SCREENS
-function rDeliverAnim(){
-  if(!g.activeAnim)return'';
-  const{job}=g.activeAnim;
-  return`<div class="anim">
-    <div class="anim-t">${job.name}</div>
-    ${sceneHTML(job.id==='food'?'bowl':'box')}
-    <div id="anim-status" class="anim-status">ĐANG GIAO HÀNG...</div>
-    <div id="anim-earn-val" class="anim-earn" style="display:none"></div>
-    <div id="rv" class="review pxf2"></div>
-  </div>`;
-}
 function rRefuelAnim(){
   if(!g.activeAnim)return'';
   const{timeLeft,startFuel,targetFuel,costPaid}=g.activeAnim;
@@ -417,7 +377,7 @@ function rModal(){
     </div></div>`;
   }
   if(type==='confirmHome'){
-    const mid=g.phase==='minigame'||g.phase==='anim-deliver'||g.phase==='anim-refuel';
+    const mid=!!DLV||g.phase==='anim-refuel';
     return`<div class="overlay"><div class="pxf2 modal">
       <div class="m-title" style="color:var(--or)">${ic('flag',28)} VỀ MÀN HÌNH BẮT ĐẦU?</div>
       <div class="m-body">Game được lưu lại, bạn có thể bấm TIẾP TỤC để chơi tiếp.${mid?' Đơn hoặc việc đang làm dở sẽ bị hủy, xăng và thể lực đã dùng không được hoàn lại.':''}</div>
@@ -483,7 +443,7 @@ function rModal(){
   if(type==='monthEnd'){
     const{month,earned,bonus,del,bills}=modal;const net=earned+bonus-bills;
     const billRows=C.monthly.map(b=>`<div class="month-row"><span>${b.n}</span><span style="color:var(--red)">-${ff(b.c)}</span></div>`).join('')+UPGS.filter(u=>u.fee&&g.upgrades[u.id]).map(u=>`<div class="month-row"><span>Phí ${u.name}</span><span style="color:var(--red)">-${ff(u.fee)}</span></div>`).join('');
-    const bl=del>=200?'(KIM CƯƠNG)':del>=150?'(VÀNG)':del>=100?'(BẠC)':'';
+    const bl=del>=480?'(KIM CƯƠNG)':del>=360?'(VÀNG)':del>=240?'(BẠC)':'';
     return`<div class="overlay"><div class="pxf2 modal">
       <div class="m-title" style="color:var(--gold)">${ic('cal',28)} THÁNG ${month} KẾT THÚC</div>
       <div class="lbl" style="margin-bottom:8px">${del} đơn ${bl}</div>

@@ -3,15 +3,15 @@ const C={
   startCash:3e6,winTarget:1e8,maxMonths:24,daysPerMonth:30,
   dayDuration:300,// 5 min
   fuelCost:150e3,fuelTime:10,sleepRate:5,// stamina/sec
-  mgTime:20,mgFull:12,mgPartial:7,
+  payScale:.55,comboChance:.18,comboPay:1.75,comboTime:1.6,comboCost:1.5,
   dailyInterest:0.002,
   monthly:[
     {n:'Thuê phòng trọ',c:25e5},{n:'Điện nước',c:4e5},{n:'Ăn uống',c:15e5},
     {n:'Điện thoại',c:2e5},{n:'Bảo hiểm xe',c:3e5},{n:'Trả góp xe',c:16e5},
   ],
   jobs:{
-    food:{id:'food',icon:'bowl',name:'ĐỒ ĂN',earn:'30k-60k',sta:15,fuel:5,min:3e4,max:6e4},
-    goods:{id:'goods',icon:'box',name:'HÀNG HÓA',earn:'60k-130k',sta:20,fuel:9,min:6e4,max:13e4},
+    food:{id:'food',icon:'bowl',name:'ĐỒ ĂN',earn:'16k-33k',sta:15,fuel:5,min:3e4,max:6e4},
+    goods:{id:'goods',icon:'box',name:'HÀNG HÓA',earn:'33k-72k',sta:20,fuel:9,min:6e4,max:13e4},
   },
 };
 const BILLS=C.monthly.reduce((s,b)=>s+b.c,0);
@@ -31,8 +31,8 @@ const UPGS=[
   {id:'fix_f', name:'Đại tu toàn diện',  icon:'gear',  cost:2e6, desc:'Phục hồi độ bền xe 100%',cat:'Sửa xe',rep:true},
 ];
 const MS=[{at:25e6,reward:1e6},{at:5e7,reward:2e6},{at:75e6,reward:3e6}];   // savings milestones
-const DIST=[{n:'GẦN',earn:.65,sta:.75,fuel:.6,t:0},{n:'VỪA',earn:1,sta:1,fuel:1,t:3},{n:'XA',earn:1.4,sta:1.35,fuel:1.6,t:6}];
-const DRIVE=[{n:'CHẬM',risk:.4,fuel:.85,t:4},{n:'THƯỜNG',risk:1,fuel:1,t:0},{n:'NHANH',risk:1.8,fuel:1.2,t:-2}];
+const DIST=[{n:'GẦN',earn:.65,sta:.75,fuel:.6,t:6},{n:'VỪA',earn:1,sta:1,fuel:1,t:10},{n:'XA',earn:1.4,sta:1.35,fuel:1.6,t:15}];   // t = base delivery seconds
+const DRIVE=[{n:'CHẬM',risk:.4,fuel:.85,t:1.3},{n:'THƯỜNG',risk:1,fuel:1,t:1},{n:'NHANH',risk:1.8,fuel:1.2,t:.75}];   // t = time multiplier
 
 
 // ===== EVENTS =====
@@ -50,7 +50,7 @@ const EVTS=[
 
 // ===== STATE =====
 let g={};let modal=null;
-let mgTmr,mgSpw,animTmr,dayTmr;
+let mgTmr,animTmr,dayTmr;
 
 function init(){
   g={
@@ -104,7 +104,7 @@ let _saveWarned=false;
 // day/month summary is pending (interest is already applied but not yet confirmed), never after the game ended.
 function canPersist(){
   if(!g||!g.phase)return false;
-  if(['start','win','lose','minigame','anim-deliver','anim-refuel'].includes(g.phase))return false;
+  if(['start','win','lose','anim-refuel'].includes(g.phase)||DLV)return false;
   if(modal&&(modal.type==='dayEnd'||modal.type==='monthEnd'))return false;   // life modals are saved with their pending choice discarded by restore()
   return true;
 }
@@ -141,7 +141,7 @@ function restore(s){
   lifeFix(g);
   g.fin=Object.assign({earn:0,fuel:0,repair:0,accident:0,bills:0,upg:0,life:0},g.fin&&typeof g.fin==='object'?g.fin:{});
   if(!Array.isArray(g.offers)||!g.offers.length||!g.offers.every(o=>o&&C.jobs[o.type]&&DIST[o.dist]&&Number.isFinite(o.base)))g.offers=genOffers();
-  clearTmrs();modal=null;mgData=null;g.activeAnim=null;g.phase='game';
+  clearTmrs();modal=null;DLV=null;g.activeAnim=null;g.phase='game';
 }
 function earnMult(){return g.vehicleHp>=70?1:g.vehicleHp>=50?.85:g.vehicleHp>=30?.7:.55}
 // ===== ORDERS =====
@@ -150,20 +150,19 @@ function isPeak(){const h=hourOf();return(h>=11&&h<13)||(h>=17&&h<19)}
 function fmH(){const h=hourOf(),H=Math.floor(h),M=Math.floor((h-H)*6)*10;return(H<10?'0':'')+H+':'+(M<10?'0':'')+M}
 function genOffer(peak){
   const type=Math.random()<.5?'food':'goods',job=C.jobs[type];
-  const r=Math.random(),dist=r<.35?0:r<.75?1:2;
+  const r=Math.random(),dist=r<.35?0:r<.75?1:2,combo=Math.random()<C.comboChance;
   const rush=Math.random()<(peak?.35:.2)+(up('prio')?.1:0);
-  const mr=Math.random(),mg=mr<.4?'catch':mr<.7?'dodge':'route';
-  const base=rnd(job.min,job.max)*DIST[dist].earn*(rush?1.7:1)*(peak?1.25:1);
-  return{type,dist,rush,mg,peak:!!peak,base:Math.round(base/1000)*1000};
+  const base=rnd(job.min,job.max)*DIST[dist].earn*(rush?1.7:1)*(peak?1.25:1)*(combo?C.comboPay:1)*C.payScale;
+  return{type,dist,rush,combo,peak:!!peak,base:Math.round(base/1000)*1000};
 }
 function genOffers(){const n=up('prio')?4:3,p=isPeak(),r=[];for(let i=0;i<n;i++)r.push(genOffer(p));return r}
 function offerCost(o){
   const job=C.jobs[o.type],d=DIST[o.dist];
-  const sta=job.sta*d.sta*(up('turbo')?.8:1);
-  const fuel=job.fuel*d.fuel*DRIVE[g.drive].fuel*(up('eco')?.65:up('turbo')?1.25:1);
+  const cb=o.combo?C.comboCost:1,sta=job.sta*d.sta*cb*(up('turbo')?.8:1);
+  const fuel=job.fuel*d.fuel*cb*DRIVE[g.drive].fuel*(up('eco')?.65:up('turbo')?1.25:1);
   return{sta:Math.max(4,Math.round(sta)),fuel:Math.max(1,Math.round(fuel))};
 }
-function offerTime(o){return Math.max(1,DIST[o.dist].t+DRIVE[g.drive].t+(up('eco')?3:0)-(up('turbo')?3:0))}   // travel seconds
+function offerTime(o){return Math.max(3,Math.round(DIST[o.dist].t*DRIVE[g.drive].t*(o.rush?.8:1)*(o.combo?C.comboTime:1)*(up('eco')?1.3:up('turbo')?.75:1)))}   // delivery seconds
 function offerPay(o){
   let e=o.base;
   if(g.rainToday)e*=.6;
@@ -201,7 +200,7 @@ function startDayTimer(){
   dayTmr=every(1000,()=>{if(!modal)dayStep()});   // popups (refuel, day/month end, tutorial) freeze the day; deliveries and sleeping use it up
 }
 function dayStep(){
-  const busy=['minigame','anim-deliver','anim-refuel'].includes(g.phase);
+  const busy=!!DLV||g.phase==='anim-refuel';
   if(g.dayTimeLeft>0)g.dayTimeLeft--;
   const el=document.getElementById('day-tmr');
   if(el)el.textContent=fmT(g.dayTimeLeft);
@@ -232,7 +231,7 @@ function doDelivery(i){
   const earn=offerPay(o);
   g.offers[i]=genOffer(isPeak());
   persistNow();
-  startMinigame(o,earn);
+  startDelivery(i,o,earn);
 }
 
 function doRefuel(){
@@ -372,7 +371,7 @@ function doWd(a){
   save();render();
 }
 
-function goUpgrade(){if(g.phase==='game'){g.phase='upgrade';render();}}
+function goUpgrade(){if(g.phase==='game'&&!DLV){g.phase='upgrade';render();}}
 function goGame(){if(g.phase==='upgrade'||g.phase==='profile'){g.phase='game';render();}}
 
 function buyUpgrade(id){
@@ -395,288 +394,55 @@ function buyUpgrade(id){
   save();render();toast('ĐÃ MUA!');
 }
 
-// ===== MINI-GAME =====
-let mgData=null;
-
-function startMinigame(o,baseEarn){
-  const rush=!!o.rush,limit=rush?15:C.mgTime;
-  mgData={jobId:o.type,offer:o,kind:o.mg,baseEarn,limit,full:rush?9:C.mgFull,part:rush?5:C.mgPartial,
-    caught:0,total:0,hits:0,passed:0,obs:[],lane:1,spawnIn:.4,flash:0,lastTs:gnow(),
-    timeLeft:limit,done:false,spots:Array(9).fill(null),startTs:gnow()};
-  if(o.mg==='route')rtInit(mgData);
-  g.phase='minigame';render();
-  if(o.mg==='route'){mgTmr=every(50,rtTick);rtLoop();return;}
-  if(o.mg==='dodge'){mgTmr=every(50,dgTick);dgLoop();return;}
-  mgTmr=every(80,mgTick);
-  mgSpw=every(1200,mgSpawn);
-  after(200,mgSpawn);
+// ===== DELIVERY (progress bar inside the order card; no mini-games) =====
+// One order at a time. Costs are paid at the start (and persisted), the pay and any random event arrive at the end.
+let DLV=null;   // {i,o,earn,start,dur} — module state only, never saved: a reload cannot refund the order
+function dlvLeft(){return DLV?Math.max(0,DLV.dur-(gnow()-DLV.start)/1000):0}
+function startDelivery(i,o,earn){
+  DLV={i,o,earn,start:gnow(),dur:offerTime(o)};
+  g.activeAnim={type:'deliver'};
+  render();
+  mgTmr=every(100,dlvTick);
 }
-
-function mgTick(){
-  if(!mgData||mgData.done)return;
-  const now=gnow();
-  mgData.timeLeft=Math.max(0,mgData.limit-(now-mgData.startTs)/1000);
-  mgData.spots=mgData.spots.map(sp=>sp&&now-sp.ts>1350?null:sp);
-  if(mgData.timeLeft<=0){mgData.done=true;stopT(mgTmr);stopT(mgSpw);showMgResult();return;}
-  mgPaint();
+function dlvTick(){
+  if(!DLV)return;
+  const left=dlvLeft(),p=Math.min(100,(1-left/DLV.dur)*100);
+  const b=document.getElementById('dl-bar'),t=document.getElementById('dl-t');
+  if(b)b.style.width=p+'%';
+  if(t)t.textContent=Math.ceil(left)+'s';
+  if(left<=0){stopT(mgTmr);completeDelivery()}
 }
-
-// ---- third mini-game: Route Rush. Memorise the turns, then steer the bike through each junction in time ----
-const RT_N=5,RT_PREVIEW=3000,RT_PENALTY=2000;
-const RT_ARR={'-1':'◀','0':'▲','1':'▶'};
-function genTurns(){
-  let t;
-  do{t=Array.from({length:RT_N},()=>rnd(-1,1))}while(new Set(t).size<2);   // never five identical turns
-  return t;
-}
-function rtApproach(){return mgData.offer.rush?1700:isPeak()?1900:2200}   // ms to reach the junction; peak hour = more traffic = tighter
-function rtInit(m){Object.assign(m,{turns:genTurns(),idx:0,mistakes:0,rtPhase:'preview',previewEnd:gnow()+RT_PREVIEW,appTs:0,rtOk:0,fb:null,fbUntil:0})}
-function rtMove(d){
-  const m=mgData;if(!m||m.kind!=='route'||m.done||m.rtPhase!=='drive')return;
-  if(m.turns[m.idx]===d){
-    m.idx++;m.fb='ok';m.fbUntil=gnow()+350;m.appTs=gnow();
-    if(m.idx>=RT_N){
-      m.done=true;stopT(mgTmr);
-      m.timeLeft=Math.max(0,m.limit-(gnow()-m.startTs)/1000);
-      m.rtOk=m.mistakes<=1?2:1;
-      rtPaint();after(450,showMgResult);return;
-    }
-  }else rtMiss();
-  rtPaint();
-}
-function rtMiss(){   // wrong turn or missed junction: a detour costs time and the junction comes round again
-  const m=mgData;m.mistakes++;m.startTs-=RT_PENALTY;m.fb='bad';m.fbUntil=gnow()+450;m.appTs=gnow();
-}
-function rtTick(){
-  const m=mgData;if(!m||m.done||m.kind!=='route')return;
-  const now=gnow();
-  if(m.rtPhase==='preview'){
-    if(now>=m.previewEnd){m.rtPhase='drive';m.startTs=now;m.appTs=now}
-    rtPaint();return;
-  }
-  m.timeLeft=Math.max(0,m.limit-(now-m.startTs)/1000);
-  if(m.timeLeft<=0){m.done=true;m.rtOk=m.idx>=3?1:0;stopT(mgTmr);rtPaint();showMgResult();return}
-  if(now-m.appTs>=rtApproach())rtMiss();
-  rtPaint();
-}
-function rtStripHTML(){
-  const m=mgData,gps=up('gps'),pre=m.rtPhase==='preview';
-  return m.turns.map((t,i)=>{
-    const done=i<m.idx,cur=i===m.idx&&!pre;
-    const vis=pre||done||(gps&&i<m.idx+3);
-    return`<div class="rt-slot${done?' done':''}${cur?' cur':''}">${vis?RT_ARR[t]:'?'}</div>`;
-  }).join('');
-}
-function rtMsg(){
-  const m=mgData,pre=m.rtPhase==='preview',fb=gnow()<m.fbUntil?m.fb:null;
-  return pre?'GHI NHỚ ĐƯỜNG ĐI! '+Math.max(1,Math.ceil((m.previewEnd-gnow())/1000))+'s':fb==='bad'?'SAI ĐƯỜNG! -2s':fb==='ok'?'ĐÚNG!':'';
-}
-function rtHTML(){
-  return`<div class="rt-strip" id="rt-strip">${rtStripHTML()}</div>
-  <div class="rt-road" id="rt-road"><canvas id="rt-cv" width="192" height="112"></canvas><div class="rt-msg" id="rt-msg">${rtMsg()}</div></div>`;
-}
-// Road scene on a canvas: scrolling lane stripes, the junction ahead, the bike closing in.
-function rtDraw(){
-  const m=mgData,cv=document.getElementById('rt-cv');
-  if(!m||!cv||m.kind!=='route')return;
-  const x=cv.getContext('2d'),W=192,H=112,T=gnow(),pre=m.rtPhase==='preview';
-  x.fillStyle='#0f0b26';x.fillRect(0,0,W,H);
-  const off=pre?0:(T/1000*60)%24;
-  x.fillStyle='#1a1440';for(let y=-24+off;y<H;y+=24)x.fillRect(0,y,W,12);
-  x.fillStyle='#3a3180';for(let y=-24+off;y<H;y+=24)x.fillRect(W/2-1,y,2,12);
-  // junction arrows at the top: left, straight, right
-  x.fillStyle='#ffd23f';
-  for(let k=0;k<9;k++){
-    x.fillRect(24+k,16-k,1,k*2+1);                 // left, apex on the left
-    x.fillRect(W/2-k,6+k,k*2+1,1);                 // straight, apex on top
-    x.fillRect(W-24-k,16-k,1,k*2+1);               // right, apex on the right
-  }
-  const prog=pre?0:Math.min(1,(T-m.appTs)/rtApproach());
-  const bw=56,bh=38;
-  x.imageSmoothingEnabled=false;
-  const im=bikeImage();if(im.complete&&im.naturalWidth)x.drawImage(im,W/2-bw/2,H-bh-4-prog*(H-bh-36),bw,bh);
-}
-function rtLoop(){if(!mgData||mgData.kind!=='route'||mgData.done||g.phase!=='minigame')return;rtDraw();requestAnimationFrame(rtLoop)}
-function rtPaint(){
-  const f=document.getElementById('rt-field');if(!f||!mgData||mgData.kind!=='route')return;
-  const m=mgData,st=document.getElementById('rt-strip'),road=document.getElementById('rt-road'),msg=document.getElementById('rt-msg');
-  if(st){const h=rtStripHTML();if(st.dataset.h!==h){st.innerHTML=h;st.dataset.h=h}}
-  const fb=gnow()<m.fbUntil?m.fb:null;
-  if(road)road.className='rt-road'+(fb?' '+fb:'');
-  if(msg)msg.textContent=rtMsg();
-  const s=document.getElementById('mg-score');if(s)s.textContent=m.idx+'/'+RT_N;
-  const t=document.getElementById('mg-timer');if(t)t.textContent=Math.ceil(m.timeLeft)+'s';
-  rtDraw();
-}
-document.addEventListener('keydown',e=>{
-  if(!mgData||mgData.kind!=='route')return;
-  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){e.preventDefault();rtMove(-1)}
-  else if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){e.preventDefault();rtMove(1)}
-  else if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){e.preventDefault();rtMove(0)}
-});
-
-// ---- second mini-game: dodge obstacles on a 3-lane road ----
-const DG_ROWS=7,DG_SPEED=4.2;
-function dgTick(){
-  const m=mgData;if(!m||m.done||m.kind!=='dodge')return;
-  const now=gnow(),dt=Math.min(.2,(now-m.lastTs)/1000);m.lastTs=now;
-  m.timeLeft=Math.max(0,m.limit-(now-m.startTs)/1000);
-  if(m.timeLeft<=0){m.done=true;stopT(mgTmr);showMgResult();return;}
-  m.spawnIn-=dt;
-  if(m.spawnIn<=0){
-    m.spawnIn=.6+Math.random()*.35;
-    const a=rnd(0,2);m.obs.push({lane:a,y:-1});
-    if(Math.random()<.25)m.obs.push({lane:(a+rnd(1,2))%3,y:-1});   // never all three lanes at once
-  }
-  m.flash=Math.max(0,m.flash-dt);
-  m.obs.forEach(o=>{
-    o.y+=DG_SPEED*dt;
-    if(!o.hit&&o.lane===m.lane&&o.y>DG_ROWS-1.6&&o.y<DG_ROWS-.2){o.hit=true;m.hits++;m.flash=.35;}
-  });
-  m.obs=m.obs.filter(o=>{if(o.y>=DG_ROWS){if(!o.hit)m.passed++;return false}return true});
-  dgPaint();
-}
-// Dodge field is a <canvas> (192x256 logical pixels, lane = 64px) drawn every animation frame from the game clock.
-const DG_W=192,DG_H=256;
-function dgPaint(){
-  const m=mgData,$=id=>document.getElementById(id);
-  if(!m||!$('dg-field'))return;
-  $('mg-timer').textContent=Math.ceil(m.timeLeft)+'s';
-  $('mg-score').textContent='VA '+m.hits+'/3';
-  $('mg-bar').style.width=Math.min(100,(1-m.timeLeft/m.limit)*100)+'%';
-  dgDraw();
-}
-function dgDraw(){
-  const m=mgData,cv=document.getElementById('dg-field');
-  if(!m||!cv||m.kind!=='dodge')return;
-  const x=cv.getContext('2d'),T=gnow(),ahead=GT.paused?0:Math.min(.1,(T-m.lastTs)/1000);   // smooth between logic ticks
-  x.fillStyle='#0a0814';x.fillRect(0,0,DG_W,DG_H);
-  // road: scrolling lane dashes
-  const off=(T/1000*DG_SPEED*DG_H/DG_ROWS)%32;
-  x.fillStyle='#3a3180';
-  for(let k=1;k<3;k++)for(let y=-32+off;y<DG_H;y+=32)x.fillRect(k*64-1,y,2,16);
-  x.fillStyle='#1a1440';x.fillRect(0,0,2,DG_H);x.fillRect(DG_W-2,0,2,DG_H);
-  const ob=spriteCanvas('warn');
-  m.obs.forEach(o=>{
-    const y=(o.y+DG_SPEED*ahead)*DG_H/DG_ROWS;
-    x.globalAlpha=o.hit?.3:1;drawSprite(x,ob,o.lane*64+16,y,32);
-  });
-  x.globalAlpha=1;
-  drawSprite(x,avatarCanvas(g.profile.helmet),m.lane*64+16,DG_H-44,32);
-  if(m.flash>0){x.fillStyle=`rgba(255,77,94,${(m.flash/.35*.35).toFixed(2)})`;x.fillRect(0,0,DG_W,DG_H)}
-}
-function dgLoop(){if(!mgData||mgData.kind!=='dodge'||mgData.done||g.phase!=='minigame')return;dgDraw();requestAnimationFrame(dgLoop)}
-function dgMove(d){if(mgData&&mgData.kind==='dodge'&&!mgData.done){mgData.lane=Math.min(2,Math.max(0,mgData.lane+d));dgPaint()}}
-function dgTap(ev){
-  if(!mgData||mgData.kind!=='dodge'||mgData.done)return;
-  const r=ev.currentTarget.getBoundingClientRect();
-  mgData.lane=Math.min(2,Math.max(0,Math.floor((ev.clientX-r.left)/r.width*3)));dgPaint();
-}
-document.addEventListener('keydown',e=>{
-  if(!mgData||mgData.kind!=='dodge')return;
-  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){e.preventDefault();dgMove(-1)}
-  else if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){e.preventDefault();dgMove(1)}
-});
-
-// Update only what changed, so a tap is never lost to a re-render under the finger.
-function mgPaint(){
-  if(!mgData||mgData.done)return;
-  const $=id=>document.getElementById(id);
-  if(!$('mg-grid'))return;
-  const now=gnow(),pk=mgData.jobId==='food'?'bowl':'box';
-  $('mg-timer').textContent=Math.ceil(mgData.timeLeft)+'s';
-  $('mg-score').textContent=mgData.caught+'/'+mgData.full;
-  $('mg-bar').style.width=Math.min(100,mgData.caught/mgData.full*100)+'%';
-  mgData.spots.forEach((sp,i)=>{
-    const el=$('mgc-'+i);if(!el)return;
-    const st=!sp?'e':((now-sp.ts)/1350>.65?'u':'h');
-    if(el.dataset.s===st)return;
-    el.dataset.s=st;
-    el.className='mg-cell'+(st==='h'?' has':st==='u'?' urg':'');
-    el.innerHTML=st==='e'?'':ic(pk,56);
-    el.disabled=st==='e';
-  });
-}
-
-function mgSpawn(){
-  if(!mgData||mgData.done)return;
-  const empty=mgData.spots.map((v,i)=>[v,i]).filter(([v])=>!v).map(([,i])=>i);
-  if(!empty.length)return;
-  const idx=empty[rnd(0,empty.length-1)];
-  mgData.spots[idx]={ts:gnow()};mgData.total++;mgPaint();
-}
-
-function catchPkg(i){
-  if(!mgData||mgData.done||!mgData.spots[i])return;
-  mgData.spots[i]=null;mgData.caught++;
-  if(mgData.caught>=mgData.full){   // all packages caught: finish at once, no need to wait for the timer
-    mgData.done=true;stopT(mgTmr);stopT(mgSpw);showMgResult();return;
-  }
-  mgPaint();
-}
-
-function showMgResult(){
-  const {caught,baseEarn,jobId}=mgData;
-  const job=C.jobs[jobId];
-  let earn,ok;
-  if(mgData.kind==='dodge')ok=mgData.hits<=2?2:mgData.hits<=5?1:0;
-  else if(mgData.kind==='route')ok=mgData.rtOk;
-  else ok=caught>=mgData.full?2:caught>=mgData.part?1:0;
-  earn=[0,Math.floor(baseEarn*.5),baseEarn][ok];
-  const evt=rollEvtFor(earn),res=evt?evt.fn(earn):null;   // decided up front: a cancelled order gets no customer review
-  mgData.review=res&&res.skip?null:addReview(ok,job);
-  mgData.result={earn,ok,job};render();
-  const rvw=mgData.review;
-  after(1800,()=>afterMinigame(earn,job,rvw,{evt,res}));
-}
-
-function afterMinigame(earn,job,rvw,pre){
-  const evt=pre?pre.evt:rollEvtFor(earn);
-  const res=pre?pre.res:(evt?evt.fn(earn):null);
-  const paid=res&&res.skip?0:earn;          // "khách hủy" means no income for this order
-  g.phase='anim-deliver';
+function completeDelivery(){
+  const{o,earn}=DLV,job=C.jobs[o.type];
+  const evt=rollEvtFor(earn),res=evt?evt.fn(earn):null;
   if(res&&res.hp&&up('tire2'))res.hp=Math.round(res.hp*.6);
-  const travel=Math.max(1,offerTime((mgData&&mgData.offer)||g.offers[0]))*1000;
-  g.activeAnim={type:'deliver',earn:paid,job};
-  render(); // Render một lần — CSS bike animation bắt đầu
-  // Sau 3s: patch DOM trực tiếp, KHÔNG gọi render() để tránh reset bike animation
-  after(travel,()=>{
-    const statusEl=document.getElementById('anim-status');
-    const earnEl=document.getElementById('anim-earn-val');
-    if(statusEl){
-      statusEl.textContent=res&&res.skip?'KHÁCH HỦY ĐƠN':paid>0?'GIAO THÀNH CÔNG!':'GIAO THẤT BẠI';
-      statusEl.classList.add('done');
+  const paid=res&&res.skip?0:earn;          // "khách hủy" means no income for this order
+  const ok=(g.vehicleHp<30||(evt&&evt.t==='bad'))?1:2;
+  if(!(res&&res.skip))addReview(ok,job);
+  if(paid>0){g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;g.fin.earn+=paid;burst(26,FX_COIN)}
+  g.delivered++;g.totalDelivered++;
+  if(evt){
+    if(res.hp){
+      if(res.cash)res.cash=Math.round(res.cash*(g.upgrades.insure?.4:1));
+      g.vehicleHp=Math.max(0,g.vehicleHp+res.hp);
     }
-    if(earnEl){earnEl.textContent=paid>0?'+'+ff(paid):'KHÔNG CÓ THU NHẬP';earnEl.style.display='block';}
-    if(paid>0)burst(26,FX_COIN);
-    const rv=document.getElementById('rv');
-    if(rv&&rvw){rv.dataset.id=String(rvw.t0);rv.innerHTML=reviewHTML(rvw);rv.classList.add('show');}
-    after(1500,()=>{
-      if(paid>0){g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;g.fin.earn+=paid;}
-      g.delivered++;g.totalDelivered++;
-      if(evt){
-        if(res.hp){
-          if(res.cash)res.cash=Math.round(res.cash*(g.upgrades.insure?.4:1));
-          g.vehicleHp=Math.max(0,g.vehicleHp+res.hp);
-        }
-        if(res.rain)g.rainToday=true;
-        if(res.sta)g.stamina=Math.max(0,g.stamina+res.sta);
-        if(res.cash){g.cash+=res.cash;if(res.cash>0){g.dailyEarned+=res.cash;g.fin.earn+=res.cash}else{g.dailySpent+=Math.abs(res.cash);g.fin.accident+=Math.abs(res.cash)}}
-        addLog(`${evt.ti}: ${res.msg}`,evt.t==='good'?'earn':evt.t==='bad'?'cost':'info');
-        modal={type:'event',evt,res};
-      }
-      addLog(`${job.name}: ${paid>0?'+'+ff(paid):'không có thu nhập'}`,paid>0?'earn':'cost');
-      g.activeAnim=null;g.phase='game';
-      mgData=null;save();
-      if(g.vehicleHp<=0)toast('XE HỎNG NẶNG! CẦN SỬA NGAY!','bad');
-      render();
-    });
-  });
+    if(res.rain)g.rainToday=true;
+    if(res.sta)g.stamina=Math.max(0,g.stamina+res.sta);
+    if(res.cash){g.cash+=res.cash;if(res.cash>0){g.dailyEarned+=res.cash;g.fin.earn+=res.cash}else{g.dailySpent+=Math.abs(res.cash);g.fin.accident+=Math.abs(res.cash)}}
+    addLog(`${evt.ti}: ${res.msg}`,evt.t==='good'?'earn':evt.t==='bad'?'cost':'info');
+    modal={type:'event',evt,res};
+  }
+  addLog(`${job.name}${o.combo?' ghép':''}: ${paid>0?'+'+ff(paid):'không có thu nhập'}`,paid>0?'earn':'cost');
+  DLV=null;g.activeAnim=null;g.phase='game';
+  save();
+  if(g.vehicleHp<=0)toast('XE HỎNG NẶNG! CẦN SỬA NGAY!','bad');
+  render();
 }
+
 
 // ===== DAY END =====
 function finish(win){
-  clearTmrs();modal=null;g.activeAnim=null;mgData=null;
+  clearTmrs();modal=null;g.activeAnim=null;DLV=null;
   g.phase=win?'win':'lose';
   try{localStorage.removeItem('btd_v2');}catch(e){}
   render();
@@ -701,8 +467,8 @@ function confirmDayEnd(){
 }
 
 function monthBonus(del){
-  let b=del>=200?35e5:del>=150?2e6:del>=100?1e6:0;
-  if(del>=50)b+=g.stars>=4.5?1e6:g.stars>=4?5e5:0;   // good ratings pay extra
+  let b=del>=480?35e5:del>=360?2e6:del>=240?1e6:0;
+  if(del>=120)b+=g.stars>=4.5?1e6:g.stars>=4?5e5:0;   // good ratings pay extra
   return b;
 }
 function billsTotal(){return BILLS+UPGS.reduce((n,u)=>n+(u.fee&&g.upgrades[u.id]?u.fee:0),0)}
@@ -748,8 +514,6 @@ function render(){
   const root=document.getElementById('root');if(!root)return;
   let h='';
   if(g.phase==='start')h=rStart();
-  else if(g.phase==='minigame')h=rMG();
-  else if(g.phase==='anim-deliver')h=rDeliverAnim();
   else if(g.phase==='anim-refuel')h=rRefuelAnim();
   else if(g.phase==='anim-sleep')h=rSleepAnim();
   else if(g.phase==='upgrade')h=rShop();
@@ -772,12 +536,12 @@ window.addEventListener('pagehide',()=>save());
 let pausedLight=false;
 function canPause(){
   if(!g||modal||GT.paused)return false;
-  return ['game','minigame','anim-deliver','anim-refuel','anim-sleep'].includes(g.phase);
+  return ['game','anim-refuel','anim-sleep'].includes(g.phase);
 }
 function pauseGame(){
   if(!canPause())return;
   setPaused(true);
-  if(g.phase==='game'||g.phase==='minigame'){pausedLight=false;modal={type:'pause'};render();return}
+  if(g.phase==='game'){pausedLight=false;modal={type:'pause'};render();return}
   pausedLight=true;showLightPause();
 }
 function showLightPause(){
@@ -802,7 +566,7 @@ function goHome(){
   const ph=g.phase;
   modal=null;pausedLight=false;
   const o=document.getElementById('pause-ov');if(o){o.hidden=true;o.innerHTML=''}
-  stopAllT();mgData=null;g.activeAnim=null;
+  stopAllT();DLV=null;g.activeAnim=null;
   if(ph==='game'||ph==='anim-sleep')save();   // an unfinished delivery/refuel is not saved, like a reload
   setPaused(false);g.phase='start';render();pauseBtnSync();
 }

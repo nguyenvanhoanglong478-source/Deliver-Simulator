@@ -327,7 +327,7 @@ function takeLoan(k){
   if(g.phase!=='game'||g.debt>=2e7)return;
   if(k==='hot')borrow(3e6,.15);else{borrow(5e6,.25);g.cash-=5e5;addLog('Phí làm hồ sơ vay: -500K','cost')}save();render();
 }
-function openHub(){if(modal||g.phase!=='game')return;modal={type:'hub'};render()}
+function openHub(){if(modal||DLV||g.phase!=='game')return;modal={type:'hub'};render()}
 function lottoHub(n){
   if(g.phase!=='game')return;
   const t=lottoBuy(n);toast(t.startsWith('Bạn cất')?`ĐÃ MUA ${n} TỜ VÉ SỐ`:t.toUpperCase(),t.startsWith('Bạn cất')?'':'bad');save();render();

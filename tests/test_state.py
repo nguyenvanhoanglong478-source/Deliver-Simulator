@@ -11,7 +11,7 @@ with sync_playwright() as p:
     ok('fresh state is valid',pg.evaluate("stateProblems(g)")==[])
     ok('every new offer is valid (3000)',pg.evaluate("(()=>{for(let i=0;i<3000;i++){if(!offerOk(genOffer(i%2==0)))return false}return true})()"))
     for name,patch,field in [('NaN cash',"g.cash=NaN","cash"),('fuel 140',"g.fuel=140","fuel"),('negative savings',"g.savings=-5","savings"),
-        ('month 99',"g.month=99","month"),('stars 0',"g.stars=0","stars"),('upgrades array',"g.upgrades=[]","upgrades"),('bad mg offer',"g.offers[0].mg='zzz'","offers"),('bad drive',"g.drive=7","drive"),('log not array',"g.log=null","log")]:
+        ('month 99',"g.month=99","month"),('stars 0',"g.stars=0","stars"),('upgrades array',"g.upgrades=[]","upgrades"),('bad drive',"g.drive=7","drive"),('log not array',"g.log=null","log")]:
         pg.evaluate("startGame(true)"); pg.evaluate(patch)
         ok(f'detects: {name}',field in pg.evaluate("stateProblems(g)"))
         pg.evaluate("repairState(g)"); ok(f'repairs: {name}',pg.evaluate("stateProblems(g)")==[])

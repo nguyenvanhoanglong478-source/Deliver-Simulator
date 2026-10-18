@@ -25,11 +25,11 @@ with sync_playwright() as p:
     pg.click("#pause-ov >> text=TIẾP TỤC"); pg.wait_for_timeout(1300); ok('sleep: resumes',pg.evaluate("g.stamina")>s0)
     pg.evaluate("stopSleep()")
     # pause during the delivery animation
-    pg.evaluate("g.stamina=100;g.fuel=100;g.offers[0]={type:'food',dist:2,rush:false,mg:'catch',peak:false,base:50000};g.cash=1e6;render();afterMinigame(50000,C.jobs.food,null)")
-    ok('delivery animation running',pg.evaluate("g.phase")=='anim-deliver')
-    pg.wait_for_timeout(500); pg.keyboard.press('p'); c0=pg.evaluate("g.cash"); pg.wait_for_timeout(6000)
-    ok('delivery frozen while paused (no payout, same phase)',pg.evaluate("g.phase")=='anim-deliver' and pg.evaluate("g.cash")==c0)
-    pg.keyboard.press('p'); pg.wait_for_function("g.phase==='game'",timeout=15000); ok('delivery completes after resume',pg.evaluate("g.cash")>=c0)
+    pg.evaluate("rollEvt=()=>null;g.stamina=100;g.fuel=100;g.offers[0]={type:'food',dist:2,rush:false,peak:false,base:50000};g.cash=1e6;doDelivery(0)")
+    ok('delivery running',pg.evaluate("!!DLV"))
+    pg.wait_for_timeout(500); pg.keyboard.press('p'); c0=pg.evaluate("g.cash"); l0=pg.evaluate("dlvLeft()"); pg.wait_for_timeout(5000)
+    ok('delivery frozen while paused (no payout, same time left)',pg.evaluate("!!DLV")and pg.evaluate("g.cash")==c0 and abs(pg.evaluate("dlvLeft()")-l0)<.05)
+    pg.keyboard.press('p'); pg.wait_for_function("!DLV",timeout=20000); ok('delivery completes after resume',pg.evaluate("g.cash")>c0)
     # refuel gauge frozen
     pg.evaluate("modal=null;g.fuel=20;g.cash=5e6;render();doRefuel()"); pg.evaluate("rfSlide(100);rfConfirm()"); pg.wait_for_timeout(900)
     pg.keyboard.press('p'); f0=pg.evaluate("document.getElementById('fuel-pct').textContent"); pg.wait_for_timeout(2500)

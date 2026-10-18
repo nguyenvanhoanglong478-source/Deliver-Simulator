@@ -1,6 +1,8 @@
 # Nhật ký thay đổi
 
 ## Gần nhất
+- Bỏ hẳn 3 minigame (bắt gói, né xe, tìm đường). Bấm đơn nào thì ô đơn đó hiện "ĐANG GIAO", thời gian còn lại và thanh tiến độ (gần ~6s, vừa ~10s, xa ~15s; lái chậm lâu hơn, lái nhanh/đơn gấp nhanh hơn). Mỗi lần chỉ giao 1 đơn, các ô khác khóa. Thêm ĐƠN GHÉP (trả x1,75, lâu x1,6, tốn x1,5 thể lực/xăng). Tập trung vào sự kiện, cốt truyện, ending.
+- Cân bằng lại vì giao nhanh gấp ~2,4 lần: tiền công đơn x0,55, mốc thưởng tháng 240/360/480 đơn (trước 100/150/200). Đã xóa `test_route.py`, `test_catch.py`.
 - Minigame bắt gói tự hoàn thành ngay khi bắt đủ gói, không phải đợi hết giờ (đơn gấp cũng vậy).
 - Nghỉ ngơi cộng +5 thể lực mỗi giây (trước là +2). Mô phỏng cân bằng: người giỏi thắng ~65%, khá ~25%, trung bình ~1%.
 - Mục TIẾT KIỆM ở bản mobile luôn hiện, không còn phải mở ra.

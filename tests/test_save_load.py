@@ -35,7 +35,7 @@ with sync_playwright() as p:
     pg.evaluate("g.stamina=100;g.fuel=100;save()")
     pg.evaluate("doDelivery(0)"); pg.evaluate("window.dispatchEvent(new Event('pagehide'))")
     sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('mid-delivery: costs already paid in save (no refund by reload)',sv['stamina']<100 and sv['fuel']<100 and sv['phase']=='game',str((sv['stamina'],sv['fuel'])))
-    pg.evaluate("clearTmrs();mgData=null;g.phase='game';g.stamina=100;g.fuel=100;render()")
+    pg.evaluate("clearTmrs();DLV=null;g.activeAnim=null;g.phase='game';g.stamina=100;g.fuel=100;render()")
     # 6 pending day end must not persist applied interest
     pg.evaluate("g.savings=2e6;save();doEndDay()"); pg.evaluate("window.dispatchEvent(new Event('pagehide'))")
     sv=json.loads(pg.evaluate("localStorage.getItem('btd_v2')")); ok('pending day-end does not persist interest',sv['savings']==2e6,str(sv['savings']))

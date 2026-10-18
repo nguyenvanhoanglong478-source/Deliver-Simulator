@@ -108,7 +108,7 @@ function addReview(ok,job){
 }
 
 // ---- profile screen actions ----
-function goProfile(){if(g.phase==='game'){g.phase='profile';render();getSample().then(()=>{if(g.phase==='profile')render()})}}
+function goProfile(){if(g.phase==='game'&&!DLV){g.phase='profile';render();getSample().then(()=>{if(g.phase==='profile')render()})}}
 function setName(v){g.profile.name=String(v).slice(0,16);save()}
 function setHobbyText(v){g.profile.hobbyText=String(v).slice(0,24);save()}
 function toggleHobby(id){

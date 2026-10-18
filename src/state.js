@@ -4,7 +4,7 @@
  * @property {'food'|'goods'} type
  * @property {0|1|2} dist         near / medium / far
  * @property {boolean} rush
- * @property {'catch'|'dodge'|'route'} mg   mini-game kind
+ * @property {boolean} [combo]   multi-drop order
  * @property {boolean} peak
  * @property {number} base        pay in VND
  *
@@ -17,15 +17,14 @@
  * @property {number} delivered @property {number} totalDelivered
  * @property {Object<string,boolean>} upgrades
  * @property {{m:string,t:string}[]} log
- * @property {'start'|'game'|'upgrade'|'profile'|'minigame'|'anim-deliver'|'anim-refuel'|'anim-sleep'|'win'|'lose'} phase
+ * @property {'start'|'game'|'upgrade'|'profile'|'anim-refuel'|'anim-sleep'|'win'|'lose'} phase
  * @property {Offer[]} offers
  * @property {number[]} ms        reached savings milestones
  * @property {0|1|2} drive        slow / normal / fast
  */
-const MG_KINDS=['catch','dodge','route'];
-const PHASES=['start','game','upgrade','profile','minigame','anim-deliver','anim-refuel','anim-sleep','win','lose'];
+const PHASES=['start','game','upgrade','profile','anim-refuel','anim-sleep','win','lose'];
 const _inR=(v,lo,hi)=>Number.isFinite(v)&&v>=lo&&v<=hi;
-function offerOk(o){return !!o&&!!C.jobs[o.type]&&!!DIST[o.dist]&&Number.isFinite(o.base)&&o.base>0&&(o.mg===undefined||MG_KINDS.includes(o.mg))}
+function offerOk(o){return !!o&&!!C.jobs[o.type]&&!!DIST[o.dist]&&Number.isFinite(o.base)&&o.base>0}
 // List what is wrong with a state object (empty array = valid). Pure: does not change anything.
 function stateProblems(s){
   const p=[];

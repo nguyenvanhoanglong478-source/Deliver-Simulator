@@ -1,4 +1,4 @@
-"""Browser test for orders, driving, rush hour, milestones, upgrades, dodge mini-game. Run: python3 tests/test_features.py"""
+"""Browser test for orders, driving, rush hour, milestones, upgrades. Run: python3 tests/test_features.py"""
 import os,json
 URL="file://"+os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),"..","index.html"))
 from playwright.sync_api import sync_playwright
@@ -14,7 +14,7 @@ with sync_playwright() as p:
     ok('3 offers on start',E("g.offers.length")==3)
     ok('offer buttons rendered',pg.locator('.offer').count()==3)
     E("g.upgrades={prio:true};g.offers=genOffers()"); ok('priority app: 4 offers',E("g.offers.length")==4); E("g.upgrades={};g.offers=genOffers()")
-    E("g.offers[0]={type:'goods',dist:2,rush:false,mg:'catch',peak:false,base:100000}")
+    E("g.offers[0]={type:'goods',dist:2,rush:false,peak:false,base:100000}")
     far=E("[offerCost(g.offers[0]),offerPay(g.offers[0]),offerTime(g.offers[0])]")
     E("g.offers[0].dist=0"); near=E("[offerCost(g.offers[0]),offerPay(g.offers[0]),offerTime(g.offers[0])]")
     ok('far order costs more and takes longer than near',far[0]['sta']>near[0]['sta'] and far[0]['fuel']>near[0]['fuel'] and far[2]>near[2],str((far,near)))
@@ -22,7 +22,7 @@ with sync_playwright() as p:
     f="""(d)=>{g.drive=d;const N=200000;let c=0;for(let i=0;i<N;i++){const e=rollEvt();if(e&&(e.id==='brk'||e.id==='crs'||e.id==='fin'))c++}g.drive=1;return c/N}"""
     r=[E(f.replace("(d)=>","(d)=>")) if False else pg.evaluate(f,d) for d in (0,1,2)]
     ok('slow < normal < fast accident odds',r[0]<r[1]<r[2],str(r))
-    E("g.vehicleHp=100;g.offers[0]={type:'goods',dist:1,rush:false,mg:'catch',peak:false,base:1e5}")
+    E("g.vehicleHp=100;g.offers[0]={type:'goods',dist:1,rush:false,peak:false,base:1e5}")
     c1=E("(g.drive=0,offerCost(g.offers[0]).fuel)"); c2=E("(g.drive=2,offerCost(g.offers[0]).fuel)"); E("g.drive=1")
     ok('slow riding uses less fuel than fast',c1<c2,str((c1,c2)))
     f2="""()=>{const N=100000;let c=0;for(let i=0;i<N;i++){const e=rollEvt();if(e&&e.id==='brk')c++}return c/N}"""
@@ -35,33 +35,28 @@ with sync_playwright() as p:
     f3="""()=>{const N=100000;let c=0;for(let i=0;i<N;i++){const e=rollEvt();if(e&&e.id==='jam')c++}return c/N}"""
     peak=g_(); E("g.dayTimeLeft=300"); off=g_()
     ok('peak doubles traffic jams',peak>off*1.8,str((peak,off)))
-    # --- sacrificial delivery: catch game pays by catches ---
-    E("g.dayTimeLeft=300;g.stamina=100;g.fuel=100;g.offers[0]={type:'food',dist:1,rush:false,mg:'catch',peak:false,base:50000}")
+    # --- delivery: progress bar inside the order card, one order at a time ---
+    E("g.dayTimeLeft=300;g.stamina=100;g.fuel=100;g.offers[0]={type:'food',dist:1,rush:false,peak:false,base:50000}")
     E("rollEvt=()=>null"); c0=E("g.cash"); E("doDelivery(0)")
-    ok('order costs paid and order replaced',E("g.stamina")<100 and E("g.offers.length")==3 and E("g.phase")=='minigame')
-    E("mgData.caught=12;mgData.timeLeft=0;mgData.done=true;stopT(mgTmr);stopT(mgSpw);showMgResult()")
-    pg.wait_for_function("g.phase==='game'",timeout=12000)
-    ok('full catch pays full price',E("g.cash")-c0==50000,str(E("g.cash")-c0))
-    # rush: easier threshold, shorter time
-    E("g.offers[0]={type:'food',dist:1,rush:true,mg:'catch',peak:false,base:80000};doDelivery(0)")
-    ok('rush: 15s and 9 catches needed',E("mgData.limit==15&&mgData.full==9"))
-    E("mgData.caught=9;mgData.done=true;stopT(mgTmr);stopT(mgSpw);showMgResult()"); c0=E("g.cash")
-    pg.wait_for_function("g.phase==='game'",timeout=12000); ok('rush pays on 9 catches',E("g.cash")-c0==80000,str(E("g.cash")-c0))
-    # --- dodge ---
-    for hits,exp in ((0,1),(2,1),(4,.5),(7,0)):
-        E("g.stamina=100;g.fuel=100;g.offers[0]={type:'food',dist:1,rush:false,mg:'dodge',peak:False and 0,base:60000}".replace("False and 0","false"))
-        E("doDelivery(0)")
-        ok(f'dodge screen renders ({hits})',pg.locator('#dg-field').count()==1)
-        c0=E("g.cash")
-        E(f"mgData.hits={hits};mgData.done=true;stopT(mgTmr);showMgResult()")
-        pg.wait_for_function("g.phase==='game'",timeout=12000)
-        ok(f'dodge {hits} hits pays x{exp}',E("g.cash")-c0==int(60000*exp),str(E("g.cash")-c0))
-    E("g.offers[0]={type:'food',dist:1,rush:false,mg:'dodge',peak:false,base:60000};doDelivery(0)")
-    pg.wait_for_timeout(600); pg.keyboard.press('ArrowLeft'); ok('arrow key moves lane',E("mgData.lane")==0)
-    pg.keyboard.press('ArrowRight');pg.keyboard.press('ArrowRight'); ok('lane clamped at 2',E("mgData.lane")==2)
-    E("mgData.lane=1;mgData.obs=[{lane:1,y:5.6}];dgTick()"); ok('collision counted once',E("mgData.hits")==1)
-    E("dgTick()"); ok('same obstacle not counted twice',E("mgData.hits")==1)
-    E("clearTmrs();mgData=null;g.phase='game';render()")
+    ok('order costs paid and order replaced',E("g.stamina")<100 and E("g.offers.length")==3 and E("!!DLV"))
+    ok('progress bar and timer shown in the card',pg.locator('#dl-bar').count()==1 and pg.locator('#dl-t').count()==1 and 'ĐANG GIAO' in pg.inner_text('.offers'))
+    ok('other order cards locked while delivering',E("[...document.querySelectorAll('.offers button.offer')].every(b=>b.disabled)"))
+    E("doDelivery(1)"); ok('cannot start a second order',E("g.offers.length")==3 and E("DLV.i")==0)
+    ok('medium order takes about 10s',E("DLV.dur")==10,str(E("DLV.dur")))
+    pg.wait_for_timeout(1500); w=float(pg.evaluate("parseFloat(document.getElementById('dl-bar').style.width)")); ok('bar advances',w>5,str(w))
+    E("DLV.start-=1e6;dlvTick()"); ok('delivery done, back to normal',E("g.phase==='game'&&!DLV&&!g.activeAnim"))
+    ok('full pay on completion',E("g.cash")-c0==50000,str(E("g.cash")-c0))
+    # rush is faster, combo pays more but takes longer and costs more
+    E("g.offers[0]={type:'food',dist:1,rush:true,peak:false,base:80000}"); ok('rush order is quicker',E("offerTime(g.offers[0])")<10)
+    E("g.offers[0]={type:'food',dist:1,rush:false,combo:true,peak:false,base:50000}")
+    ok('combo: longer, costlier',E("offerTime(g.offers[0])")>10 and E("offerCost(g.offers[0]).sta")>15)
+    E("g.offers[0]={type:'food',dist:0,rush:false,peak:false,base:50000}");n=E("offerTime(g.offers[0])")
+    E("g.offers[0]={type:'food',dist:2,rush:false,peak:false,base:50000}");fa=E("offerTime(g.offers[0])")
+    ok('near about 6s, far about 15s',n==6 and fa==15,str((n,fa)))
+    E("g.drive=0");sl=E("offerTime(g.offers[0])");E("g.drive=2");fs=E("offerTime(g.offers[0])");E("g.drive=1")
+    ok('slow riding takes longer than fast',sl>fa>fs,str((sl,fa,fs)))
+    ok('combo orders appear and pay more on average',E("(()=>{let c=0,N=4000;for(let i=0;i<N;i++)if(genOffer(false).combo)c++;return c/N})()")>.1)
+    ok('locked while delivering: shop/hub/profile',E("(()=>{g.stamina=100;g.fuel=100;doDelivery(0);goUpgrade();const a=g.phase;openHub();const b=modal;DLV.start-=1e6;dlvTick();return a==='game'&&b===null})()"))
     # --- upgrades ---
     E("g.upgrades={};g.cash=2e7;g.ms=[];goUpgrade()")
     E("buyUpgrade('heat')"); ok('buy bag',E("g.upgrades.heat===true"))
@@ -69,7 +64,7 @@ with sync_playwright() as p:
     E("buyUpgrade('eco');buyUpgrade('turbo')"); ok('engines are exclusive',E("!g.upgrades.eco&&g.upgrades.turbo===true"))
     c0=E("g.cash"); E("buyUpgrade('vip')"); ok('locked upgrade refused until milestone',E("!g.upgrades.vip")and E("g.cash")==c0)
     E("g.ms=[25e6,5e7,75e6];buyUpgrade('vip')"); ok('unlocked after milestone',E("g.upgrades.vip===true"))
-    E("g.upgrades={};g.dayTimeLeft=300;g.offers[0]={type:'goods',dist:1,rush:false,mg:'catch',peak:false,base:100000}")
+    E("g.upgrades={};g.dayTimeLeft=300;g.offers[0]={type:'goods',dist:1,rush:false,peak:false,base:100000}")
     b0=E("offerPay(g.offers[0])"); E("g.upgrades={crate:true}"); b1=E("offerPay(g.offers[0])"); E("g.upgrades={heat:true}"); b2=E("offerPay(g.offers[0])")
     ok('crate +20% goods, heat bag -10% goods',b1==120000 and b2==90000,str((b0,b1,b2)))
     E("g.upgrades={};g.offers[0].type='goods';g.upgrades.turbo=true"); t=E("offerCost(g.offers[0])"); E("g.upgrades={}"); n=E("offerCost(g.offers[0])")
@@ -85,8 +80,8 @@ with sync_playwright() as p:
     ok('milestone hit via interest shows in day summary',E("g.ms.includes(5e7)&&modal.ms.length==1"))
     E("confirmDayEnd()")
     # --- monthly bonus ---
-    E("g.stars=4.6"); ok('bonus: 150 orders + 4.6 stars',E("monthBonus(150)")==3e6)
-    ok('bonus: under 50 orders none',E("monthBonus(40)")==0)
+    E("g.stars=4.6"); ok('bonus: 360 orders + 4.6 stars',E("monthBonus(360)")==3e6)
+    ok('bonus: under 120 orders none',E("monthBonus(100)")==0)
     # --- legacy save upgrades ---
     E("g.phase='start';localStorage.setItem('btd_v2',JSON.stringify({cash:5e6,savings:0,month:2,day:3,stamina:50,fuel:50,vehicleHp:50,phase:'game',upgrades:{tires:true,tank:true,engine:true,heatbag:true,gps:true}}))")
     pg.reload(); pg.click('text=TIẾP TỤC')
