@@ -171,7 +171,7 @@ function rGame(){
   </div></div>`;
 }
 
-// MINI-GAME
+// (delivery has no screen of its own: progress shows inside the order card)
 function rRefuelAnim(){
   if(!g.activeAnim)return'';
   const{timeLeft,startFuel,targetFuel,costPaid}=g.activeAnim;

@@ -31,9 +31,9 @@ with sync_playwright() as p:
     pg.keyboard.press('p'); pg.wait_for_timeout(1000)
     tl2=pg.evaluate("dlvLeft()")
     ok('delivery resumes without losing the paused time',tl2<tl and tl-tl2<1.6,f"{tl}->{tl2}")
-    pg.evaluate("stopT(mgTmr);DLV=null;g.activeAnim=null;g.phase='game';render()")
+    pg.evaluate("stopT(dlvTmr);DLV=null;g.activeAnim=null;g.phase='game';render()")
     # ===== back to the start screen from the pause menu =====
-    pg.evaluate("stopT(mgTmr);DLV=null;g.activeAnim=null;g.phase='game';modal=null;GT.paused=false;render()")
+    pg.evaluate("stopT(dlvTmr);DLV=null;g.activeAnim=null;g.phase='game';modal=null;GT.paused=false;render()")
     pg.evaluate("g.cash=1234567;save()")
     pg.keyboard.press('p'); ok('pause menu has the home option','VỀ MÀN HÌNH BẮT ĐẦU' in pg.inner_text('body'))
     pg.click("text=VỀ MÀN HÌNH BẮT ĐẦU"); ok('asks for confirmation',pg.evaluate("modal&&modal.type==='confirmHome'") and 'VỀ MÀN HÌNH BẮT ĐẦU?' in pg.inner_text('body'))

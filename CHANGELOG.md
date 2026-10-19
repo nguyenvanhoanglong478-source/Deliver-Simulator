@@ -79,3 +79,6 @@
 
 ## Shop price cells
 - Price / owned / locked cells on the Upgrade page are now all exactly 128x38 on phones and desktop (they used to size by their text, 51-118 px wide and two different heights). Removed the conflicting CSS rules. Test added in test_ux.py (21 checks).
+
+## Audit
+- Removed dead JS/CSS/icons, orphan CSS, stale comments; renamed mgTmr→dlvTmr. All test files pass.

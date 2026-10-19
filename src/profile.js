@@ -70,7 +70,6 @@ async function getSample(){
   try{_sample=(window.claude&&typeof window.claude.use==='function'&&await window.claude.use('sample'))||null}catch(e){_sample=null}
   return _sample;
 }
-function aiAvailable(){return !!_sample}
 function aiPrompt(r,ctx){
   const ds=['giao rất trễ, hàng bị hỏng hoặc thiếu','giao hơi trễ','giao nhanh, hàng nguyên vẹn'][ctx.ok];
   const hb=hobbyList();

@@ -50,7 +50,7 @@ const EVTS=[
 
 // ===== STATE =====
 let g={};let modal=null;
-let mgTmr,animTmr,dayTmr;
+let dlvTmr,animTmr,dayTmr;
 
 function init(){
   g={
@@ -404,14 +404,13 @@ function buyUpgrade(id){
 
 // ===== DELIVERY (progress bar inside the order card; no mini-games) =====
 // One order at a time. Costs are paid at the start (and persisted), the pay and any random event arrive at the end.
-let DLV=null,RVNEW=null;   // RVNEW: the review that just arrived (highlighted for 3 s)
-let DLV_ups=null;   // {i,o,earn,start,dur} — module state only, never saved: a reload cannot refund the order
+let DLV=null,RVNEW=null;   // DLV {i,o,earn,start,dur,ups}: module state only, never saved, so a reload cannot refund the order. RVNEW: review that just arrived (highlighted 3 s)
 function dlvLeft(){return DLV?Math.max(0,DLV.dur-(gnow()-DLV.start)/1000):0}
 function startDelivery(i,o,earn){
   DLV={i,o,earn,start:gnow(),dur:offerTime(o),ups:Object.assign({},g.upgrades)};   // upgrades bought mid-delivery only count from the next order
   g.activeAnim={type:'deliver'};
   render();
-  mgTmr=every(100,dlvTick);
+  dlvTmr=every(100,dlvTick);
 }
 function dlvTick(){
   if(!DLV)return;
@@ -419,7 +418,7 @@ function dlvTick(){
   const b=document.getElementById('dl-bar'),t=document.getElementById('dl-t');
   if(b)b.style.width=p+'%';
   if(t)t.textContent=Math.ceil(left)+'s';
-  if(left<=0){if(modal)return;stopT(mgTmr);completeDelivery()}   // wait while a popup (life hub, settings) is open
+  if(left<=0){if(modal)return;stopT(dlvTmr);completeDelivery()}   // wait while a popup (life hub, settings) is open
 }
 function completeDelivery(){
   const{o,earn}=DLV,job=C.jobs[o.type];
