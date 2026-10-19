@@ -83,3 +83,4 @@
 ## Audit
 - Removed dead JS/CSS/icons, orphan CSS, stale comments; renamed mgTmr→dlvTmr. All test files pass.
 - bike.png nén 64 màu: 212K → 30K, bản build 458 KB → 217 KB.
+- Thêm tests/test_fuzz.py: bấm nút ngẫu nhiên 6 seed x 300 bước, kiểm tra trạng thái luôn hợp lệ (không lỗi).
