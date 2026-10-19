@@ -58,7 +58,7 @@ function init(){
     stamina:100,fuel:100,vehicleHp:100,
     stars:5.0,
     dayTimeLeft:C.dayDuration,
-    dailyEarned:0,dailySpent:0,
+    dailyEarned:0,dailySpent:0,dOrders:0,dBest:0,dMishap:0,prevNet:0,
     earned:0,delivered:0,totalDelivered:0,
     upgrades:{},log:[],
     phase:'start',activeAnim:null,
@@ -129,7 +129,7 @@ function restore(s){
   g.month=clamp(g.month,1,C.maxMonths);g.day=clamp(g.day,1,C.daysPerMonth);
   g.dayTimeLeft=clamp(g.dayTimeLeft,1,C.dayDuration);
   g.cash=Math.round(g.cash);g.savings=Math.max(0,Math.round(g.savings));
-  ['dailyEarned','dailySpent','earned','delivered','totalDelivered'].forEach(k=>{g[k]=Number.isFinite(g[k])?g[k]:0});
+  ['dailyEarned','dailySpent','dOrders','dBest','dMishap','prevNet','earned','delivered','totalDelivered'].forEach(k=>{g[k]=Number.isFinite(g[k])?g[k]:0});
   g.rainToday=!!g.rainToday;
   const od=g.upgrades,nu={};   // older saves: map retired upgrades onto the new ones
   Object.keys(od).forEach(k=>{const u=UPGS.find(x=>x.id===k);if(u&&!u.rep&&od[k])nu[k]=true});
@@ -389,7 +389,7 @@ function buyUpgrade(id){
   if(g.upgrades[u.id]&&!u.rep){toast('BẠN ĐÃ CÓ NÂNG CẤP NÀY','warn');return;}
   if(u.rep&&g.vehicleHp>=100){toast('XE CÒN NGUYÊN VẸN, KHÔNG CẦN SỬA','warn');return;}
   if(g.cash<u.cost){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
-  g.cash-=u.cost;g.dailySpent+=u.cost;
+  sfx('buy');g.cash-=u.cost;g.dailySpent+=u.cost;
   if(u.rep)g.fin.repair+=u.cost;else g.fin.upg+=u.cost;
   if(id==='fix_s'){g.vehicleHp=Math.min(100,g.vehicleHp+30);}
   else if(id==='fix_f'){g.vehicleHp=100;}
@@ -428,7 +428,7 @@ function completeDelivery(){
   const paid=res&&res.skip?0:earn;          // "khách hủy" means no income for this order
   const ok=(g.vehicleHp<30||(evt&&evt.t==='bad'))?1:2;
   RVNEW=(res&&res.skip)?null:addReview(ok,job);
-  if(paid>0){g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;g.fin.earn+=paid;burst(26,FX_COIN)}
+  if(paid>0){g.dOrders++;g.dBest=Math.max(g.dBest,paid);g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;g.fin.earn+=paid;burst(26,FX_COIN);sfx('coin')}
   g.delivered++;g.totalDelivered++;
   if(evt){
     if(res.hp){
@@ -439,6 +439,7 @@ function completeDelivery(){
     if(res.sta)g.stamina=Math.max(0,g.stamina+res.sta);
     if(res.cash){g.cash+=res.cash;if(res.cash>0){g.dailyEarned+=res.cash;g.fin.earn+=res.cash}else{g.dailySpent+=Math.abs(res.cash);g.fin.accident+=Math.abs(res.cash)}}
     addLog(`${evt.ti}: ${res.msg}`,evt.t==='good'?'earn':evt.t==='bad'?'cost':'info');
+    if(evt.t==='bad'){sfx('bad');g.dMishap++}
     modal={type:'event',evt,res};
   }
   addLog(`${job.name}${o.combo?' ghép':''}: ${paid>0?'+'+ff(paid):'không có thu nhập'}`,paid>0?'earn':'cost');
@@ -466,13 +467,13 @@ function triggerDayEnd(){
   g.savings+=interest;
   if(netWin()){finish(true);return;}
   const inv=invDayEnd(),lot=lottoDraw();
-  const ms=checkMilestones();
-  modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day,ms,inv,lot};
+  const ms=checkMilestones();sfx('day');
+  modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day,ms,inv,lot,n:g.dOrders,best:g.dBest,mishap:g.dMishap,prev:g.day>1?g.prevNet:null,stars:g.stars,hp:g.vehicleHp};
   render();
 }
 
 function confirmDayEnd(){
-  g.dailyEarned=0;g.dailySpent=0;g.wasRain=g.rainToday;g.rainToday=false;modal=null;
+  g.prevNet=g.dailyEarned-g.dailySpent;g.dOrders=0;g.dBest=0;g.dMishap=0;g.dailyEarned=0;g.dailySpent=0;g.wasRain=g.rainToday;g.rainToday=false;modal=null;
   if(g.day>=C.daysPerMonth){triggerMonthEnd();return;}
   advanceDay();save();
 }
@@ -503,7 +504,7 @@ function confirmMonthEnd(){
   }
   if(g.cash<-2e6||g.endWhy==='debt'){finish(false);return;}
   g.month++;g.day=1;g.earned=0;g.delivered=0;
-  g.dailyEarned=0;g.dailySpent=0;g.dayTimeLeft=C.dayDuration;
+  g.dailyEarned=0;g.dailySpent=0;g.dOrders=0;g.dBest=0;g.dMishap=0;g.prevNet=0;g.dayTimeLeft=C.dayDuration;
   modal=null;
   if(g.month>C.maxMonths){invLiquidate();const c=Math.min(g.debt,Math.max(0,g.cash));g.cash-=c;g.debt-=c;const t=Math.min(g.debt,g.savings);g.savings-=t;g.debt-=t;finish(netWin());return;}
   lifeNewDay();lifeRoll();
@@ -516,7 +517,7 @@ function resetGame(){const p=g.profile;try{localStorage.removeItem('btd_v2');}ca
 let _tTmr;
 function toast(msg,t=''){
   const el=document.getElementById('toast');if(!el)return;
-  el.textContent=msg;el.className=(t?t+' ':'')+' show';
+  el.textContent=msg;el.className=(t?t+' ':'')+' show';if(t==='bad'||t==='warn')sfx('bad');
   clearTimeout(_tTmr);_tTmr=setTimeout(()=>el.classList.remove('show'),2500);
 }
 

@@ -29,7 +29,7 @@ function bjDeal(){
   if(!BJ||BJ.phase!=='bet'&&BJ.phase!=='done')return;
   if(!bjCanPlay()){return}
   bjFixBet();const bet=BJ.bet;if(bet<BJ_MIN||g.cash<bet)return;
-  BJ.deck=bjCards();BJ.bet=bet;BJ.chase=BJ.chase||false;
+  sfx('card');BJ.deck=bjCards();BJ.bet=bet;BJ.chase=BJ.chase||false;
   lifeSpend(bet);g.bjToday++;g.dayTimeLeft-=BJ_TIME;g.gamble=Math.min(100,g.gamble+BJ_HOOK);
   BJ.hands=[{cards:[bjDraw()],bet,done:false}];BJ.dealer=[bjDraw()];
   BJ.hands[0].cards.push(bjDraw());BJ.dealer.push(bjDraw());
@@ -50,7 +50,7 @@ function bjNext(){
   render();
 }
 function bjHit(){
-  if(!BJ||BJ.phase!=='play')return;const h=bjHand();h.cards.push(bjDraw());
+  if(!BJ||BJ.phase!=='play')return;const h=bjHand();sfx('card');h.cards.push(bjDraw());
   const v=bjVal(h.cards).t;if(v>=21)h.done=true;
   bjNext();
 }
@@ -91,7 +91,7 @@ function bjSettle(){
     h.out=t;h.ret=r;ret+=r;
   });
   if(ret>0){g.cash+=ret;g.fin.life=Math.max(0,(g.fin.life||0)-ret)}
-  const net=ret-staked;g.bjNet+=net;
+  const net=ret-staked;g.bjNet+=net;sfx(net>0?'win':net<0?'lose':'push');
   if(net<0){g.bjLoss++;if(g.bjLoss>=4){lifeGain('family',-3);addLog('Thua liền mấy ván, bạn về nhà muộn và cáu: -3 gia đình','warn')}}
   else if(net>0)g.bjLoss=0;
   BJ.res={net,ret,staked};BJ.phase='done';BJ.hi=-1;

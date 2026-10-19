@@ -404,6 +404,8 @@ function rModal(){
       <div class="m-title" style="color:var(--cy)">${ic(AUD.on?'sound':'mute',28)} ÂM THANH</div>
       <div class="set-row"><span>Nhạc nền</span>
         <button class="btn sm ${AUD.on?'b-gr':'b-dim'}" onclick="toggleMusic()" aria-pressed="${AUD.on}">${AUD.on?'BẬT':'TẮT'}</button></div>
+      <div class="set-row"><span>Hiệu ứng</span>
+        <button class="btn sm ${AUD.sfx?'b-gr':'b-dim'}" onclick="toggleSfx()" aria-pressed="${AUD.sfx}">${AUD.sfx?'BẬT':'TẮT'}</button></div>
       <div class="set-row trk"><span>Bài hát</span><span class="trk-ctl">
         <button class="btn sm b-dim" onclick="skipTrack(-1)" ${g.phase==='start'?'disabled':''} aria-label="Bài trước">◀</button>
         <button class="btn sm b-dim" onclick="skipTrack(1)" ${g.phase==='start'?'disabled':''} aria-label="Bài sau">▶</button></span></div>
@@ -447,6 +449,12 @@ function rModal(){
         <div class="day-row"><span>Chi tiêu</span><span style="color:var(--red)">-${ff(spent)}</span></div>
         <div class="day-div"></div>
         <div class="day-row"><span>Kết quả</span><span style="color:${net>=0?'var(--gr)':'var(--red)'}">${net>=0?'+':''}${ff(net)}</span></div>
+        <div class="day-div"></div>
+        <div class="day-row"><span>Số đơn giao</span><span>${modal.n}${modal.n?` <small>(TB ${fm(Math.round(earned/modal.n))})</small>`:''}</span></div>
+        ${modal.best?`<div class="day-row"><span>Đơn cao nhất</span><span style="color:var(--gold)">${ff(modal.best)}</span></div>`:''}
+        <div class="day-row"><span>Sự cố gặp phải</span><span style="color:${modal.mishap?'var(--red)':'var(--gr)'}">${modal.mishap||'Không'}</span></div>
+        <div class="day-row"><span>Đánh giá · Độ bền xe</span><span>${modal.stars.toFixed(1)}★ · ${Math.round(modal.hp)}%</span></div>
+        ${modal.prev!==null?`<div class="day-row"><span>So với hôm qua</span><span style="color:${net>=modal.prev?'var(--gr)':'var(--red)'}">${net>=modal.prev?'+':'-'}${ff(Math.abs(net-modal.prev))}</span></div>`:''}
       </div>
       <div class="interest">${ic('bank',20)} LÃI TIẾT KIỆM ${(C.dailyInterest*100).toFixed(1).replace(/\.0$/,'')}%: +${ff(interest)}<small>Tiết kiệm: ${ff(g.savings)}</small></div>
       ${(modal.inv&&modal.inv.length)?`<div class="day-sec"><div class="m-h" style="color:var(--cy)">${ic('chart',20)} ĐẦU TƯ HÔM NAY</div>${modal.inv.map(r=>`<div class="day-row"><span>${ic(r.ic,20)} ${r.n} <small>${r.pct>=0?'+':''}${r.pct.toFixed(1)}%</small></span><span style="color:${r.delta>=0?'var(--gr)':'var(--red)'}">${r.delta>=0?'+':'-'}${ff(Math.abs(r.delta))}</span></div><div class="day-sub"><span>Giá trị ${fm(r.val)}</span><span style="color:${r.pl>=0?'var(--gr)':'var(--red)'}">${r.pl>=0?'Lãi':'Lỗ'} tổng ${fm(Math.abs(r.pl))}</span></div>`).join('')}</div>`:''}

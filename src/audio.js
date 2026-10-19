@@ -6,9 +6,9 @@ const TRACKS=[
   {n:'Game 8-Bit On',src:"__T3__"},
   {n:'I Love My 8-Bit Game Console',src:"__T4__"},
 ];
-const AUD={on:true,vol:.5,track:0,el:null,key:null,fade:null};
-try{const a=JSON.parse(localStorage.getItem('btd_audio')||'null');if(a){AUD.on=a.on!==false;AUD.vol=Math.min(1,Math.max(0,Number.isFinite(a.vol)?a.vol:.5));AUD.track=Number.isInteger(a.track)&&a.track>=0&&a.track<TRACKS.length?a.track:0}}catch(e){}
-function audSave(){try{localStorage.setItem('btd_audio',JSON.stringify({on:AUD.on,vol:AUD.vol,track:AUD.track}))}catch(e){}}
+const AUD={on:true,vol:.5,track:0,el:null,key:null,fade:null,sfx:true};
+try{const a=JSON.parse(localStorage.getItem('btd_audio')||'null');if(a){AUD.on=a.on!==false;AUD.vol=Math.min(1,Math.max(0,Number.isFinite(a.vol)?a.vol:.5));AUD.track=Number.isInteger(a.track)&&a.track>=0&&a.track<TRACKS.length?a.track:0;AUD.sfx=a.sfx!==false}}catch(e){}
+function audSave(){try{localStorage.setItem('btd_audio',JSON.stringify({on:AUD.on,vol:AUD.vol,track:AUD.track,sfx:AUD.sfx}))}catch(e){}}
 // What should be playing for the current screen: one fixed loop on the start screen, the playlist during a run, nothing after it ends.
 function musicTarget(){
   if(!AUD.on||document.visibilityState==='hidden')return null;
@@ -40,6 +40,36 @@ function musicSync(){
 function musicEnded(){if(AUD.key&&AUD.key[0]==='t')skipTrack(1)}   // playlist: the next song starts by itself, and it wraps around
 ['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{if(musicTarget()&&(!AUD.el||AUD.el.paused))musicSync()},{passive:true}));
 document.addEventListener('visibilitychange',musicSync);
+
+// ---- sound effects: tiny synthesized beeps (no files), follow the volume slider and their own switch
+let _ac=null;
+const SFX={
+  coin:[[988,.07,'square'],[1319,.16,'square',.07]],
+  buy:[[523,.07,'square'],[659,.07,'square',.07],[784,.14,'square',.14]],
+  bad:[[196,.14,'sawtooth'],[147,.22,'sawtooth',.12]],
+  card:[[1800,.03,'triangle'],[1200,.04,'triangle',.03]],
+  win:[[523,.1,'square'],[659,.1,'square',.1],[784,.1,'square',.2],[1047,.3,'square',.3]],
+  lose:[[392,.15,'triangle'],[330,.15,'triangle',.15],[262,.4,'triangle',.3]],
+  push:[[440,.08,'triangle'],[440,.08,'triangle',.1]],
+  day:[[659,.1,'triangle'],[523,.1,'triangle',.1],[392,.25,'triangle',.2]],
+  tick:[[660,.025,'square']]
+};
+function sfx(n){
+  if(!AUD.sfx||AUD.vol<=0||!SFX[n])return;
+  try{
+    _ac=_ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(_ac.state==='suspended')_ac.resume();
+    const t0=_ac.currentTime,base=n==='tick'?.05:.16;
+    SFX[n].forEach(([f,d,w,at=0])=>{
+      const o=_ac.createOscillator(),v=_ac.createGain();
+      o.type=w;o.frequency.value=f;
+      v.gain.setValueAtTime(base*AUD.vol,t0+at);v.gain.exponentialRampToValueAtTime(.0001,t0+at+d);
+      o.connect(v);v.connect(_ac.destination);o.start(t0+at);o.stop(t0+at+d+.02);
+    });
+  }catch(e){}
+}
+document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('button');if(b&&!b.disabled)sfx('tick')},{passive:true});
+function toggleSfx(){AUD.sfx=!AUD.sfx;audSave();if(AUD.sfx)sfx('coin');render()}
 
 function openSettings(){if(modal&&modal.type!=='settings'&&modal.type!=='pause')return;const fp=modal&&modal.type==='pause';modal={type:'settings',from:fp?'pause':null};render()}
 function closeSettings(){if(modal&&modal.type==='settings'){modal=modal.from==='pause'?{type:'pause'}:null;render()}}

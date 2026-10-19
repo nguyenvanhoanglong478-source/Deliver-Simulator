@@ -592,7 +592,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 <canvas id="fx" aria-hidden="true"></canvas>
 <div id="pause-ov" class="overlay" hidden></div>
 <script>
-const BUILD='ba224c95c9';   // content hash filled in by build.py; shown in the sound settings so a stale cached copy is easy to spot
+const BUILD='4f962b3793';   // content hash filled in by build.py; shown in the sound settings so a stale cached copy is easy to spot
 // ===== GAME CLOCK: one loop drives every timer in the game =====
 // All game timing (day clock, deliveries, animations, delays) runs on this clock, so pausing is a single switch:
 // while GT.paused the clock does not advance and nothing scheduled with every()/after() fires.
@@ -1264,9 +1264,9 @@ const TRACKS=[
   {n:'Game 8-Bit On',src:"src/track3.mp3"},
   {n:'I Love My 8-Bit Game Console',src:"src/track4.mp3"},
 ];
-const AUD={on:true,vol:.5,track:0,el:null,key:null,fade:null};
-try{const a=JSON.parse(localStorage.getItem('btd_audio')||'null');if(a){AUD.on=a.on!==false;AUD.vol=Math.min(1,Math.max(0,Number.isFinite(a.vol)?a.vol:.5));AUD.track=Number.isInteger(a.track)&&a.track>=0&&a.track<TRACKS.length?a.track:0}}catch(e){}
-function audSave(){try{localStorage.setItem('btd_audio',JSON.stringify({on:AUD.on,vol:AUD.vol,track:AUD.track}))}catch(e){}}
+const AUD={on:true,vol:.5,track:0,el:null,key:null,fade:null,sfx:true};
+try{const a=JSON.parse(localStorage.getItem('btd_audio')||'null');if(a){AUD.on=a.on!==false;AUD.vol=Math.min(1,Math.max(0,Number.isFinite(a.vol)?a.vol:.5));AUD.track=Number.isInteger(a.track)&&a.track>=0&&a.track<TRACKS.length?a.track:0;AUD.sfx=a.sfx!==false}}catch(e){}
+function audSave(){try{localStorage.setItem('btd_audio',JSON.stringify({on:AUD.on,vol:AUD.vol,track:AUD.track,sfx:AUD.sfx}))}catch(e){}}
 // What should be playing for the current screen: one fixed loop on the start screen, the playlist during a run, nothing after it ends.
 function musicTarget(){
   if(!AUD.on||document.visibilityState==='hidden')return null;
@@ -1298,6 +1298,36 @@ function musicSync(){
 function musicEnded(){if(AUD.key&&AUD.key[0]==='t')skipTrack(1)}   // playlist: the next song starts by itself, and it wraps around
 ['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{if(musicTarget()&&(!AUD.el||AUD.el.paused))musicSync()},{passive:true}));
 document.addEventListener('visibilitychange',musicSync);
+
+// ---- sound effects: tiny synthesized beeps (no files), follow the volume slider and their own switch
+let _ac=null;
+const SFX={
+  coin:[[988,.07,'square'],[1319,.16,'square',.07]],
+  buy:[[523,.07,'square'],[659,.07,'square',.07],[784,.14,'square',.14]],
+  bad:[[196,.14,'sawtooth'],[147,.22,'sawtooth',.12]],
+  card:[[1800,.03,'triangle'],[1200,.04,'triangle',.03]],
+  win:[[523,.1,'square'],[659,.1,'square',.1],[784,.1,'square',.2],[1047,.3,'square',.3]],
+  lose:[[392,.15,'triangle'],[330,.15,'triangle',.15],[262,.4,'triangle',.3]],
+  push:[[440,.08,'triangle'],[440,.08,'triangle',.1]],
+  day:[[659,.1,'triangle'],[523,.1,'triangle',.1],[392,.25,'triangle',.2]],
+  tick:[[660,.025,'square']]
+};
+function sfx(n){
+  if(!AUD.sfx||AUD.vol<=0||!SFX[n])return;
+  try{
+    _ac=_ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(_ac.state==='suspended')_ac.resume();
+    const t0=_ac.currentTime,base=n==='tick'?.05:.16;
+    SFX[n].forEach(([f,d,w,at=0])=>{
+      const o=_ac.createOscillator(),v=_ac.createGain();
+      o.type=w;o.frequency.value=f;
+      v.gain.setValueAtTime(base*AUD.vol,t0+at);v.gain.exponentialRampToValueAtTime(.0001,t0+at+d);
+      o.connect(v);v.connect(_ac.destination);o.start(t0+at);o.stop(t0+at+d+.02);
+    });
+  }catch(e){}
+}
+document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('button');if(b&&!b.disabled)sfx('tick')},{passive:true});
+function toggleSfx(){AUD.sfx=!AUD.sfx;audSave();if(AUD.sfx)sfx('coin');render()}
 
 function openSettings(){if(modal&&modal.type!=='settings'&&modal.type!=='pause')return;const fp=modal&&modal.type==='pause';modal={type:'settings',from:fp?'pause':null};render()}
 function closeSettings(){if(modal&&modal.type==='settings'){modal=modal.from==='pause'?{type:'pause'}:null;render()}}
@@ -1503,7 +1533,7 @@ function init(){
     stamina:100,fuel:100,vehicleHp:100,
     stars:5.0,
     dayTimeLeft:C.dayDuration,
-    dailyEarned:0,dailySpent:0,
+    dailyEarned:0,dailySpent:0,dOrders:0,dBest:0,dMishap:0,prevNet:0,
     earned:0,delivered:0,totalDelivered:0,
     upgrades:{},log:[],
     phase:'start',activeAnim:null,
@@ -1574,7 +1604,7 @@ function restore(s){
   g.month=clamp(g.month,1,C.maxMonths);g.day=clamp(g.day,1,C.daysPerMonth);
   g.dayTimeLeft=clamp(g.dayTimeLeft,1,C.dayDuration);
   g.cash=Math.round(g.cash);g.savings=Math.max(0,Math.round(g.savings));
-  ['dailyEarned','dailySpent','earned','delivered','totalDelivered'].forEach(k=>{g[k]=Number.isFinite(g[k])?g[k]:0});
+  ['dailyEarned','dailySpent','dOrders','dBest','dMishap','prevNet','earned','delivered','totalDelivered'].forEach(k=>{g[k]=Number.isFinite(g[k])?g[k]:0});
   g.rainToday=!!g.rainToday;
   const od=g.upgrades,nu={};   // older saves: map retired upgrades onto the new ones
   Object.keys(od).forEach(k=>{const u=UPGS.find(x=>x.id===k);if(u&&!u.rep&&od[k])nu[k]=true});
@@ -1834,7 +1864,7 @@ function buyUpgrade(id){
   if(g.upgrades[u.id]&&!u.rep){toast('BẠN ĐÃ CÓ NÂNG CẤP NÀY','warn');return;}
   if(u.rep&&g.vehicleHp>=100){toast('XE CÒN NGUYÊN VẸN, KHÔNG CẦN SỬA','warn');return;}
   if(g.cash<u.cost){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
-  g.cash-=u.cost;g.dailySpent+=u.cost;
+  sfx('buy');g.cash-=u.cost;g.dailySpent+=u.cost;
   if(u.rep)g.fin.repair+=u.cost;else g.fin.upg+=u.cost;
   if(id==='fix_s'){g.vehicleHp=Math.min(100,g.vehicleHp+30);}
   else if(id==='fix_f'){g.vehicleHp=100;}
@@ -1873,7 +1903,7 @@ function completeDelivery(){
   const paid=res&&res.skip?0:earn;          // "khách hủy" means no income for this order
   const ok=(g.vehicleHp<30||(evt&&evt.t==='bad'))?1:2;
   RVNEW=(res&&res.skip)?null:addReview(ok,job);
-  if(paid>0){g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;g.fin.earn+=paid;burst(26,FX_COIN)}
+  if(paid>0){g.dOrders++;g.dBest=Math.max(g.dBest,paid);g.cash+=paid;g.earned+=paid;g.dailyEarned+=paid;g.fin.earn+=paid;burst(26,FX_COIN);sfx('coin')}
   g.delivered++;g.totalDelivered++;
   if(evt){
     if(res.hp){
@@ -1884,6 +1914,7 @@ function completeDelivery(){
     if(res.sta)g.stamina=Math.max(0,g.stamina+res.sta);
     if(res.cash){g.cash+=res.cash;if(res.cash>0){g.dailyEarned+=res.cash;g.fin.earn+=res.cash}else{g.dailySpent+=Math.abs(res.cash);g.fin.accident+=Math.abs(res.cash)}}
     addLog(`${evt.ti}: ${res.msg}`,evt.t==='good'?'earn':evt.t==='bad'?'cost':'info');
+    if(evt.t==='bad'){sfx('bad');g.dMishap++}
     modal={type:'event',evt,res};
   }
   addLog(`${job.name}${o.combo?' ghép':''}: ${paid>0?'+'+ff(paid):'không có thu nhập'}`,paid>0?'earn':'cost');
@@ -1911,13 +1942,13 @@ function triggerDayEnd(){
   g.savings+=interest;
   if(netWin()){finish(true);return;}
   const inv=invDayEnd(),lot=lottoDraw();
-  const ms=checkMilestones();
-  modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day,ms,inv,lot};
+  const ms=checkMilestones();sfx('day');
+  modal={type:'dayEnd',earned:g.dailyEarned,spent:g.dailySpent,interest,day:g.day,ms,inv,lot,n:g.dOrders,best:g.dBest,mishap:g.dMishap,prev:g.day>1?g.prevNet:null,stars:g.stars,hp:g.vehicleHp};
   render();
 }
 
 function confirmDayEnd(){
-  g.dailyEarned=0;g.dailySpent=0;g.wasRain=g.rainToday;g.rainToday=false;modal=null;
+  g.prevNet=g.dailyEarned-g.dailySpent;g.dOrders=0;g.dBest=0;g.dMishap=0;g.dailyEarned=0;g.dailySpent=0;g.wasRain=g.rainToday;g.rainToday=false;modal=null;
   if(g.day>=C.daysPerMonth){triggerMonthEnd();return;}
   advanceDay();save();
 }
@@ -1948,7 +1979,7 @@ function confirmMonthEnd(){
   }
   if(g.cash<-2e6||g.endWhy==='debt'){finish(false);return;}
   g.month++;g.day=1;g.earned=0;g.delivered=0;
-  g.dailyEarned=0;g.dailySpent=0;g.dayTimeLeft=C.dayDuration;
+  g.dailyEarned=0;g.dailySpent=0;g.dOrders=0;g.dBest=0;g.dMishap=0;g.prevNet=0;g.dayTimeLeft=C.dayDuration;
   modal=null;
   if(g.month>C.maxMonths){invLiquidate();const c=Math.min(g.debt,Math.max(0,g.cash));g.cash-=c;g.debt-=c;const t=Math.min(g.debt,g.savings);g.savings-=t;g.debt-=t;finish(netWin());return;}
   lifeNewDay();lifeRoll();
@@ -1961,7 +1992,7 @@ function resetGame(){const p=g.profile;try{localStorage.removeItem('btd_v2');}ca
 let _tTmr;
 function toast(msg,t=''){
   const el=document.getElementById('toast');if(!el)return;
-  el.textContent=msg;el.className=(t?t+' ':'')+' show';
+  el.textContent=msg;el.className=(t?t+' ':'')+' show';if(t==='bad'||t==='warn')sfx('bad');
   clearTimeout(_tTmr);_tTmr=setTimeout(()=>el.classList.remove('show'),2500);
 }
 
@@ -2116,7 +2147,8 @@ function stateProblems(s){
   ['stamina','fuel','vehicleHp'].forEach(k=>{if(!_inR(s[k],0,100))p.push(k)});
   if(!_inR(s.stars,1,5))p.push('stars');
   if(![0,1,2].includes(s.drive))p.push('drive');
-  ['dailyEarned','dailySpent','earned','delivered','totalDelivered'].forEach(k=>{if(!_inR(s[k],0,1e13))p.push(k)});
+  ['dailyEarned','dailySpent','dOrders','dBest','dMishap','earned','delivered','totalDelivered'].forEach(k=>{if(!_inR(s[k],0,1e13))p.push(k)});
+  if(!_inR(s.prevNet,-1e13,1e13))p.push('prevNet');
   if(!PHASES.includes(s.phase))p.push('phase');
   if(!s.upgrades||typeof s.upgrades!=='object'||Array.isArray(s.upgrades))p.push('upgrades');
   if(!Array.isArray(s.log))p.push('log');
@@ -2133,7 +2165,8 @@ function repairState(s){
   s.month=cl(s.month,1,C.maxMonths,1);s.day=cl(s.day,1,C.daysPerMonth,1);s.dayTimeLeft=cl(s.dayTimeLeft,0,C.dayDuration,C.dayDuration);
   ['stamina','fuel','vehicleHp'].forEach(k=>s[k]=cl(s[k],0,100,100));
   s.stars=cl(s.stars,1,5,5);if(![0,1,2].includes(s.drive))s.drive=1;
-  ['dailyEarned','dailySpent','earned','delivered','totalDelivered'].forEach(k=>s[k]=cl(s[k],0,1e13,0));
+  ['dailyEarned','dailySpent','dOrders','dBest','dMishap','earned','delivered','totalDelivered'].forEach(k=>s[k]=cl(s[k],0,1e13,0));
+  s.prevNet=cl(s.prevNet,-1e13,1e13,0);
   if(!s.upgrades||typeof s.upgrades!=='object'||Array.isArray(s.upgrades))s.upgrades={};
   if(!Array.isArray(s.log))s.log=[];
   if(!Array.isArray(s.ms))s.ms=[];
@@ -2513,7 +2546,7 @@ function bjDeal(){
   if(!BJ||BJ.phase!=='bet'&&BJ.phase!=='done')return;
   if(!bjCanPlay()){return}
   bjFixBet();const bet=BJ.bet;if(bet<BJ_MIN||g.cash<bet)return;
-  BJ.deck=bjCards();BJ.bet=bet;BJ.chase=BJ.chase||false;
+  sfx('card');BJ.deck=bjCards();BJ.bet=bet;BJ.chase=BJ.chase||false;
   lifeSpend(bet);g.bjToday++;g.dayTimeLeft-=BJ_TIME;g.gamble=Math.min(100,g.gamble+BJ_HOOK);
   BJ.hands=[{cards:[bjDraw()],bet,done:false}];BJ.dealer=[bjDraw()];
   BJ.hands[0].cards.push(bjDraw());BJ.dealer.push(bjDraw());
@@ -2534,7 +2567,7 @@ function bjNext(){
   render();
 }
 function bjHit(){
-  if(!BJ||BJ.phase!=='play')return;const h=bjHand();h.cards.push(bjDraw());
+  if(!BJ||BJ.phase!=='play')return;const h=bjHand();sfx('card');h.cards.push(bjDraw());
   const v=bjVal(h.cards).t;if(v>=21)h.done=true;
   bjNext();
 }
@@ -2575,7 +2608,7 @@ function bjSettle(){
     h.out=t;h.ret=r;ret+=r;
   });
   if(ret>0){g.cash+=ret;g.fin.life=Math.max(0,(g.fin.life||0)-ret)}
-  const net=ret-staked;g.bjNet+=net;
+  const net=ret-staked;g.bjNet+=net;sfx(net>0?'win':net<0?'lose':'push');
   if(net<0){g.bjLoss++;if(g.bjLoss>=4){lifeGain('family',-3);addLog('Thua liền mấy ván, bạn về nhà muộn và cáu: -3 gia đình','warn')}}
   else if(net>0)g.bjLoss=0;
   BJ.res={net,ret,staked};BJ.phase='done';BJ.hi=-1;
@@ -3056,6 +3089,8 @@ function rModal(){
       <div class="m-title" style="color:var(--cy)">${ic(AUD.on?'sound':'mute',28)} ÂM THANH</div>
       <div class="set-row"><span>Nhạc nền</span>
         <button class="btn sm ${AUD.on?'b-gr':'b-dim'}" onclick="toggleMusic()" aria-pressed="${AUD.on}">${AUD.on?'BẬT':'TẮT'}</button></div>
+      <div class="set-row"><span>Hiệu ứng</span>
+        <button class="btn sm ${AUD.sfx?'b-gr':'b-dim'}" onclick="toggleSfx()" aria-pressed="${AUD.sfx}">${AUD.sfx?'BẬT':'TẮT'}</button></div>
       <div class="set-row trk"><span>Bài hát</span><span class="trk-ctl">
         <button class="btn sm b-dim" onclick="skipTrack(-1)" ${g.phase==='start'?'disabled':''} aria-label="Bài trước">◀</button>
         <button class="btn sm b-dim" onclick="skipTrack(1)" ${g.phase==='start'?'disabled':''} aria-label="Bài sau">▶</button></span></div>
@@ -3099,6 +3134,12 @@ function rModal(){
         <div class="day-row"><span>Chi tiêu</span><span style="color:var(--red)">-${ff(spent)}</span></div>
         <div class="day-div"></div>
         <div class="day-row"><span>Kết quả</span><span style="color:${net>=0?'var(--gr)':'var(--red)'}">${net>=0?'+':''}${ff(net)}</span></div>
+        <div class="day-div"></div>
+        <div class="day-row"><span>Số đơn giao</span><span>${modal.n}${modal.n?` <small>(TB ${fm(Math.round(earned/modal.n))})</small>`:''}</span></div>
+        ${modal.best?`<div class="day-row"><span>Đơn cao nhất</span><span style="color:var(--gold)">${ff(modal.best)}</span></div>`:''}
+        <div class="day-row"><span>Sự cố gặp phải</span><span style="color:${modal.mishap?'var(--red)':'var(--gr)'}">${modal.mishap||'Không'}</span></div>
+        <div class="day-row"><span>Đánh giá · Độ bền xe</span><span>${modal.stars.toFixed(1)}★ · ${Math.round(modal.hp)}%</span></div>
+        ${modal.prev!==null?`<div class="day-row"><span>So với hôm qua</span><span style="color:${net>=modal.prev?'var(--gr)':'var(--red)'}">${net>=modal.prev?'+':'-'}${ff(Math.abs(net-modal.prev))}</span></div>`:''}
       </div>
       <div class="interest">${ic('bank',20)} LÃI TIẾT KIỆM ${(C.dailyInterest*100).toFixed(1).replace(/\.0$/,'')}%: +${ff(interest)}<small>Tiết kiệm: ${ff(g.savings)}</small></div>
       ${(modal.inv&&modal.inv.length)?`<div class="day-sec"><div class="m-h" style="color:var(--cy)">${ic('chart',20)} ĐẦU TƯ HÔM NAY</div>${modal.inv.map(r=>`<div class="day-row"><span>${ic(r.ic,20)} ${r.n} <small>${r.pct>=0?'+':''}${r.pct.toFixed(1)}%</small></span><span style="color:${r.delta>=0?'var(--gr)':'var(--red)'}">${r.delta>=0?'+':'-'}${ff(Math.abs(r.delta))}</span></div><div class="day-sub"><span>Giá trị ${fm(r.val)}</span><span style="color:${r.pl>=0?'var(--gr)':'var(--red)'}">${r.pl>=0?'Lãi':'Lỗ'} tổng ${fm(Math.abs(r.pl))}</span></div>`).join('')}</div>`:''}

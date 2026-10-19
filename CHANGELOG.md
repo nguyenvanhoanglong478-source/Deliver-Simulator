@@ -84,3 +84,8 @@
 - Removed dead JS/CSS/icons, orphan CSS, stale comments; renamed mgTmr→dlvTmr. All test files pass.
 - bike.png nén 64 màu: 212K → 30K, bản build 458 KB → 217 KB.
 - Thêm tests/test_fuzz.py: bấm nút ngẫu nhiên 6 seed x 300 bước, kiểm tra trạng thái luôn hợp lệ (không lỗi).
+
+## Âm thanh hiệu ứng + thống kê cuối ngày
+- Hiệu ứng âm thanh tổng hợp bằng WebAudio (không thêm file): nhận tiền, mua đồ, sự cố/cảnh báo, chia/rút bài, thắng/thua/hòa blackjack, hết ngày, tiếng bấm nút. Công tắc "Hiệu ứng" riêng trong cài đặt âm thanh, theo thanh âm lượng.
+- Màn KẾT NGÀY thêm: số đơn (và trung bình), đơn cao nhất, số sự cố, đánh giá/độ bền xe, so với hôm qua.
+- tests/test_daystats.py (15 kiểm tra).

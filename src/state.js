@@ -37,7 +37,8 @@ function stateProblems(s){
   ['stamina','fuel','vehicleHp'].forEach(k=>{if(!_inR(s[k],0,100))p.push(k)});
   if(!_inR(s.stars,1,5))p.push('stars');
   if(![0,1,2].includes(s.drive))p.push('drive');
-  ['dailyEarned','dailySpent','earned','delivered','totalDelivered'].forEach(k=>{if(!_inR(s[k],0,1e13))p.push(k)});
+  ['dailyEarned','dailySpent','dOrders','dBest','dMishap','earned','delivered','totalDelivered'].forEach(k=>{if(!_inR(s[k],0,1e13))p.push(k)});
+  if(!_inR(s.prevNet,-1e13,1e13))p.push('prevNet');
   if(!PHASES.includes(s.phase))p.push('phase');
   if(!s.upgrades||typeof s.upgrades!=='object'||Array.isArray(s.upgrades))p.push('upgrades');
   if(!Array.isArray(s.log))p.push('log');
@@ -54,7 +55,8 @@ function repairState(s){
   s.month=cl(s.month,1,C.maxMonths,1);s.day=cl(s.day,1,C.daysPerMonth,1);s.dayTimeLeft=cl(s.dayTimeLeft,0,C.dayDuration,C.dayDuration);
   ['stamina','fuel','vehicleHp'].forEach(k=>s[k]=cl(s[k],0,100,100));
   s.stars=cl(s.stars,1,5,5);if(![0,1,2].includes(s.drive))s.drive=1;
-  ['dailyEarned','dailySpent','earned','delivered','totalDelivered'].forEach(k=>s[k]=cl(s[k],0,1e13,0));
+  ['dailyEarned','dailySpent','dOrders','dBest','dMishap','earned','delivered','totalDelivered'].forEach(k=>s[k]=cl(s[k],0,1e13,0));
+  s.prevNet=cl(s.prevNet,-1e13,1e13,0);
   if(!s.upgrades||typeof s.upgrades!=='object'||Array.isArray(s.upgrades))s.upgrades={};
   if(!Array.isArray(s.log))s.log=[];
   if(!Array.isArray(s.ms))s.ms=[];
