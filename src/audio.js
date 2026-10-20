@@ -6,9 +6,9 @@ const TRACKS=[
   {n:'Game 8-Bit On',src:"__T3__"},
   {n:'I Love My 8-Bit Game Console',src:"__T4__"},
 ];
-const AUD={on:true,vol:.5,track:0,el:null,key:null,fade:null,sfx:true};
-try{const a=JSON.parse(localStorage.getItem('btd_audio')||'null');if(a){AUD.on=a.on!==false;AUD.vol=Math.min(1,Math.max(0,Number.isFinite(a.vol)?a.vol:.5));AUD.track=Number.isInteger(a.track)&&a.track>=0&&a.track<TRACKS.length?a.track:0;AUD.sfx=a.sfx!==false}}catch(e){}
-function audSave(){try{localStorage.setItem('btd_audio',JSON.stringify({on:AUD.on,vol:AUD.vol,track:AUD.track,sfx:AUD.sfx}))}catch(e){}}
+const AUD={on:true,vol:.5,track:0,el:null,key:null,fade:null,sfx:true,sfxVol:.5};
+try{const a=JSON.parse(localStorage.getItem('btd_audio')||'null');if(a){AUD.on=a.on!==false;AUD.vol=Math.min(1,Math.max(0,Number.isFinite(a.vol)?a.vol:.5));AUD.track=Number.isInteger(a.track)&&a.track>=0&&a.track<TRACKS.length?a.track:0;AUD.sfx=a.sfx!==false;AUD.sfxVol=Math.min(1,Math.max(0,Number.isFinite(a.sfxVol)?a.sfxVol:AUD.vol))}}catch(e){}
+function audSave(){try{localStorage.setItem('btd_audio',JSON.stringify({on:AUD.on,vol:AUD.vol,track:AUD.track,sfx:AUD.sfx,sfxVol:AUD.sfxVol}))}catch(e){}}
 // What should be playing for the current screen: one fixed loop on the start screen, the playlist during a run, nothing after it ends.
 function musicTarget(){
   if(!AUD.on||document.visibilityState==='hidden')return null;
@@ -55,7 +55,7 @@ const SFX={
   tick:[[660,.025,'square']]
 };
 function sfx(n){
-  if(!AUD.sfx||AUD.vol<=0||!SFX[n])return;
+  if(!AUD.sfx||AUD.sfxVol<=0||!SFX[n])return;
   try{
     _ac=_ac||new (window.AudioContext||window.webkitAudioContext)();
     if(_ac.state==='suspended')_ac.resume();
@@ -63,12 +63,17 @@ function sfx(n){
     SFX[n].forEach(([f,d,w,at=0])=>{
       const o=_ac.createOscillator(),v=_ac.createGain();
       o.type=w;o.frequency.value=f;
-      v.gain.setValueAtTime(base*AUD.vol,t0+at);v.gain.exponentialRampToValueAtTime(.0001,t0+at+d);
+      v.gain.setValueAtTime(base*AUD.sfxVol,t0+at);v.gain.exponentialRampToValueAtTime(.0001,t0+at+d);
       o.connect(v);v.connect(_ac.destination);o.start(t0+at);o.stop(t0+at+d+.02);
     });
   }catch(e){}
 }
 document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('button');if(b&&!b.disabled)sfx('tick')},{passive:true});
+function setSfxVolume(v){
+  AUD.sfxVol=Math.min(1,Math.max(0,(parseInt(v)||0)/100));audSave();
+  const l=document.getElementById('sfx-lbl');if(l)l.textContent=Math.round(AUD.sfxVol*100)+'%';
+}
+function sfxPreview(){sfx('coin')}   // played when the slider is released, so the new level can be heard
 function toggleSfx(){AUD.sfx=!AUD.sfx;audSave();if(AUD.sfx)sfx('coin');render()}
 
 function openSettings(){if(modal&&modal.type!=='settings'&&modal.type!=='pause')return;const fp=modal&&modal.type==='pause';modal={type:'settings',from:fp?'pause':null};render()}
@@ -90,7 +95,7 @@ function sndBtnSync(){
   const b=document.getElementById('snd-btn');if(!b||!g)return;
   const show=true;   // always visible
   b.hidden=!show;
-  b.innerHTML=ic(AUD.on&&AUD.vol>0?'sound':'mute',24);
+  b.innerHTML=ic((AUD.on&&AUD.vol>0)||(AUD.sfx&&AUD.sfxVol>0)?'sound':'mute',24);
   b.setAttribute('aria-label','Cài đặt âm thanh');
   pauseBtnSync();
 }

@@ -89,3 +89,4 @@
 - Hiệu ứng âm thanh tổng hợp bằng WebAudio (không thêm file): nhận tiền, mua đồ, sự cố/cảnh báo, chia/rút bài, thắng/thua/hòa blackjack, hết ngày, tiếng bấm nút. Công tắc "Hiệu ứng" riêng trong cài đặt âm thanh, theo thanh âm lượng.
 - Màn KẾT NGÀY thêm: số đơn (và trung bình), đơn cao nhất, số sự cố, đánh giá/độ bền xe, so với hôm qua.
 - tests/test_daystats.py (15 kiểm tra).
+- Tách riêng nhạc nền và hiệu ứng: mỗi loại có công tắc và thanh âm lượng riêng (lưu riêng trong btd_audio: sfx, sfxVol).

@@ -401,17 +401,19 @@ function rModal(){
   }
   if(type==='settings'){
     return`<div class="overlay" onclick="if(event.target===this)closeSettings()"><div class="pxf2 modal set-box">
-      <div class="m-title" style="color:var(--cy)">${ic(AUD.on?'sound':'mute',28)} ÂM THANH</div>
-      <div class="set-row"><span>Nhạc nền</span>
+      <div class="m-title" style="color:var(--cy)">${ic(AUD.on||AUD.sfx?'sound':'mute',28)} ÂM THANH</div>
+      <div class="set-row"><span class="m-h" style="color:var(--gold);margin:0">NHẠC NỀN</span>
         <button class="btn sm ${AUD.on?'b-gr':'b-dim'}" onclick="toggleMusic()" aria-pressed="${AUD.on}">${AUD.on?'BẬT':'TẮT'}</button></div>
-      <div class="set-row"><span>Hiệu ứng</span>
-        <button class="btn sm ${AUD.sfx?'b-gr':'b-dim'}" onclick="toggleSfx()" aria-pressed="${AUD.sfx}">${AUD.sfx?'BẬT':'TẮT'}</button></div>
       <div class="set-row trk"><span>Bài hát</span><span class="trk-ctl">
         <button class="btn sm b-dim" onclick="skipTrack(-1)" ${g.phase==='start'?'disabled':''} aria-label="Bài trước">◀</button>
         <button class="btn sm b-dim" onclick="skipTrack(1)" ${g.phase==='start'?'disabled':''} aria-label="Bài sau">▶</button></span></div>
       <div class="lbl trk-name">${g.phase==='start'?'Màn hình bắt đầu: nhạc cố định':`${AUD.track+1}/${TRACKS.length} · ${TRACKS[AUD.track].n}`}</div>
-      <div class="set-row"><span>Âm lượng</span><b id="vol-lbl">${Math.round(AUD.vol*100)}%</b></div>
+      <div class="set-row"><span>Âm lượng nhạc</span><b id="vol-lbl">${Math.round(AUD.vol*100)}%</b></div>
       <input id="vol-slider" type="range" min="0" max="100" step="5" value="${Math.round(AUD.vol*100)}" oninput="setVolume(this.value)" aria-label="Âm lượng nhạc nền">
+      <div class="set-row" style="margin-top:6px"><span class="m-h" style="color:var(--gold);margin:0">HIỆU ỨNG</span>
+        <button class="btn sm ${AUD.sfx?'b-gr':'b-dim'}" onclick="toggleSfx()" aria-pressed="${AUD.sfx}">${AUD.sfx?'BẬT':'TẮT'}</button></div>
+      <div class="set-row"><span>Âm lượng hiệu ứng</span><b id="sfx-lbl">${Math.round(AUD.sfxVol*100)}%</b></div>
+      <input id="sfx-slider" type="range" min="0" max="100" step="5" value="${Math.round(AUD.sfxVol*100)}" oninput="setSfxVolume(this.value)" onchange="sfxPreview()" aria-label="Âm lượng hiệu ứng">
       <div class="lbl" style="text-align:center;font-size:16px">Phiên bản ${BUILD}</div>
       <button class="btn b-gr blk" onclick="closeSettings()">ĐÓNG</button>
     </div></div>`;
