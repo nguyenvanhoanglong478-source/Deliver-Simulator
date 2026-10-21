@@ -12,7 +12,7 @@ BIKE=b64('src/bike.png','image/png')
 AUDIO=(('__MUSIC__','src/music.mp3'),('__T1__','src/track1.mp3'),('__T2__','src/track2.mp3'),('__T3__','src/track3.mp3'),('__T4__','src/track4.mp3'))
 FONTS=(('__F_VT_LATIN__','src/fonts/vt323-latin-400-normal.woff2'),('__F_VT_EXT__','src/fonts/vt323-latin-ext-400-normal.woff2'),
        ('__F_VT_VI__','src/fonts/vt323-vietnamese-400-normal.woff2'),('__F_PS_LATIN__','src/fonts/press-start-2p-latin-400-normal.woff2'))
-JS_FILES=['src/loop.js','src/icons.js','src/audio.js','src/profile.js','src/logic.js','src/state.js','src/life.js','src/blackjack.js','src/render.js']
+JS_FILES=['src/loop.js','src/i18n.js','src/icons.js','src/audio.js','src/profile.js','src/logic.js','src/state.js','src/life.js','src/blackjack.js','src/render.js']
 CSS=rd('src/style.css')
 
 def make(embed):
@@ -25,7 +25,7 @@ def make(embed):
           '<canvas id="fx" aria-hidden="true"></canvas>\n<div id="pause-ov" class="overlay" hidden></div>\n<script>\n'+js+'</script>\n')
     return fc+'\n'+CSS,body
 
-title='<title>Be The Driver</title>'
+title='<title>Một ngày làm shipper</title>'
 css,body=make(False)
 sw_ver=hashlib.sha1((css+body).encode()).hexdigest()[:10]
 body=body.replace('__BUILD__',sw_ver)
@@ -74,7 +74,7 @@ self.addEventListener('fetch',e=>{{
   }})());
 }});
 """)
-open('manifest.webmanifest','w',encoding='utf8').write(json.dumps({"name":"Be The Driver","short_name":"Be The Driver","start_url":"./","display":"standalone",
+open('manifest.webmanifest','w',encoding='utf8').write(json.dumps({"name":"Một ngày làm shipper","short_name":"Shipper","start_url":"./","display":"standalone",
   "background_color":"#0a0814","theme_color":"#0a0814","lang":"vi","icons":[{"src":"src/icon-192.png","sizes":"192x192","type":"image/png"},{"src":"src/icon-512.png","sizes":"512x512","type":"image/png"}]},indent=1))
 print('built index.html',len(full)//1024,'KB')
 

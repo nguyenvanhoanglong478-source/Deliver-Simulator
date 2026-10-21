@@ -1,22 +1,22 @@
 // ===== DRIVER PROFILE + CUSTOMER REVIEWS =====
 const HOBBIES=[
-  {id:'nhac',t:'Nghe nhạc'},{id:'bongda',t:'Bóng đá'},{id:'game',t:'Chơi game'},{id:'cafe',t:'Cà phê'},
-  {id:'nau',t:'Nấu ăn'},{id:'phim',t:'Xem phim'},{id:'dulich',t:'Du lịch'},{id:'sach',t:'Đọc sách'},
-  {id:'cauca',t:'Câu cá'},{id:'thucung',t:'Thú cưng'},
+  {id:'nhac',t:T('Nghe nhạc','Music')},{id:'bongda',t:T('Bóng đá','Football')},{id:'game',t:T('Chơi game','Gaming')},{id:'cafe',t:T('Cà phê','Coffee')},
+  {id:'nau',t:T('Nấu ăn','Cooking')},{id:'phim',t:T('Xem phim','Movies')},{id:'dulich',t:T('Du lịch','Travel')},{id:'sach',t:T('Đọc sách','Reading')},
+  {id:'cauca',t:T('Câu cá','Fishing')},{id:'thucung',t:T('Thú cưng','Pets')},
 ];
 const HOBBY_LINE={
-  nhac:'Anh shipper nghe nhạc hay phết, giao hàng lại còn nhanh.',
-  bongda:'Tài xế bàn bóng đá vui lắm, đơn đến cực nhanh.',
-  game:'Shipper này tay lái chắc như chơi game, né kẹt xe giỏi thật.',
-  cafe:'Giao đúng giờ như ly cà phê pha chuẩn vị.',
-  nau:'Giữ đồ ăn cẩn thận như người biết nấu ăn, mở ra còn nóng.',
-  phim:'Shipper vui tính, kể chuyện phim nghe cuốn lắm.',
-  dulich:'Rành đường như đi du lịch khắp phố, tới nơi rất nhanh.',
-  sach:'Tài xế lịch sự, nhẹ nhàng, giao hàng gọn gàng.',
-  cauca:'Kiên nhẫn như người câu cá, đứng chờ mình xuống lấy rất lịch sự.',
-  thucung:'Con chó nhà mình còn quý bạn shipper này luôn.',
+  nhac: T('Anh shipper nghe nhạc hay phết, giao hàng lại còn nhanh.','The driver has great taste in music, and delivers fast too.'),
+  bongda: T('Tài xế bàn bóng đá vui lắm, đơn đến cực nhanh.','Fun driver to talk football with, and the order came super fast.'),
+  game: T('Shipper này tay lái chắc như chơi game, né kẹt xe giỏi thật.','This rider handles the bike like a gamer, dodging traffic like a pro.'),
+  cafe: T('Giao đúng giờ như ly cà phê pha chuẩn vị.','Delivered right on time, like a perfectly brewed coffee.'),
+  nau: T('Giữ đồ ăn cẩn thận như người biết nấu ăn, mở ra còn nóng.','Handled the food like someone who cooks, still hot when I opened it.'),
+  phim: T('Shipper vui tính, kể chuyện phim nghe cuốn lắm.','Funny rider, his movie stories were great to listen to.'),
+  dulich: T('Rành đường như đi du lịch khắp phố, tới nơi rất nhanh.','Knows the streets like a seasoned traveler, arrived really fast.'),
+  sach: T('Tài xế lịch sự, nhẹ nhàng, giao hàng gọn gàng.','Polite, gentle driver, and the delivery was neat and tidy.'),
+  cauca: T('Kiên nhẫn như người câu cá, đứng chờ mình xuống lấy rất lịch sự.','Patient like an angler, waited politely for me to come down.'),
+  thucung: T('Con chó nhà mình còn quý bạn shipper này luôn.','Even my dog likes this rider.'),
 };
-const TPL={
+const TPL_VI={
   5:['Giao rất nhanh, {j} còn nguyên vẹn. Năm sao!','{name} thân thiện, giao đúng hẹn. Sẽ đặt lại.','{J} đến sớm hơn dự kiến, đóng gói cẩn thận.','Quá tuyệt vời, shipper nhiệt tình và lịch sự.','Nhanh gọn, không có gì để chê. Cảm ơn bạn!','Giao tận tay, nói chuyện dễ thương. Đánh giá cao.',
     'Vừa đặt xong đã thấy tới, nhanh hơn mình nghĩ nhiều.','{J} còn nguyên, shipper còn chào hỏi rất lễ phép.','Đường đông mà vẫn giao đúng giờ, quá đỉnh.','Shipper gọi trước khi tới, rất chuyên nghiệp.','Năm sao không cần suy nghĩ, lần sau lại gọi bạn này.','{J} được bọc cẩn thận, không sót món nào.','Lịch sự, nhanh nhẹn, giao tới tận cửa luôn.','Dịch vụ tốt, mình sẽ giới thiệu cho bạn bè.','Trời nóng mà bạn vẫn niềm nở, cảm ơn nhiều nhé.','App báo 15 phút mà 10 phút đã tới, cực kỳ nhanh.','Cảm ơn {name} nhiều, {j} đến đúng lúc mình đang cần.','Chạy xe chắc tay, hàng không bị xô lệch gì cả.'],
   4:['Giao khá nhanh, {j} ổn. Chỉ hơi trễ một chút.','Tài xế lịch sự, {j} đầy đủ. Bốn sao nhé.','Ổn áp, lần sau mình vẫn chọn bạn này.','Giao đúng gần giờ hẹn, {j} không sao cả.',
@@ -28,11 +28,13 @@ const TPL={
   1:['Quá trễ, {j} nguội ngắt và bị hư. Không hài lòng.','Chờ rất lâu, tài xế không báo gì cả. Một sao.','{J} bị thiếu và hỏng, mình sẽ khiếu nại.',
     'Tệ, một tiếng mới tới, mất hết thiện cảm.','{J} nát bét, không thể dùng được.','Gọi không bắt máy, tới nơi thì hàng hư. Một sao.','Thất vọng hoàn toàn, sẽ không đặt lại.','Giao sai chỗ, trễ hơn nửa tiếng. Rất tệ.'],
 };
-const CUSTOMERS=['Chị Lan','Anh Minh','Cô Hạnh','Bạn Tú','Bé Na','Anh Đạt','Chị Mai','Chú Hùng','Bạn Linh','Anh Phúc','Chị Thảo','Bạn Khoa','Cô Ngọc','Anh Long'];
+const TPL_EN={5:['Super fast, the {j} arrived intact. Five stars!','{name} was friendly and on time. Will order again.','The {J} came earlier than expected, carefully packed.','Awesome, the rider was enthusiastic and polite.','Quick and neat, nothing to complain about. Thank you!','Handed it to me in person, lovely to talk to. Highly recommend.','It arrived right after I ordered, way faster than I expected.','The {J} was intact, and the rider greeted me so politely.','Busy streets and still on time, amazing.','The rider called before arriving, very professional.','Five stars, no hesitation, I\'ll book this rider again.','The {J} was wrapped carefully, nothing missing.','Polite, quick, brought it right to my door.','Great service, I\'ll recommend it to friends.','Hot weather and still so friendly, thanks a lot.','The app said 15 minutes but it came in 10, super fast.','Thanks so much {name}, the {j} came right when I needed it.','Steady rider, nothing got knocked around.'],4:['Pretty fast, the {j} was fine. Just a little late.','Polite driver, the {j} was complete. Four stars.','Solid, I\'d pick this rider again.','Arrived close to the promised time, the {j} was fine.','Pretty good, just a few extra minutes of waiting.','The {J} was fine, rider was courteous. One star off for being slightly late.','Satisfied, a bit faster and it would be perfect.','Complete order, good attitude, just circled around a bit looking for the place.','Okay, the rider is likeable.','The {J} came a bit late but the rider apologized sincerely.','Good overall, will order again if needed.','Packed fine, just a slight dent in one corner.'],3:['Okay, the {j} came a little later than expected.','Average, not bad but nothing special.','Took a while, but the {j} was intact.','Fine, hoping for faster next time.','Almost 15 minutes late, but the {j} was fine.','Nothing special, it got delivered and that\'s it.','A bit nerve-wracking to wait, but the rider was fairly polite.','Three stars, slower than the app said.','The {J} arrived a bit cold, the rider was courteous though.','Acceptable, speed needs improving.'],2:['Waited a long time, the {j} wasn\'t the same as when it left.','Quite late, I had to call twice.','A bit disappointed, the {j} was dented and late.','Too late, the {j} was cold by the time it arrived.','The rider got lost, I had to go to the end of the alley to meet them.','Some of the {j} spilled, and it was slow too.','Not what I expected, I\'ll probably pick someone else next time.','Waited over half an hour, and the attitude wasn\'t very cheerful.'],1:['Way too late, the {j} was stone cold and damaged. Not satisfied.','Waited forever, the driver never told me anything. One star.','The {J} was missing and broken, I\'ll file a complaint.','Terrible, took an hour, lost all goodwill.','The {J} was destroyed, completely unusable.','Didn\'t pick up my calls, and the goods were ruined when they arrived. One star.','Totally disappointed, won\'t order again.','Wrong location, over half an hour late. Very bad.']};
+const TPL={};for(const k in TPL_VI)TPL[k]=TPL_VI[k].map((v,i)=>T(v,TPL_EN[k][i]));
+const CUSTOMERS=[T('Chị Lan','Ms. Lan'),T('Anh Minh','Mr. Minh'),T('Cô Hạnh','Mrs. Hanh'),T('Bạn Tú','Tu'),T('Bé Na','Little Na'),T('Anh Đạt','Mr. Dat'),T('Chị Mai','Ms. Mai'),T('Chú Hùng','Uncle Hung'),T('Bạn Linh','Linh'),T('Anh Phúc','Mr. Phuc'),T('Chị Thảo','Ms. Thao'),T('Bạn Khoa','Khoa'),T('Cô Ngọc','Aunt Ngoc'),T('Anh Long','Mr. Long')];
 
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function defProfile(){return{name:'',hobbies:[],hobbyText:'',helmet:HELMETS[0],reviewsOn:true}}
-function pname(){return(g.profile&&g.profile.name.trim())||'Tài xế'}
+function pname(){return(g.profile&&g.profile.name.trim())||T('Tài xế','Driver')}
 function hobbyList(){
   const p=g.profile;const l=p.hobbies.map(id=>(HOBBIES.find(h=>h.id===id)||{}).t).filter(Boolean);
   if(p.hobbyText.trim())l.push(p.hobbyText.trim());return l;
@@ -60,7 +62,7 @@ function templateReview(stars,job){
   const hl=g.profile.hobbies.map(id=>HOBBY_LINE[id]).filter(Boolean);
   if(stars>=4&&hl.length&&Math.random()<.45)return hl[rnd(0,hl.length-1)];
   const t=pool[rnd(0,pool.length-1)];
-  return t.replace(/\{name\}/g,g.profile.name.trim()?'Tài xế '+pname():'Tài xế').replace(/\{J\}/g,food?'Đồ ăn':'Hàng').replace(/\{j\}/g,food?'đồ ăn':'hàng');
+  return t.replace(/\{name\}/g,g.profile.name.trim()?T('Tài xế ','Driver ')+pname():T('Tài xế','Driver')).replace(/\{J\}/g,food?T('Đồ ăn','Food'):T('Hàng','Goods')).replace(/\{j\}/g,food?T('đồ ăn','food'):T('hàng','goods'));
 }
 
 // ---- Claude-written reviews (only where the page can ask Claude) ----
@@ -71,12 +73,16 @@ async function getSample(){
   return _sample;
 }
 function aiPrompt(r,ctx){
-  const ds=['giao rất trễ, hàng bị hỏng hoặc thiếu','giao hơi trễ','giao nhanh, hàng nguyên vẹn'][ctx.ok];
+  const ds=T(['giao rất trễ, hàng bị hỏng hoặc thiếu','giao hơi trễ','giao nhanh, hàng nguyên vẹn'],['very late delivery, goods damaged or missing','slightly late delivery','fast delivery, goods intact'])[ctx.ok];
   const hb=hobbyList();
-  return`Bạn là một khách hàng Việt Nam vừa nhận ${ctx.job.id==='food'?'đơn đồ ăn':'đơn hàng'} từ tài xế Be${g.profile.name.trim()?` tên ${pname()}`:''}${hb.length?` (sở thích của tài xế: ${hb.join(', ')})`:''}.
+  return T(`Bạn là một khách hàng Việt Nam vừa nhận ${ctx.job.id==='food'?'đơn đồ ăn':'đơn hàng'} từ tài xế${g.profile.name.trim()?` tên ${pname()}`:''}${hb.length?` (sở thích của tài xế: ${hb.join(', ')})`:''}.
 Tình hình lần giao này: ${ds}${g.rainToday?', trời đang mưa':''}${g.vehicleHp<40?', xe của tài xế trông đã cũ hỏng':''}.
 Bạn đã chấm ${r.stars}/5 sao.
-Viết đúng một câu đánh giá bằng tiếng Việt, tối đa 110 ký tự, giọng tự nhiên như người thật, hợp với số sao đã chấm. Có thể nhắc nhẹ đến sở thích của tài xế nếu hợp. Không emoji, không ngoặc kép. Chỉ trả về câu đánh giá.`;
+Viết đúng một câu đánh giá bằng tiếng Việt, tối đa 110 ký tự, giọng tự nhiên như người thật, hợp với số sao đã chấm. Có thể nhắc nhẹ đến sở thích của tài xế nếu hợp. Không emoji, không ngoặc kép. Chỉ trả về câu đánh giá.`,
+`You are a customer in Vietnam who just received ${ctx.job.id==='food'?'a food order':'an order'} from a driver${g.profile.name.trim()?` named ${pname()}`:''}${hb.length?` (the driver's hobbies: ${hb.join(', ')})`:''}.
+How this delivery went: ${ds}${g.rainToday?', it was raining':''}${g.vehicleHp<40?', the driver\'s bike looked old and worn':''}.
+You gave ${r.stars}/5 stars.
+Write exactly one review sentence in English, at most 110 characters, in a natural voice like a real person, matching the star rating. You may lightly mention the driver's hobbies if it fits. No emoji, no quotation marks. Return only the review sentence.`);
 }
 async function askClaudeReview(r,ctx,onDone){
   if(_aiInflight||Date.now()<_aiBusyUntil)return;
@@ -89,7 +95,7 @@ async function askClaudeReview(r,ctx,onDone){
     if(t&&t.length<=160){r.text=t;r.ai=true;save();onDone&&onDone(r)}
   }catch(e){
     const code=e&&e.code;
-    if(code==='not_granted'){_aiBusyUntil=Infinity;toast('KHÔNG BẬT ĐƯỢC ĐÁNH GIÁ MỚI — DÙNG ĐÁNH GIÁ CÓ SẴN','warn')}
+    if(code==='not_granted'){_aiBusyUntil=Infinity;toast(T('KHÔNG BẬT ĐƯỢC ĐÁNH GIÁ MỚI — DÙNG ĐÁNH GIÁ CÓ SẴN','CAN\'T GENERATE NEW REVIEWS — USING BUILT-IN ONES'),'warn')}
     else if(code==='rate_limited')_aiBusyUntil=Date.now()+60000;
   }finally{clearTimeout(to);_aiInflight=false}
 }
@@ -112,7 +118,7 @@ function setName(v){g.profile.name=String(v).slice(0,16);save()}
 function setHobbyText(v){g.profile.hobbyText=String(v).slice(0,24);save()}
 function toggleHobby(id){
   const a=g.profile.hobbies,i=a.indexOf(id);
-  if(i>=0)a.splice(i,1);else if(a.length<3)a.push(id);else{toast('CHỌN TỐI ĐA 3 SỞ THÍCH','warn');return}
+  if(i>=0)a.splice(i,1);else if(a.length<3)a.push(id);else{toast(T('CHỌN TỐI ĐA 3 SỞ THÍCH','PICK UP TO 3 HOBBIES'),'warn');return}
   save();render();
 }
 function setHelmet(i){g.profile.helmet=HELMETS[i];save();render()}

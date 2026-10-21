@@ -91,3 +91,8 @@
 - tests/test_daystats.py (15 kiểm tra).
 - Tách riêng nhạc nền và hiệu ứng: mỗi loại có công tắc và thanh âm lượng riêng (lưu riêng trong btd_audio: sfx, sfxVol).
 - Ô đơn đang giao chỉ còn tên, tiền công, thời gian và thanh tiến độ (bỏ icon, xe, cờ).
+
+## Đổi tên + tiếng Anh
+- Game đổi tên thành "Một ngày làm shipper" (tiếng Anh: "Shipper Simulator"); bỏ tên "Be", thay bằng "hệ thống".
+- Thêm tiếng Anh (src/i18n.js: `T('vi','en')`). Nút VI/EN ở màn bắt đầu và trong cài đặt; đổi ngôn ngữ sẽ tải lại trang và tự vào lại game đang chơi (không đổi được giữa lúc đang giao đơn). Mặc định tiếng Việt.
+- tests/test_lang.py: quét bản tiếng Anh không lọt chữ Việt.

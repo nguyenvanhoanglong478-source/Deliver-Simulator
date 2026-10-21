@@ -581,11 +581,11 @@ function ic(name,size){
 function starsHTML(avg,size){
   const n=Math.round(avg);let h='';
   for(let i=1;i<=5;i++)h+=ic(i<=n?'star':'starOff',size||16);
-  return`<span class="stars" role="img" aria-label="${avg.toFixed(1)} trên 5 sao">${h}</span>`;
+  return`<span class="stars" role="img" aria-label="${T(`${avg.toFixed(1)} trên 5 sao`,`${avg.toFixed(1)} out of 5 stars`)}">${h}</span>`;
 }
 function starsFixed(n,size){
   let h='';for(let i=1;i<=5;i++)h+=ic(i<=n?'star':'starOff',size||16);
-  return`<span class="stars" role="img" aria-label="${n} trên 5 sao">${h}</span>`;
+  return`<span class="stars" role="img" aria-label="${T(`${n} trên 5 sao`,`${n} out of 5 stars`)}">${h}</span>`;
 }
 
 // 12x12 driver portrait. h/H helmet, s skin, e eyes, m mouth, j/J jacket, o outline

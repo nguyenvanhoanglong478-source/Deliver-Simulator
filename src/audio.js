@@ -96,6 +96,6 @@ function sndBtnSync(){
   const show=true;   // always visible
   b.hidden=!show;
   b.innerHTML=ic((AUD.on&&AUD.vol>0)||(AUD.sfx&&AUD.sfxVol>0)?'sound':'mute',24);
-  b.setAttribute('aria-label','Cài đặt âm thanh');
+  b.setAttribute('aria-label',T('Cài đặt âm thanh','Sound settings'));
   pauseBtnSync();
 }

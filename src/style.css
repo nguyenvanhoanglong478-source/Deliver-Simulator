@@ -557,3 +557,6 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 .bj-res{text-align:center;font-size:26px;margin-bottom:8px}.bj-res.gr{color:var(--gr)}.bj-res.red{color:var(--red)}.bj-res.gold{color:var(--gold)}
 .bj-warn{color:var(--or);text-align:center;margin:8px 0}
 .bj-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0}
+
+.lang-sw{display:inline-flex;gap:6px}
+.logo .lang-sw{margin-top:8px}

@@ -92,11 +92,11 @@ function bjSettle(){
   });
   if(ret>0){g.cash+=ret;g.fin.life=Math.max(0,(g.fin.life||0)-ret)}
   const net=ret-staked;g.bjNet+=net;sfx(net>0?'win':net<0?'lose':'push');
-  if(net<0){g.bjLoss++;if(g.bjLoss>=4){lifeGain('family',-3);addLog('Thua liền mấy ván, bạn về nhà muộn và cáu: -3 gia đình','warn')}}
+  if(net<0){g.bjLoss++;if(g.bjLoss>=4){lifeGain('family',-3);addLog(T('Thua liền mấy ván, bạn về nhà muộn và cáu: -3 gia đình','Lost several hands in a row, you got home late and cranky: -3 family'),'warn')}}
   else if(net>0)g.bjLoss=0;
   BJ.res={net,ret,staked};BJ.phase='done';BJ.hi=-1;
   if(net>0)burst(18,FX_COIN);
-  addLog(`Blackjack: ${net>0?'thắng +'+ff(net):net<0?'thua '+ff(-net):'hòa'}`,net>0?'earn':net<0?'cost':'info');
+  addLog(`Blackjack: ${net>0?T('thắng +','won +')+ff(net):net<0?T('thua ','lost ')+ff(-net):T('hòa','push')}`,net>0?'earn':net<0?'cost':'info');
   save();render();
 }
 function bjChase(){if(BJ&&BJ.phase==='done'){BJ.chase=true;render()}}
@@ -121,46 +121,46 @@ function bjCardHTML(c,hidden){
 function bjHandHTML(cards,hideSecond){
   return`<div class="bj-cards">${cards.map((c,i)=>bjCardHTML(c,hideSecond&&i===1)).join('')}</div>`;
 }
-const BJ_OUT={bj:['BLACKJACK!','gr'],win:['THẮNG','gr'],push:['HÒA','gold'],lose:['THUA','red'],bust:['QUẮC','red']};
+const BJ_OUT={bj:['BLACKJACK!','gr'],win:[T('THẮNG','WIN'),'gr'],push:[T('HÒA','PUSH'),'gold'],lose:[T('THUA','LOSE'),'red'],bust:[T('QUẮC','BUST'),'red']};
 function bjHTML(){
   if(!BJ)return'';
   if(BJ.phase==='bet'||BJ.phase==='done')bjFixBet();
   const hide=BJ.phase==='play',dv=bjVal(BJ.dealer||[]);
   const left=BJ_MAX-g.bjToday;
   let h=`<div class="overlay"><div class="pxf2 modal bj">
-    <div class="m-title" style="color:var(--gold)">${ic('dice',28)} SÒNG BÀI</div>
-    <div class="hub-sum"><span>Tiền mặt <b>${ff(g.cash)}</b></span><span>Còn <b>${left}</b>/${BJ_MAX} ván</span><span>Tổng <b style="color:${g.bjNet>=0?'var(--gr)':'var(--red)'}">${g.bjNet>=0?'+':''}${ff(g.bjNet)}</b></span></div>
+    <div class="m-title" style="color:var(--gold)">${ic('dice',28)} ${T('SÒNG BÀI','CARD TABLE')}</div>
+    <div class="hub-sum"><span>${T('Tiền mặt','Cash')} <b>${ff(g.cash)}</b></span><span>${T('Còn','Left')} <b>${left}</b>/${BJ_MAX} ${T('ván','hands')}</span><span>${T('Tổng','Total')} <b style="color:${g.bjNet>=0?'var(--gr)':'var(--red)'}">${g.bjNet>=0?'+':''}${ff(g.bjNet)}</b></span></div>
     <div class="bj-table">`;
   if(BJ.dealer){
-    h+=`<div class="bj-row"><div class="bj-who">NHÀ CÁI${hide?'':` <b>${dv.t}</b>`}</div>${bjHandHTML(BJ.dealer,hide)}</div>`;
+    h+=`<div class="bj-row"><div class="bj-who">${T('NHÀ CÁI','DEALER')}${hide?'':` <b>${dv.t}</b>`}</div>${bjHandHTML(BJ.dealer,hide)}</div>`;
     h+=BJ.hands.map((x,i)=>{
       const v=bjVal(x.cards),o=x.out?BJ_OUT[x.out]:null,act=BJ.phase==='play'&&i===BJ.hi;
-      return`<div class="bj-row${act?' act':''}"><div class="bj-who">BẠN${BJ.hands.length>1?' '+(i+1):''} <b>${v.t}${v.soft?'*':''}</b> · cược ${fm(x.bet)}${o?` <b class="${o[1]}">${o[0]}</b>`:''}</div>${bjHandHTML(x.cards,false)}</div>`;
+      return`<div class="bj-row${act?' act':''}"><div class="bj-who">${T('BẠN','YOU')}${BJ.hands.length>1?' '+(i+1):''} <b>${v.t}${v.soft?'*':''}</b> · ${T('cược','bet')} ${fm(x.bet)}${o?` <b class="${o[1]}">${o[0]}</b>`:''}</div>${bjHandHTML(x.cards,false)}</div>`;
     }).join('');
-  }else h+=`<div class="bj-empty">Bộ bài mới mỗi ván. Nhà cái dừng ở 17, blackjack trả 3:2.</div>`;
+  }else h+=`<div class="bj-empty">${T('Bộ bài mới mỗi ván. Nhà cái dừng ở 17, blackjack trả 3:2.','Fresh deck every hand. Dealer stands on 17, blackjack pays 3:2.')}</div>`;
   h+='</div>';
   if(BJ.phase==='play'){
-    h+=`<div class="hub-grid g2"><button class="btn b-gr sm" onclick="bjHit()">RÚT THÊM</button><button class="btn b-or sm" onclick="bjStand()">DẰN</button>
-      ${bjCanDouble()?`<button class="btn b-cy sm" onclick="bjDouble()">GẤP ĐÔI</button>`:''}${bjCanSplit()?`<button class="btn b-pu sm" onclick="bjSplit()">TÁCH ĐÔI BÀI</button>`:''}</div>`;
+    h+=`<div class="hub-grid g2"><button class="btn b-gr sm" onclick="bjHit()">${T('RÚT THÊM','HIT')}</button><button class="btn b-or sm" onclick="bjStand()">${T('DẰN','STAND')}</button>
+      ${bjCanDouble()?`<button class="btn b-cy sm" onclick="bjDouble()">${T('GẤP ĐÔI','DOUBLE')}</button>`:''}${bjCanSplit()?`<button class="btn b-pu sm" onclick="bjSplit()">${T('TÁCH ĐÔI BÀI','SPLIT')}</button>`:''}</div>`;
   }else if(BJ.phase==='dealer'){
-    h+=`<div class="sub" style="text-align:center">Nhà cái đang rút bài...</div>`;
+    h+=`<div class="sub" style="text-align:center">${T('Nhà cái đang rút bài...','Dealer is drawing...')}</div>`;
   }else{
     if(BJ.phase==='done'){
       const r=BJ.res;
-      h+=`<div class="bj-res ${r.net>0?'gr':r.net<0?'red':'gold'}">${r.net>0?'Bạn thắng +'+ff(r.net):r.net<0?'Bạn thua '+ff(-r.net):'Hòa, nhận lại tiền cược'}</div>`;
+      h+=`<div class="bj-res ${r.net>0?'gr':r.net<0?'red':'gold'}">${r.net>0?T('Bạn thắng +','You won +')+ff(r.net):r.net<0?T('Bạn thua ','You lost ')+ff(-r.net):T('Hòa, nhận lại tiền cược','Push, bet returned')}</div>`;
     }
     const choose=BJ.phase==='done'&&g.bjLoss>=3&&!BJ.chase;
     if(choose){
-      h+=`<div class="bj-warn">Bạn đã thua ${g.bjLoss} ván liên tiếp. Đứng dậy hay gỡ lại?</div>
-        <div class="hub-grid g2"><button class="btn b-dim sm" onclick="bjLeave()">THÔI, ĐỨNG DẬY</button><button class="btn b-red sm" onclick="bjChase()">GỠ LẠI</button></div>`;
+      h+=`<div class="bj-warn">${T(`Bạn đã thua ${g.bjLoss} ván liên tiếp. Đứng dậy hay gỡ lại?`,`You\'ve lost ${g.bjLoss} hands in a row. Leave or chase it back?`)}</div>
+        <div class="hub-grid g2"><button class="btn b-dim sm" onclick="bjLeave()">${T('THÔI, ĐỨNG DẬY','LEAVE THE TABLE')}</button><button class="btn b-red sm" onclick="bjChase()">${T('GỠ LẠI','CHASE IT BACK')}</button></div>`;
     }else{
       const cap=bjCap();
       h+=`<div class="bj-chips">${BJ_CHIPS.map(v=>`<button class="btn sm ${BJ.bet===v?'b-gold':'b-dim'}" onclick="bjBet(${v})" ${v>cap?'disabled':''}>${fm(v)}</button>`).join('')}</div>
-        <div class="sub">Cược tối đa ${fm(cap)} (20% tiền mặt). Mỗi ván tốn ${BJ_TIME} giây và tăng chỉ số cờ bạc. Thắng thua do may rủi, bạn tự chịu trách nhiệm.</div>`;
-      const why=g.bjToday>=BJ_MAX?'Hôm nay đủ ván rồi, mai chơi tiếp.':g.dayTimeLeft<=BJ_TIME?'Không đủ thời gian trong ngày.':g.cash<BJ_MIN?'Không đủ tiền cược.':'';
+        <div class="sub">${T(`Cược tối đa ${fm(cap)} (20% tiền mặt). Mỗi ván tốn ${BJ_TIME} giây và tăng chỉ số cờ bạc. Thắng thua do may rủi, bạn tự chịu trách nhiệm.`,`Max bet ${fm(cap)} (20% of cash). Each hand takes ${BJ_TIME} seconds and raises your gambling level. Wins and losses are down to luck, play at your own risk.`)}</div>`;
+      const why=g.bjToday>=BJ_MAX?T('Hôm nay đủ ván rồi, mai chơi tiếp.','That\'s enough hands for today, play again tomorrow.'):g.dayTimeLeft<=BJ_TIME?T('Không đủ thời gian trong ngày.','Not enough time left today.'):g.cash<BJ_MIN?T('Không đủ tiền cược.','Not enough cash to bet.'):'';
       if(why)h+=`<div class="bj-warn">${why}</div>`;
-      if(g.cash<BJ_MIN&&g.bjLoss>=4&&g.debt<2e7)h+=`<button class="btn b-red sm blk" onclick="bjLoan()"><span>VAY NÓNG 3TR<small>lãi 15%/tháng</small></span></button>`;
-      h+=`<div class="hub-grid g2"><button class="btn b-dim sm" onclick="bjLeave()">ĐỨNG DẬY</button><button class="btn b-gr sm" onclick="bjDeal()" ${bjCanPlay()&&BJ.bet<=bjCap()?'':'disabled'}>${BJ.phase==='done'?'VÁN MỚI':'CHIA BÀI'} · ${fm(BJ.bet)}</button></div>`;
+      if(g.cash<BJ_MIN&&g.bjLoss>=4&&g.debt<2e7)h+=`<button class="btn b-red sm blk" onclick="bjLoan()"><span>${T('VAY NÓNG 3TR','HOT LOAN 3M')}<small>${T('lãi 15%/tháng','15%/month interest')}</small></span></button>`;
+      h+=`<div class="hub-grid g2"><button class="btn b-dim sm" onclick="bjLeave()">${T('ĐỨNG DẬY','LEAVE')}</button><button class="btn b-gr sm" onclick="bjDeal()" ${bjCanPlay()&&BJ.bet<=bjCap()?'':'disabled'}>${BJ.phase==='done'?T('VÁN MỚI','NEW HAND'):T('CHIA BÀI','DEAL')} · ${fm(BJ.bet)}</button></div>`;
     }
   }
   return h+'</div></div>';

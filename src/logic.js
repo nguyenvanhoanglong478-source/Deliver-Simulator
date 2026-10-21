@@ -6,46 +6,46 @@ const C={
   payScale:.55,comboChance:.18,comboPay:1.75,comboTime:1.6,comboCost:1.5,
   dailyInterest:0.002,
   monthly:[
-    {n:'Thuê phòng trọ',c:25e5},{n:'Điện nước',c:4e5},{n:'Ăn uống',c:15e5},
-    {n:'Điện thoại',c:2e5},{n:'Bảo hiểm xe',c:3e5},{n:'Trả góp xe',c:16e5},
+    {n:T('Thuê phòng trọ','Room rent'),c:25e5},{n:T('Điện nước','Utilities'),c:4e5},{n:T('Ăn uống','Food'),c:15e5},
+    {n:T('Điện thoại','Phone'),c:2e5},{n:T('Bảo hiểm xe','Bike insurance'),c:3e5},{n:T('Trả góp xe','Bike installment'),c:16e5},
   ],
   jobs:{
-    food:{id:'food',icon:'bowl',name:'ĐỒ ĂN',earn:'16k-33k',sta:15,fuel:5,min:3e4,max:6e4},
-    goods:{id:'goods',icon:'box',name:'HÀNG HÓA',earn:'33k-72k',sta:20,fuel:9,min:6e4,max:13e4},
+    food:{id:'food',icon:'bowl',name:T('ĐỒ ĂN','FOOD'),earn:'16k-33k',sta:15,fuel:5,min:3e4,max:6e4},
+    goods:{id:'goods',icon:'box',name:T('HÀNG HÓA','GOODS'),earn:'33k-72k',sta:20,fuel:9,min:6e4,max:13e4},
   },
 };
 const BILLS=C.monthly.reduce((s,b)=>s+b.c,0);
 
 // ===== UPGRADES =====
 const UPGS=[
-  {id:'gps',   name:'GPS thông minh',    icon:'flag',  cost:12e5,desc:'-50% kẹt xe & hủy đơn. Phí 150K/tháng',cat:'Phụ tùng',fee:15e4},
-  {id:'insure',name:'Bảo hiểm mở rộng',  icon:'bank',  cost:2e6, desc:'-60% chi phí tai nạn. Phí 300K/tháng',cat:'Phụ tùng',fee:3e5},
-  {id:'heat',  name:'Túi giữ nhiệt',     icon:'bowl',  cost:8e5, desc:'Đồ ăn +25%, hàng hóa -10% (chọn 1 trong 2 túi)',cat:'Túi giao hàng',grp:'bag'},
-  {id:'crate', name:'Thùng hàng lớn',    icon:'box',   cost:12e5,desc:'Hàng hóa +20%, đồ ăn -10% (chọn 1 trong 2 túi)',cat:'Túi giao hàng',grp:'bag'},
-  {id:'eco',   name:'Động cơ tiết kiệm', icon:'fuel',  cost:2e6, desc:'Xăng -35%, giao chậm hơn 30% (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
-  {id:'turbo', name:'Động cơ mạnh',      icon:'bolt',  cost:5e6, desc:'Thể lực -20%, giao nhanh hơn 25%, xăng +25% (chọn 1 trong 2 động cơ)',cat:'Động cơ',grp:'eng'},
-  {id:'tire2', name:'Lốp chống thủng',   icon:'gear',  cost:3e6, desc:'Tai nạn làm mất ít độ bền hơn 40%',cat:'Mở khóa 25TR',req:25e6},
-  {id:'prio',  name:'Ứng dụng ưu tiên',  icon:'star',  cost:6e6, desc:'Thấy 4 đơn mỗi lượt, nhiều đơn gấp hơn',cat:'Mở khóa 50TR',req:5e7},
-  {id:'vip',   name:'Thẻ đối tác vàng',  icon:'trophy',cost:1e7, desc:'+15% thu nhập mọi đơn',cat:'Mở khóa 75TR',req:75e6},
-  {id:'fix_s', name:'Sửa chữa nhẹ',      icon:'wrench',cost:5e5, desc:'+30% độ bền xe',cat:'Sửa xe',rep:true},
-  {id:'fix_f', name:'Đại tu toàn diện',  icon:'gear',  cost:2e6, desc:'Phục hồi độ bền xe 100%',cat:'Sửa xe',rep:true},
+  {id:'gps',   name:T('GPS thông minh','Smart GPS'),    icon:'flag',  cost:12e5,desc:T('-50% kẹt xe & hủy đơn. Phí 150K/tháng','-50% traffic jams & cancelled orders. Fee 150K/month'),cat:T('Phụ tùng','Parts'),fee:15e4},
+  {id:'insure',name:T('Bảo hiểm mở rộng','Extended insurance'),  icon:'bank',  cost:2e6, desc:T('-60% chi phí tai nạn. Phí 300K/tháng','-60% accident costs. Fee 300K/month'),cat:T('Phụ tùng','Parts'),fee:3e5},
+  {id:'heat',  name:T('Túi giữ nhiệt','Insulated bag'),     icon:'bowl',  cost:8e5, desc:T('Đồ ăn +25%, hàng hóa -10% (chọn 1 trong 2 túi)','Food +25%, goods -10% (pick 1 of 2 bags)'),cat:T('Túi giao hàng','Delivery bags'),grp:'bag'},
+  {id:'crate', name:T('Thùng hàng lớn','Large cargo box'),    icon:'box',   cost:12e5,desc:T('Hàng hóa +20%, đồ ăn -10% (chọn 1 trong 2 túi)','Goods +20%, food -10% (pick 1 of 2 bags)'),cat:T('Túi giao hàng','Delivery bags'),grp:'bag'},
+  {id:'eco',   name:T('Động cơ tiết kiệm','Eco engine'), icon:'fuel',  cost:2e6, desc:T('Xăng -35%, giao chậm hơn 30% (chọn 1 trong 2 động cơ)','Fuel -35%, deliveries 30% slower (pick 1 of 2 engines)'),cat:T('Động cơ','Engine'),grp:'eng'},
+  {id:'turbo', name:T('Động cơ mạnh','Power engine'),      icon:'bolt',  cost:5e6, desc:T('Thể lực -20%, giao nhanh hơn 25%, xăng +25% (chọn 1 trong 2 động cơ)','Stamina -20%, deliveries 25% faster, fuel +25% (pick 1 of 2 engines)'),cat:T('Động cơ','Engine'),grp:'eng'},
+  {id:'tire2', name:T('Lốp chống thủng','Puncture-proof tires'),   icon:'gear',  cost:3e6, desc:T('Tai nạn làm mất ít độ bền hơn 40%','Accidents cost 40% less durability'),cat:T('Mở khóa 25TR','Unlock 25M'),req:25e6},
+  {id:'prio',  name:T('Ứng dụng ưu tiên','Priority app'),  icon:'star',  cost:6e6, desc:T('Thấy 4 đơn mỗi lượt, nhiều đơn gấp hơn','See 4 orders per round, more rush orders'),cat:T('Mở khóa 50TR','Unlock 50M'),req:5e7},
+  {id:'vip',   name:T('Thẻ đối tác vàng','Gold partner card'),  icon:'trophy',cost:1e7, desc:T('+15% thu nhập mọi đơn','+15% earnings on every order'),cat:T('Mở khóa 75TR','Unlock 75M'),req:75e6},
+  {id:'fix_s', name:T('Sửa chữa nhẹ','Minor repair'),      icon:'wrench',cost:5e5, desc:T('+30% độ bền xe','+30% bike durability'),cat:T('Sửa xe','Bike repair'),rep:true},
+  {id:'fix_f', name:T('Đại tu toàn diện','Full overhaul'),  icon:'gear',  cost:2e6, desc:T('Phục hồi độ bền xe 100%','Restore bike durability to 100%'),cat:T('Sửa xe','Bike repair'),rep:true},
 ];
 const MS=[{at:25e6,reward:1e6},{at:5e7,reward:2e6},{at:75e6,reward:3e6}];   // savings milestones
-const DIST=[{n:'GẦN',earn:.65,sta:.75,fuel:.6,t:6},{n:'VỪA',earn:1,sta:1,fuel:1,t:10},{n:'XA',earn:1.4,sta:1.35,fuel:1.6,t:15}];   // t = base delivery seconds
-const DRIVE=[{n:'CHẬM',risk:.4,fuel:.85,t:1.3},{n:'THƯỜNG',risk:1,fuel:1,t:1},{n:'NHANH',risk:1.8,fuel:1.2,t:.75}];   // t = time multiplier
+const DIST=[{n:T('GẦN','NEAR'),earn:.65,sta:.75,fuel:.6,t:6},{n:T('VỪA','MID'),earn:1,sta:1,fuel:1,t:10},{n:T('XA','FAR'),earn:1.4,sta:1.35,fuel:1.6,t:15}];   // t = base delivery seconds
+const DRIVE=[{n:T('CHẬM','SLOW'),risk:.4,fuel:.85,t:1.3},{n:T('THƯỜNG','NORMAL'),risk:1,fuel:1,t:1},{n:T('NHANH','FAST'),risk:1.8,fuel:1.2,t:.75}];   // t = time multiplier
 
 
 // ===== EVENTS =====
 const EVTS=[
-  {id:'tip',ic:'coin',t:'good',p:.07,ti:'TIP THÊM!',fn:(e)=>{const r=rnd(4e4,2e5);return{cash:r,msg:`Khách vui tính, tip ${fm(r)}`}}},
-  {id:'vip',ic:'star',t:'good',p:.04,ti:'ĐƠN VIP!',fn:(e)=>{return{cash:e,msg:`VIP! Thù lao x2, thêm ${fm(e)}`}}},
-  {id:'bon',ic:'trophy',t:'good',p:.02,ti:'BE THƯỞNG!',fn:(e)=>{const r=rnd(3e5,1e6);return{cash:r,msg:`Be thưởng tài xế: +${fm(r)}`}}},
-  {id:'brk',ic:'wrench',t:'bad',p:.03,ti:'XE HỎNG!',fn:(e)=>{const r=rnd(25e4,85e4);return{cash:-r,hp:-20,msg:`Sửa xe khẩn: -${fm(r)}`}}},
-  {id:'fin',ic:'warn',t:'bad',p:.03,ti:'BỊ PHẠT!',fn:(e)=>{const r=rnd(12e4,36e4);return{cash:-r,msg:`CSGT phạt: -${fm(r)}`}}},
-  {id:'crs',ic:'warn',t:'bad',p:.02,ti:'VA CHẠM!',fn:(e)=>{const r=rnd(18e4,54e4);return{cash:-r,hp:-15,msg:`Bồi thường: -${fm(r)}`}}},
-  {id:'cnl',ic:'skull',t:'neu',p:.04,ti:'KHÁCH HỦY!',fn:(e)=>{return{cash:0,sta:-10,skip:true,msg:`Khách hủy sau khi đến!`}}},
-  {id:'jam',ic:'warn',t:'neu',p:.05,ti:'KẸT XE!',fn:(e)=>{return{cash:0,sta:-15,msg:`Kẹt xe kinh hoàng!`}}},
-  {id:'rain',ic:'cloud',t:'bad',p:.01,ti:'MƯA TO!',fn:(e)=>{return{cash:0,rain:true,msg:`Thu nhập giảm 40% hôm nay`}}},
+  {id:'tip',ic:'coin',t:'good',p:.07,ti:T('TIP THÊM!','EXTRA TIP!'),fn:(e)=>{const r=rnd(4e4,2e5);return{cash:r,msg:T(`Khách vui tính, tip ${fm(r)}`,`Friendly customer, tipped ${fm(r)}`)}}},
+  {id:'vip',ic:'star',t:'good',p:.04,ti:T('ĐƠN VIP!','VIP ORDER!'),fn:(e)=>{return{cash:e,msg:T(`VIP! Thù lao x2, thêm ${fm(e)}`,`VIP! Double pay, +${fm(e)}`)}}},
+  {id:'bon',ic:'trophy',t:'good',p:.02,ti:T('HỆ THỐNG THƯỞNG!','SYSTEM BONUS!'),fn:(e)=>{const r=rnd(3e5,1e6);return{cash:r,msg:T(`Hệ thống thưởng tài xế: +${fm(r)}`,`The system rewards the driver: +${fm(r)}`)}}},
+  {id:'brk',ic:'wrench',t:'bad',p:.03,ti:T('XE HỎNG!','BIKE BROKE!'),fn:(e)=>{const r=rnd(25e4,85e4);return{cash:-r,hp:-20,msg:T(`Sửa xe khẩn: -${fm(r)}`,`Emergency repair: -${fm(r)}`)}}},
+  {id:'fin',ic:'warn',t:'bad',p:.03,ti:T('BỊ PHẠT!','FINED!'),fn:(e)=>{const r=rnd(12e4,36e4);return{cash:-r,msg:T(`CSGT phạt: -${fm(r)}`,`Traffic police fine: -${fm(r)}`)}}},
+  {id:'crs',ic:'warn',t:'bad',p:.02,ti:T('VA CHẠM!','CRASH!'),fn:(e)=>{const r=rnd(18e4,54e4);return{cash:-r,hp:-15,msg:T(`Bồi thường: -${fm(r)}`,`Compensation: -${fm(r)}`)}}},
+  {id:'cnl',ic:'skull',t:'neu',p:.04,ti:T('KHÁCH HỦY!','CUSTOMER CANCELLED!'),fn:(e)=>{return{cash:0,sta:-10,skip:true,msg:T(`Khách hủy sau khi đến!`,`Customer cancelled after you arrived!`)}}},
+  {id:'jam',ic:'warn',t:'neu',p:.05,ti:T('KẸT XE!','TRAFFIC JAM!'),fn:(e)=>{return{cash:0,sta:-15,msg:T(`Kẹt xe kinh hoàng!`,`Terrible traffic jam!`)}}},
+  {id:'rain',ic:'cloud',t:'bad',p:.01,ti:T('MƯA TO!','HEAVY RAIN!'),fn:(e)=>{return{cash:0,rain:true,msg:T(`Thu nhập giảm 40% hôm nay`,`Earnings down 40% today`)}}},
 ];
 
 // ===== STATE =====
@@ -77,11 +77,11 @@ function fm(n){
   if(!n&&n!==0)return'—';
   const a=Math.abs(Math.round(n));
   const s=n<0?'-':'';
-  if(a>=1e6)return s+(a/1e6%1?((a/1e6).toFixed(1)):(a/1e6))+'TR';
+  if(a>=1e6)return s+(a/1e6%1?((a/1e6).toFixed(1)):(a/1e6))+T('TR','M');
   if(a>=1e3)return s+Math.round(a/1e3)+'K';
-  return s+a.toLocaleString('vi-VN');
+  return s+a.toLocaleString(NUM_LOCALE);
 }
-function ff(n){return(n<0?'-':'')+Math.abs(Math.round(n)).toLocaleString('vi-VN')+' đ'}
+function ff(n){return(n<0?'-':'')+Math.abs(Math.round(n)).toLocaleString(NUM_LOCALE)+T(' đ',' VND')}
 function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 function addLog(m,t='info'){g.log.unshift({m,t});if(g.log.length>20)g.log.pop()}
 function up(id){return !!(g.upgrades&&g.upgrades[id])}
@@ -112,7 +112,7 @@ function save(){
   if(!canPersist())return;
   const fixed=repairState(g);if(fixed.length)console.warn('[btd] repaired state fields:',fixed.join(', '));   // never write a broken state
   try{localStorage.setItem('btd_v2',JSON.stringify(g));}
-  catch(e){if(!_saveWarned){_saveWarned=true;toast('KHÔNG LƯU ĐƯỢC TIẾN TRÌNH TRÊN TRÌNH DUYỆT NÀY','warn');}}
+  catch(e){if(!_saveWarned){_saveWarned=true;toast(T('KHÔNG LƯU ĐƯỢC TIẾN TRÌNH TRÊN TRÌNH DUYỆT NÀY','CAN\'T SAVE PROGRESS IN THIS BROWSER'),'warn');}}
 }
 function load(){try{const s=localStorage.getItem('btd_v2');return s?JSON.parse(s):null;}catch(e){return null}}
 function saneSave(s){
@@ -181,16 +181,16 @@ function offerPay(o){
 function canDoOffer(o){const c=offerCost(o);return !isSick()&&g.stamina>=c.sta&&g.fuel>=c.fuel&&g.vehicleHp>0}
 function offerWhy(o){
   const c=offerCost(o);
-  if(isSick())return`đang ốm, còn nghỉ ${g.sickDays} ngày`;
-  if(g.vehicleHp<=0)return'xe hỏng, cần sửa ở mục Nâng cấp';
+  if(isSick())return T(`đang ốm, còn nghỉ ${g.sickDays} ngày`,`sick, ${g.sickDays} days of rest left`);
+  if(g.vehicleHp<=0)return T('xe hỏng, cần sửa ở mục Nâng cấp','bike broken, repair it in Upgrades');
   const lack=[];
-  if(g.fuel<c.fuel)lack.push(`xăng (cần ${c.fuel}%, còn ${g.fuel}%)`);
-  if(g.stamina<c.sta)lack.push(`thể lực (cần ${c.sta}, còn ${g.stamina})`);
-  return lack.length?'thiếu '+lack.join(' và '):'';
+  if(g.fuel<c.fuel)lack.push(T(`xăng (cần ${c.fuel}%, còn ${g.fuel}%)`,`fuel (need ${c.fuel}%, have ${g.fuel}%)`));
+  if(g.stamina<c.sta)lack.push(T(`thể lực (cần ${c.sta}, còn ${g.stamina})`,`stamina (need ${c.sta}, have ${g.stamina})`));
+  return lack.length?T('thiếu '+lack.join(' và '),'lacking '+lack.join(' and ')):'';
 }
 function refreshOffers(){
   if(modal||g.activeAnim||g.phase!=='game')return;
-  if(g.dayTimeLeft<=10){toast('KHÔNG ĐỦ THỜI GIAN ĐỂ ĐỔI ĐƠN','warn');return}
+  if(g.dayTimeLeft<=10){toast(T('KHÔNG ĐỦ THỜI GIAN ĐỂ ĐỔI ĐƠN','NOT ENOUGH TIME TO REFRESH ORDERS'),'warn');return}
   g.dayTimeLeft-=8;g.offers=genOffers();save();render();
 }
 function setDrive(i){
@@ -223,9 +223,9 @@ function fmT(s){const m=Math.floor(s/60);const sc=s%60;return`${m}:${sc<10?'0':'
 const HOLD_MS=1500;   // how long a finished refuel / sleep screen stays before returning to the game
 // ===== ACTIONS =====
 function startGame(fresh){
-  if(!fresh){const s=load();if(saneSave(s)&&!['start','win','lose'].includes(s.phase)){restore(s);lifeResume();startDayTimer();render();toast('GAME CŨ ĐÃ TẢI!');return;}}
+  if(!fresh){const s=load();if(saneSave(s)&&!['start','win','lose'].includes(s.phase)){restore(s);lifeResume();startDayTimer();render();toast(T('GAME CŨ ĐÃ TẢI!','SAVED GAME LOADED!'));return;}}
   if(fresh){const old=load(),keep=(old&&old.profile)||g.profile;init();g.profile=Object.assign(defProfile(),keep);}   // every stat back to its starting value, driver profile kept
-  g.phase='game';addLog('Bắt đầu hành trình!','info');
+  g.phase='game';addLog(T('Bắt đầu hành trình!','Journey begins!'),'info');
   startDayTimer();save();render();   // save now so a reload cannot bring the old game back
 }
 
@@ -233,7 +233,7 @@ function doDelivery(i){
   if(modal||g.activeAnim||g.phase!=='game')return;
   const o=g.offers[i];if(!o)return;
   const c=offerCost(o);
-  if(!canDoOffer(o)){toast(g.vehicleHp<=0?'XE HỎNG QUÁ NẶNG!':g.fuel<c.fuel?'HẾT XĂNG!':'HẾT THỂ LỰC!','bad');return;}
+  if(!canDoOffer(o)){toast(g.vehicleHp<=0?T('XE HỎNG QUÁ NẶNG!','BIKE TOO DAMAGED!'):g.fuel<c.fuel?T('HẾT XĂNG!','OUT OF FUEL!'):T('HẾT THỂ LỰC!','OUT OF STAMINA!'),'bad');return;}
   g.stamina=Math.max(0,g.stamina-c.sta);
   g.fuel=Math.max(0,g.fuel-c.fuel);
   const earn=offerPay(o);
@@ -244,7 +244,7 @@ function doDelivery(i){
 
 function doRefuel(){
   if(modal||g.activeAnim||g.phase!=='game')return;
-  if(g.fuel>=fuelMax()-2){toast('BÌNH ĐÃ GẦN ĐẦY!');return;}
+  if(g.fuel>=fuelMax()-2){toast(T('BÌNH ĐÃ GẦN ĐẦY!','TANK IS ALMOST FULL!'));return;}
   modal={type:'refuel',target:g.fuel};   // shared modal state: the day clock pauses while it is open
   render();
 }
@@ -268,7 +268,7 @@ function rfConfirm(){
   if(!modal||modal.type!=='refuel')return;
   const i=rfInfo();
   if(i.fill<=0)return;
-  if(!i.ok){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
+  if(!i.ok){toast(T('KHÔNG ĐỦ TIỀN!','NOT ENOUGH MONEY!'),'bad');return;}
   const startFuel=g.fuel,val=i.t,fillable=i.fill,cost=i.cost;
   modal=null;
   g.cash-=cost;g.dailySpent+=cost;g.fin.fuel+=cost;
@@ -280,13 +280,13 @@ function rfConfirm(){
   animTmr=every(1000,()=>{
     g.activeAnim.timeLeft--;
     const tEl=document.getElementById('fuel-txt');
-    if(tEl)tEl.textContent=g.activeAnim.timeLeft>0?g.activeAnim.timeLeft+'s còn lại':'Hoàn tất!';
+    if(tEl)tEl.textContent=g.activeAnim.timeLeft>0?g.activeAnim.timeLeft+T('s còn lại','s left'):T('Hoàn tất!','Done!');
     if(g.activeAnim.timeLeft<=0){
       stopT(animTmr);
       g.fuel=val;
       const f=document.getElementById('fuel-fill'),p=document.getElementById('fuel-pct');   // make sure the gauge really shows the finished tank
       if(f)f.style.width=val+'%';if(p)p.textContent=val+'%';
-      addLog('Đổ xăng +'+fillable+'%: -'+ff(cost),'cost');
+      addLog(T('Đổ xăng +','Refuel +')+fillable+'%: -'+ff(cost),'cost');
       after(HOLD_MS,()=>{if(g.phase!=='anim-refuel')return;g.activeAnim=null;g.phase='game';save();render();});   // let the full tank sit on screen for a moment
     }
   });
@@ -307,7 +307,7 @@ function refuelVisual(a,b,ms){
 
 function doSleep(){
   if(modal||g.activeAnim||g.phase!=='game')return;
-  if(g.stamina>=100){toast('THỂ LỰC ĐÃ ĐẦY!');return;}
+  if(g.stamina>=100){toast(T('THỂ LỰC ĐÃ ĐẦY!','STAMINA IS FULL!'));return;}
   g.activeAnim={type:'sleep'};g.phase='anim-sleep';render();
   animTmr=every(1000,()=>{
     g.stamina=Math.min(100,g.stamina+C.sleepRate);
@@ -317,7 +317,7 @@ function doSleep(){
     if(txt)txt.textContent=g.stamina+'/100';
     if(g.stamina>=100){
       stopT(animTmr);
-      addLog('Nghỉ ngơi đủ giấc ('+g.stamina+'/100)','info');
+      addLog(T('Nghỉ ngơi đủ giấc (','Fully rested (')+g.stamina+'/100)','info');
       const sb=document.querySelector('.anim .btn');if(sb)sb.disabled=true;
       after(HOLD_MS,()=>{if(g.phase!=='anim-sleep')return;g.activeAnim=null;g.phase='game';save();render();});
     }
@@ -325,7 +325,7 @@ function doSleep(){
 }
 function stopSleep(){
   stopT(animTmr);
-  addLog('Dừng nghỉ — thể lực: '+g.stamina+'/100','info');
+  addLog(T('Dừng nghỉ — thể lực: ','Stopped resting — stamina: ')+g.stamina+'/100','info');
   g.activeAnim=null;g.phase='game';
   save();render();
 }
@@ -356,9 +356,9 @@ function advanceDay(){
 function doSave(a){
   if(g.phase!=='game'&&g.phase!=='anim-sleep')return;
   let amt=a==='all'?Math.max(0,g.cash-5e5):a;
-  if(amt<=0||amt>g.cash){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
+  if(amt<=0||amt>g.cash){toast(T('KHÔNG ĐỦ TIỀN!','NOT ENOUGH MONEY!'),'bad');return;}
   g.cash-=amt;g.savings+=amt;
-  addLog('Gửi tiết kiệm: +'+ff(amt),'save');
+  addLog(T('Gửi tiết kiệm: +','Deposited to savings: +')+ff(amt),'save');
   if(netWin()){finish(true);return;}
   const ms=checkMilestones();if(ms.length)modal={type:'milestone',list:ms};
   save();render();
@@ -366,16 +366,16 @@ function doSave(a){
 
 function checkMilestones(){
   const hit=[];
-  MS.forEach(m=>{if(g.savings>=m.at&&!g.ms.includes(m.at)){g.ms.push(m.at);g.cash+=m.reward;addLog('Mốc '+fm(m.at)+': thưởng '+ff(m.reward),'earn');hit.push(m)}});
+  MS.forEach(m=>{if(g.savings>=m.at&&!g.ms.includes(m.at)){g.ms.push(m.at);g.cash+=m.reward;addLog(T('Mốc '+fm(m.at)+': thưởng '+ff(m.reward),'Milestone '+fm(m.at)+': reward '+ff(m.reward)),'earn');hit.push(m)}});
   return hit;
 }
 
 function doWd(a){
   if(g.phase!=='game')return;
   let amt=a==='all'?g.savings:a;
-  if(amt<=0||amt>g.savings){toast('KHÔNG ĐỦ SỐ DƯ!','bad');return;}
+  if(amt<=0||amt>g.savings){toast(T('KHÔNG ĐỦ SỐ DƯ!','INSUFFICIENT BALANCE!'),'bad');return;}
   g.savings-=amt;g.cash+=amt;
-  addLog('Rút tiết kiệm: '+ff(amt),'info');
+  addLog(T('Rút tiết kiệm: ','Withdrew from savings: ')+ff(amt),'info');
   save();render();
 }
 
@@ -385,21 +385,21 @@ function goGame(){if(g.phase==='upgrade'||g.phase==='profile'){g.phase='game';re
 function buyUpgrade(id){
   const u=UPGS.find(x=>x.id===id);
   if(!u)return;
-  if(u.req&&!g.ms.includes(u.req)){toast('CHƯA MỞ KHÓA — CẦN '+fm(u.req)+' TIẾT KIỆM','warn');return;}
-  if(g.upgrades[u.id]&&!u.rep){toast('BẠN ĐÃ CÓ NÂNG CẤP NÀY','warn');return;}
-  if(u.rep&&g.vehicleHp>=100){toast('XE CÒN NGUYÊN VẸN, KHÔNG CẦN SỬA','warn');return;}
-  if(g.cash<u.cost){toast('KHÔNG ĐỦ TIỀN!','bad');return;}
+  if(u.req&&!g.ms.includes(u.req)){toast(T('CHƯA MỞ KHÓA — CẦN '+fm(u.req)+' TIẾT KIỆM','LOCKED — NEED '+fm(u.req)+' SAVINGS'),'warn');return;}
+  if(g.upgrades[u.id]&&!u.rep){toast(T('BẠN ĐÃ CÓ NÂNG CẤP NÀY','YOU ALREADY OWN THIS UPGRADE'),'warn');return;}
+  if(u.rep&&g.vehicleHp>=100){toast(T('XE CÒN NGUYÊN VẸN, KHÔNG CẦN SỬA','BIKE IS INTACT, NO REPAIR NEEDED'),'warn');return;}
+  if(g.cash<u.cost){toast(T('KHÔNG ĐỦ TIỀN!','NOT ENOUGH MONEY!'),'bad');return;}
   sfx('buy');g.cash-=u.cost;g.dailySpent+=u.cost;
   if(u.rep)g.fin.repair+=u.cost;else g.fin.upg+=u.cost;
   if(id==='fix_s'){g.vehicleHp=Math.min(100,g.vehicleHp+30);}
   else if(id==='fix_f'){g.vehicleHp=100;}
   else{
     const other=u.grp&&UPGS.find(x=>x.grp===u.grp&&x.id!==u.id&&g.upgrades[x.id]);
-    if(other){delete g.upgrades[other.id];addLog(`Thay ${other.name} bằng ${u.name}`,'info');}
+    if(other){delete g.upgrades[other.id];addLog(T(`Thay ${other.name} bằng ${u.name}`,`Replaced ${other.name} with ${u.name}`),'info');}
     g.upgrades[u.id]=true;
   }
-  addLog(`Mua ${u.name}: -${ff(u.cost)}`,'cost');
-  save();render();toast('ĐÃ MUA!');
+  addLog(T(`Mua ${u.name}: -${ff(u.cost)}`,`Bought ${u.name}: -${ff(u.cost)}`),'cost');
+  save();render();toast(T('ĐÃ MUA!','PURCHASED!'));
 }
 
 // ===== DELIVERY (progress bar inside the order card; no mini-games) =====
@@ -442,11 +442,11 @@ function completeDelivery(){
     if(evt.t==='bad'){sfx('bad');g.dMishap++}
     modal={type:'event',evt,res};
   }
-  addLog(`${job.name}${o.combo?' ghép':''}: ${paid>0?'+'+ff(paid):'không có thu nhập'}`,paid>0?'earn':'cost');
+  addLog(`${job.name}${o.combo?T(' ghép',' combo'):''}: ${paid>0?'+'+ff(paid):T('không có thu nhập','no income')}`,paid>0?'earn':'cost');
   g.upgrades=nowUps;
   DLV=null;g.activeAnim=null;
   save();
-  if(g.vehicleHp<=0)toast('XE HỎNG NẶNG! CẦN SỬA NGAY!','bad');
+  if(g.vehicleHp<=0)toast(T('XE HỎNG NẶNG! CẦN SỬA NGAY!','BIKE BADLY DAMAGED! REPAIR NOW!'),'bad');
   render();
   if(RVNEW){const r=RVNEW;after(3000,()=>{if(RVNEW===r){RVNEW=null;const e=document.getElementById('rv-last');if(e)e.classList.remove('rv-new')}})}
 }
@@ -462,7 +462,7 @@ function finish(win){
 }
 
 function triggerDayEnd(){
-  if(g.phase==='anim-sleep'){stopT(animTmr);g.activeAnim=null;g.phase='game';addLog('Hết ngày khi đang nghỉ ngơi','info');}
+  if(g.phase==='anim-sleep'){stopT(animTmr);g.activeAnim=null;g.phase='game';addLog(T('Hết ngày khi đang nghỉ ngơi','The day ended while you were resting'),'info');}
   const interest=Math.floor(g.savings*C.dailyInterest);
   g.savings+=interest;
   if(netWin()){finish(true);return;}
@@ -496,11 +496,11 @@ function confirmMonthEnd(){
   const bills=billsTotal();
   g.cash+=bonus;g.cash-=bills;g.fin.bills+=bills;
   familyMonthEnd();debtMonthEnd();
-  if(bonus>0)addLog('Thưởng Be: +'+ff(bonus),'earn');
-  addLog('Chi phí tháng '+g.month+': -'+ff(bills),'cost');
+  if(bonus>0)addLog(T('Thưởng hệ thống: +','System bonus: +')+ff(bonus),'earn');
+  addLog(T('Chi phí tháng ','Month ')+g.month+T(': -',' expenses: -')+ff(bills),'cost');
   if(g.cash<0&&g.savings>0){   // bills come out of savings before the player is declared broke
     const t=Math.min(g.savings,-g.cash);g.savings-=t;g.cash+=t;
-    addLog('Rút tiết kiệm '+ff(t)+' để trả chi phí tháng','info');
+    addLog(T('Rút tiết kiệm '+ff(t)+' để trả chi phí tháng','Withdrew '+ff(t)+' from savings to pay monthly expenses'),'info');
   }
   if(g.cash<-2e6||g.endWhy==='debt'){finish(false);return;}
   g.month++;g.day=1;g.earned=0;g.delivered=0;
@@ -558,7 +558,7 @@ function pauseGame(){
 }
 function showLightPause(){
   const o=document.getElementById('pause-ov');
-  if(o){o.innerHTML=`<div class="pxf2 modal"><div class="m-title" style="color:var(--gold)">${ic('pause',28)} TẠM DỪNG</div><div class="lbl" style="text-align:center">Thời gian đang dừng.</div><button class="btn b-gr blk" onclick="resumeGame()">TIẾP TỤC</button><button class="btn b-dim blk" style="margin-top:8px" onclick="askHome()">VỀ MÀN HÌNH BẮT ĐẦU</button></div>`;o.hidden=false}
+  if(o){o.innerHTML=`<div class="pxf2 modal"><div class="m-title" style="color:var(--gold)">${ic('pause',28)} ${T('TẠM DỪNG','PAUSED')}</div><div class="lbl" style="text-align:center">${T('Thời gian đang dừng.','Time is paused.')}</div><button class="btn b-gr blk" onclick="resumeGame()">${T('TIẾP TỤC','RESUME')}</button><button class="btn b-dim blk" style="margin-top:8px" onclick="askHome()">${T('VỀ MÀN HÌNH BẮT ĐẦU','BACK TO START SCREEN')}</button></div>`;o.hidden=false}
   pauseBtnSync();
 }
 // Back to the start screen from the pause menu. The game stays saved (continue with TIẾP TỤC); an order in progress is cancelled.

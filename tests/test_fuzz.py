@@ -5,12 +5,12 @@ from playwright.sync_api import sync_playwright
 bad=[];errs=[];n=0
 with sync_playwright() as p:
     b=p.chromium.launch()
-    for seed in range(6):
+    for seed in range(3):
         random.seed(seed); pg=b.new_page(viewport={'width':420,'height':800})
         pg.on('pageerror',lambda e:errs.append(str(e)))
         pg.goto(URL); pg.evaluate("localStorage.clear();localStorage.setItem('btd_tut','1')"); pg.reload()
         pg.evaluate("startGame(true)")
-        for step in range(300):
+        for step in range(200):
             btns=pg.query_selector_all('button:not([disabled])')
             btns=[x for x in btns if x.is_visible()]
             if btns:

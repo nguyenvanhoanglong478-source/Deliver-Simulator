@@ -1,4 +1,4 @@
-# Be The Driver (Deliver Simulator)
+# Một ngày làm shipper / Shipper Simulator
 
 A retro 8-bit motorbike delivery-driver simulation that runs entirely in the browser. No install, no framework: plain HTML, CSS and JavaScript built into a single file.
 
