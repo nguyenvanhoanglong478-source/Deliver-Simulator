@@ -14,9 +14,8 @@ function offerCard(o,i){
   if(DLV&&DLV.i===i){
     const job=C.jobs[DLV.o.type],left=dlvLeft(),pc=Math.min(100,(1-left/DLV.dur)*100);
     return`<div class="btn ${DLV.o.type==='food'?'b-gr':'b-cy'} offer delivering${DLV.o.rush?' rush':''}" aria-live="polite">
-    <span class="of-ic">${ic(job.icon,32)}</span>
     <span class="of-main"><span class="nm">ĐANG GIAO · ${job.name}</span><span class="er">${money(DLV.earn)}</span>
-      <span class="dl-track"><span class="dl-bar" id="dl-bar" style="width:${pc}%"><img class="dl-bike" src="${BIKE}" alt=""></span><span class="dl-flag">${ic('flag',20)}</span></span></span>
+      <span class="dl-track"><span class="dl-bar" id="dl-bar" style="width:${pc}%"></span></span></span>
     <span class="co"><span id="dl-t">${Math.ceil(left)}s</span></span>
   </div>`;
   }

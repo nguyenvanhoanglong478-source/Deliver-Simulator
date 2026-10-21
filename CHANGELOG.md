@@ -90,3 +90,4 @@
 - Màn KẾT NGÀY thêm: số đơn (và trung bình), đơn cao nhất, số sự cố, đánh giá/độ bền xe, so với hôm qua.
 - tests/test_daystats.py (15 kiểm tra).
 - Tách riêng nhạc nền và hiệu ứng: mỗi loại có công tắc và thanh âm lượng riêng (lưu riêng trong btd_audio: sfx, sfxVol).
+- Ô đơn đang giao chỉ còn tên, tiền công, thời gian và thanh tiến độ (bỏ icon, xe, cờ).
