@@ -362,7 +362,7 @@ function rModal(){
   if(type==='confirmEnd'){
     return`<div class="overlay"><div class="pxf2 modal">
       <div class="m-title" style="color:var(--or)">${ic('flag',28)} ${T('KẾT THÚC NGÀY?','END THE DAY?')}</div>
-      <div class="m-body">${T(`Ngày còn ${fmT(g.dayTimeLeft)}. Kết thúc sớm sẽ bỏ lỡ thời gian giao hàng.`,`${fmT(g.dayTimeLeft)} left in the day. Ending early wastes delivery time.`)}</div>
+      <div class="m-body">${g.dayTimeLeft>90?T(`Ngày còn ${fmT(g.dayTimeLeft)}. Kết thúc sớm sẽ bỏ lỡ thời gian giao hàng.`,`${fmT(g.dayTimeLeft)} left in the day. Ending early wastes delivery time.`):T(`Ngày còn ${fmT(g.dayTimeLeft)}. Bạn muốn kết thúc ngày và xem tổng kết?`,`${fmT(g.dayTimeLeft)} left in the day. End it now and see the summary?`)}</div>
       <div class="rf-btns"><button class="btn b-dim" onclick="modal=null;render()">${T('Ở LẠI','STAY')}</button>
       <button class="btn b-cy" onclick="modal=null;doEndDay()">${T('KẾT THÚC','END DAY')}</button></div>
     </div></div>`;

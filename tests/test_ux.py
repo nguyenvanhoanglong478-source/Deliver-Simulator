@@ -19,7 +19,8 @@ with sync_playwright() as p:
     # end-day confirm
     pg.click("text=KẾT THÚC NGÀY"); ok('early end-day asks first',pg.evaluate("modal.type==='confirmEnd'&&g.day===1"))
     pg.click("text=Ở LẠI"); ok('stay keeps the day',pg.evaluate("modal===null&&g.day===1"))
-    pg.evaluate("g.dayTimeLeft=40"); pg.click("text=KẾT THÚC NGÀY"); ok('late end-day needs no confirm',pg.evaluate("modal&&modal.type==='dayEnd'"))
+    pg.evaluate("g.dayTimeLeft=40;render()"); pg.click("text=KẾT THÚC NGÀY"); ok('late end-day asks too',pg.evaluate("modal&&modal.type==='confirmEnd'"))
+    pg.click("text=KẾT THÚC",strict=False) if False else pg.locator('.rf-btns .b-cy').click(); ok('confirming ends the day',pg.evaluate("modal&&modal.type==='dayEnd'"))
     # clock follows real time
     pg.evaluate("modal=null;startDayTimer();g.dayTimeLeft=200;render()"); pg.wait_for_timeout(3300)
     d=200-pg.evaluate("g.dayTimeLeft"); ok('clock ~1 per real second',2<=d<=4,str(d))

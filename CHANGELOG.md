@@ -99,3 +99,5 @@
 
 ## Font
 - Thay VT323 và Press Start 2P bằng Nunito (OFL, hỗ trợ đầy đủ tiếng Việt, 2 độ đậm 400/800), chỉnh lại cỡ chữ toàn bộ giao diện; chữ nhỏ hơn nhưng rõ hơn. Không dùng font "Be Vietnam Pro" vì tên và nguồn gốc liên quan đến thương hiệu Be.
+
+- Nút KẾT THÚC NGÀY luôn hỏi xác nhận một lần (trước đây chỉ hỏi khi còn hơn 90 giây).

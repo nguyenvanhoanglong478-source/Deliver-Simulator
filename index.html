@@ -600,7 +600,7 @@ body{font-size:17px;line-height:1.25}
 <canvas id="fx" aria-hidden="true"></canvas>
 <div id="pause-ov" class="overlay" hidden></div>
 <script>
-const BUILD='ab121b53e0';   // content hash filled in by build.py; shown in the sound settings so a stale cached copy is easy to spot
+const BUILD='37bf8df5fd';   // content hash filled in by build.py; shown in the sound settings so a stale cached copy is easy to spot
 // ===== GAME CLOCK: one loop drives every timer in the game =====
 // All game timing (day clock, deliveries, animations, delays) runs on this clock, so pausing is a single switch:
 // while GT.paused the clock does not advance and nothing scheduled with every()/after() fires.
@@ -1847,8 +1847,7 @@ function stopSleep(){
 }
 function askEndDay(){
   if(modal||g.activeAnim||g.phase!=='game')return;
-  if(g.dayTimeLeft>90){modal={type:'confirmEnd'};render();return}   // lots of the day left: ask first
-  doEndDay();
+  modal={type:'confirmEnd'};render();   // always ask once before the day ends
 }
 function startClick(fresh){
   startGame(fresh);
@@ -3088,7 +3087,7 @@ function rModal(){
   if(type==='confirmEnd'){
     return`<div class="overlay"><div class="pxf2 modal">
       <div class="m-title" style="color:var(--or)">${ic('flag',28)} ${T('KẾT THÚC NGÀY?','END THE DAY?')}</div>
-      <div class="m-body">${T(`Ngày còn ${fmT(g.dayTimeLeft)}. Kết thúc sớm sẽ bỏ lỡ thời gian giao hàng.`,`${fmT(g.dayTimeLeft)} left in the day. Ending early wastes delivery time.`)}</div>
+      <div class="m-body">${g.dayTimeLeft>90?T(`Ngày còn ${fmT(g.dayTimeLeft)}. Kết thúc sớm sẽ bỏ lỡ thời gian giao hàng.`,`${fmT(g.dayTimeLeft)} left in the day. Ending early wastes delivery time.`):T(`Ngày còn ${fmT(g.dayTimeLeft)}. Bạn muốn kết thúc ngày và xem tổng kết?`,`${fmT(g.dayTimeLeft)} left in the day. End it now and see the summary?`)}</div>
       <div class="rf-btns"><button class="btn b-dim" onclick="modal=null;render()">${T('Ở LẠI','STAY')}</button>
       <button class="btn b-cy" onclick="modal=null;doEndDay()">${T('KẾT THÚC','END DAY')}</button></div>
     </div></div>`;

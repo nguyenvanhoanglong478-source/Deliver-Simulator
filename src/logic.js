@@ -331,8 +331,7 @@ function stopSleep(){
 }
 function askEndDay(){
   if(modal||g.activeAnim||g.phase!=='game')return;
-  if(g.dayTimeLeft>90){modal={type:'confirmEnd'};render();return}   // lots of the day left: ask first
-  doEndDay();
+  modal={type:'confirmEnd'};render();   // always ask once before the day ends
 }
 function startClick(fresh){
   startGame(fresh);
