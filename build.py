@@ -10,8 +10,8 @@ def b64(p,mime): return f'data:{mime};base64,'+base64.b64encode(rd(p,'rb')).deco
 
 BIKE=b64('src/bike.png','image/png')
 AUDIO=(('__MUSIC__','src/music.mp3'),('__T1__','src/track1.mp3'),('__T2__','src/track2.mp3'),('__T3__','src/track3.mp3'),('__T4__','src/track4.mp3'))
-FONTS=(('__F_VT_LATIN__','src/fonts/vt323-latin-400-normal.woff2'),('__F_VT_EXT__','src/fonts/vt323-latin-ext-400-normal.woff2'),
-       ('__F_VT_VI__','src/fonts/vt323-vietnamese-400-normal.woff2'),('__F_PS_LATIN__','src/fonts/press-start-2p-latin-400-normal.woff2'))
+FONTS=(('__F_N4_LATIN__','src/fonts/nunito-latin-400-normal.woff2'),('__F_N4_VI__','src/fonts/nunito-vietnamese-400-normal.woff2'),
+       ('__F_N8_LATIN__','src/fonts/nunito-latin-800-normal.woff2'),('__F_N8_VI__','src/fonts/nunito-vietnamese-800-normal.woff2'))
 JS_FILES=['src/loop.js','src/i18n.js','src/icons.js','src/audio.js','src/profile.js','src/logic.js','src/state.js','src/life.js','src/blackjack.js','src/render.js']
 CSS=rd('src/style.css')
 
@@ -32,7 +32,7 @@ body=body.replace('__BUILD__',sw_ver)
 reg=("<script>if('serviceWorker'in navigator&&location.protocol.startsWith('http')){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>\n")
 head=('<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
       '<meta name="theme-color" content="#0a0814">\n<link rel="manifest" href="manifest.webmanifest">\n<link rel="icon" href="src/icon-192.png">\n'
-      '<link rel="preload" href="src/fonts/vt323-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>\n')
+      '<link rel="preload" href="src/fonts/nunito-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>\n')
 full=f'<!DOCTYPE html>\n<html lang="vi">\n<head>\n{head}{title}\n<style>\nhtml{{color-scheme:dark}}\n{css}</style>\n</head>\n<body>\n{body}{reg}</body>\n</html>\n'
 open('index.html','w',encoding='utf8').write(full)
 

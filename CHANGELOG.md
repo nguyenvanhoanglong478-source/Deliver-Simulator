@@ -96,3 +96,6 @@
 - Game đổi tên thành "Một ngày làm shipper" (tiếng Anh: "Shipper Simulator"); bỏ tên "Be", thay bằng "hệ thống".
 - Thêm tiếng Anh (src/i18n.js: `T('vi','en')`). Nút VI/EN ở màn bắt đầu và trong cài đặt; đổi ngôn ngữ sẽ tải lại trang và tự vào lại game đang chơi (không đổi được giữa lúc đang giao đơn). Mặc định tiếng Việt.
 - tests/test_lang.py: quét bản tiếng Anh không lọt chữ Việt.
+
+## Font
+- Thay VT323 và Press Start 2P bằng Nunito (OFL, hỗ trợ đầy đủ tiếng Việt, 2 độ đậm 400/800), chỉnh lại cỡ chữ toàn bộ giao diện; chữ nhỏ hơn nhưng rõ hơn. Không dùng font "Be Vietnam Pro" vì tên và nguồn gốc liên quan đến thương hiệu Be.
