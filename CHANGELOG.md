@@ -1,105 +1,105 @@
-# Nhật ký thay đổi
+# Nhật ký thay đổi / Changelog
 
-## Gần nhất
-- Sửa lỗi bản cũ bị kẹt trên trình duyệt (GitHub Pages / cài như app): trang chính giờ ưu tiên tải từ mạng (có kiểm tra bản mới), chỉ dùng bản lưu khi mất mạng hoặc mạng quá chậm (3 giây); cache khi cài đặt cũng bỏ qua cache HTTP. Trước đây service worker ưu tiên bản lưu nên bản sửa lỗi có thể không hiện dù tải lại nhiều lần. Thêm dòng "Phiên bản ..." trong hộp ÂM THANH để biết đang chạy bản nào.
-- Sửa blackjack: sau mỗi ván bấm chip tiền cược (50K...2TR) không có tác dụng, chỉ chỉnh được ở lần cược đầu. Giờ chỉnh được giữa các ván; test chuột thật (53 kiểm tra).
-- Sửa lỗi nút blackjack: sau khi thua, hạn mức cược (20% tiền mặt) giảm nhưng mức cược cũ vẫn giữ nên nút "VÁN MỚI" bị khóa mà nhãn vẫn ghi số tiền. Giờ mức cược tự hạ xuống chip lớn nhất còn hợp lệ. Nút tách bài đổi tên "TÁCH ĐÔI BÀI" (trước trùng tên "CHIA BÀI" với nút chia bài), nút gấp đôi / tách chỉ hiện khi dùng được, nút rút đổi thành "RÚT THÊM". Test bằng chuột thật (51 kiểm tra).
-- Thêm SÒNG BÀI blackjack trong mục ĐỜI SỐNG, chơi được ngay từ đầu game. Luật chuẩn: bộ bài mới xáo mỗi ván, nhà cái dừng ở 17, blackjack trả 3:2, có rút / dằn / gấp đôi / chia bài. Tối đa 5 ván mỗi ngày, mỗi ván tốn 10 giây trong ngày, cược tối đa 20% tiền mặt (từ 50K), mỗi ván tăng chỉ số cờ bạc +2. Thắng thua hoàn toàn ngẫu nhiên và công bằng (không phụ thuộc độ khó hay chỉ số). Thua 3 ván liền thì hỏi "đứng dậy hay gỡ lại"; gỡ lại mà thua tiếp thì gia đình -3 mỗi lần, hết tiền thì hiện nút vay nóng. Tiền cược trừ ngay khi chia bài (tải lại trang không hoàn). Test mới `tests/test_blackjack.py`.
-- Vẽ thêm chi tiết giao diện: cảnh phố sống động ở màn chính (mặt trời/trăng đi theo giờ trong ngày, bình minh/hoàng hôn/ban đêm, mưa rơi khi trời mưa, cảnh chỉ chạy khi đang giao), ô đơn đang giao có đường chạy với xe máy tiến về lá cờ, chấm báo độ xa, đơn gấp nhấp nháy viền, nền có ánh sáng, đường chân trời và sao, panel có chuyển sắc nổi khối, thanh chỉ số có sọc chéo, logo nhấp nháy neon.
-- Đánh giá mới ở màn chính nhấp nháy viền vàng ~3 giây; hồ sơ tài xế chỉ hiện 10 đánh giá gần nhất.
-- Đang giao hàng vẫn mở được Nâng cấp / Đời sống / Hồ sơ; nâng cấp mua giữa chừng chỉ có hiệu lực từ đơn kế tiếp (đơn đang giao tính theo nâng cấp lúc bắt đầu). Đơn xong khi đang mở popup thì chờ đóng popup rồi mới tính.
-- Chữ in nghiêng (THỂ LỰC, XĂNG...) về bình thường. Nút âm thanh luôn hiển thị.
-- Bỏ hẳn 3 minigame (bắt gói, né xe, tìm đường). Bấm đơn nào thì ô đơn đó hiện "ĐANG GIAO", thời gian còn lại và thanh tiến độ (gần ~6s, vừa ~10s, xa ~15s; lái chậm lâu hơn, lái nhanh/đơn gấp nhanh hơn). Mỗi lần chỉ giao 1 đơn, các ô khác khóa. Thêm ĐƠN GHÉP (trả x1,75, lâu x1,6, tốn x1,5 thể lực/xăng). Tập trung vào sự kiện, cốt truyện, ending.
-- Cân bằng lại vì giao nhanh gấp ~2,4 lần: tiền công đơn x0,55, mốc thưởng tháng 240/360/480 đơn (trước 100/150/200). Đã xóa `test_route.py`, `test_catch.py`.
-- Minigame bắt gói tự hoàn thành ngay khi bắt đủ gói, không phải đợi hết giờ (đơn gấp cũng vậy).
-- Nghỉ ngơi cộng +5 thể lực mỗi giây (trước là +2). Mô phỏng cân bằng: người giỏi thắng ~65%, khá ~25%, trung bình ~1%.
-- Mục TIẾT KIỆM ở bản mobile luôn hiện, không còn phải mở ra.
-- Vé số mua trong mục ĐỜI SỐNG (tối đa 40 tờ/ngày), xổ vào cuối ngày. Giá vàng/chứng khoán đổi mỗi ngày, bảng cuối ngày hiện lãi/lỗ hôm nay và tổng lãi/lỗ so với vốn. Các mục trong ĐỜI SỐNG tách thành thẻ riêng, cách xa hơn.
-- Menu tạm dừng có thêm "VỀ MÀN HÌNH BẮT ĐẦU" (hỏi xác nhận, game vẫn lưu và bấm TIẾP TỤC để chơi tiếp; đơn đang giao bị hủy, tài nguyên đã dùng không hoàn lại giống như tải lại trang). Có ở cả menu tạm dừng thường và khi đang chạy hoạt ảnh.
-- Màn bắt đầu luôn vừa khít cửa sổ (không phải kéo xuống để bấm BẮT ĐẦU): bỏ đệm đáy 84px, thu nhỏ ảnh/chữ khi cửa sổ thấp, chia 2 cột khi rộng mà thấp (ví dụ PC thu phóng 150%, điện thoại nằm ngang). Test mới tests/test_startfit.py.
-- Layout: thanh Sức khỏe / Gia đình riêng ở màn chính, bảng ĐỜI SỐNG chia mục rõ ràng (nút không còn tràn trên mobile, rộng hơn trên PC), nút ĐỜI SỐNG tách khỏi khối hành động.
-- Rà soát logic life-sim: cảm lạnh sau hôm mưa (trước đó không bao giờ xảy ra), "hết tiền ăn" chỉ khi thật sự hết tiền và tiết kiệm, sự kiện đang mở được lưu và hiện lại khi tải lại trang, trả hết nợ là thắng ngay, tháng cuối trả nợ bằng tiền mặt trước, hướng dẫn thêm trang ĐỜI SỐNG.
-- Life-sim giai đoạn 5: cốt truyện 4 chương (tháng 1/7/13/19), sự kiện gia đình theo tháng 3/9/15/21 (mái nhà dột, em đóng học phí, mẹ nhập viện, bạn rủ góp vốn), kết thúc nhiều kiểu theo cách sống, hiển thị mức khắc nghiệt. Cân bằng lại: tiền đơn tăng khoảng 20% (đồ ăn 30k-60k, hàng hóa 60k-130k); mô phỏng Monte-Carlo cho người giỏi thắng ~50%, người trung bình ~12%.
-- Life-sim giai đoạn 4: vay (bạn không lãi, vay nóng 15%, app 25% có phí), lãi cộng dồn hàng tháng, người đòi nợ, nợ từ 30TR bị siết (thua), phải hết nợ mới thắng; vé số (trúng nhỏ/lớn/độc đắc), sự kiện hết tiền ăn.
-- Life-sim giai đoạn 3: lời mời nhậu / đánh bài / tò mò cá cược (sự kiện nhỏ, có giá), thanh thói quen rượu và cờ bạc, thèm, mệt sau rượu, gan yếu; nút "tự nhủ bớt lại" mỗi tháng một lần.
-- Life-sim giai đoạn 2: menu ĐỜI SỐNG (gửi tiền về quê, mua/bán vàng và chứng khoán, biến động theo tháng, tự bán vào tiết kiệm khi hết 24 tháng); gia đình lo dần mỗi tháng.
-- Life-sim giai đoạn 1: mức khắc nghiệt ngẫu nhiên (ẩn, hiện ở màn thắng/thua), chỉ số sức khỏe/gia đình/nợ, engine sự kiện có lựa chọn (cảm lạnh, mẹ gọi), ốm thì không nhận đơn được.
-- Đơn bị khách hủy không tạo đánh giá và không đổi số sao.
-- Màn đổ xăng/nghỉ ngơi giữ thêm 1,5 giây khi xong; thanh xăng luôn đầy đúng mức đã chọn.
-- Animation đổ xăng mới: cảnh trạm xăng, vòi xăng chạy, thanh đo 10 ô, số % đếm mượt.
-- Nhạc nền: 1 bài lặp ở màn hình bắt đầu, 4 bài tự chuyển trong game; nút loa mở cài đặt (bật/tắt, chọn bài, âm lượng); lưu ở `btd_audio`.
-- Icon vẽ lại 16x16 (mặt trăng, cúp đối xứng, v.v.); sửa HUD và font tiếng Việt trên mobile.
+---
 
-## Gameplay lớn
-- Chọn đơn (3-4 đơn/lượt, gần/vừa/xa, đơn gấp), 2 minigame (bắt gói, né vật cản), tốc độ lái, giờ cao điểm.
-- Mốc tiết kiệm 25/50/75 triệu, nâng cấp có đánh đổi (túi/động cơ loại trừ nhau, phí tháng cho GPS và bảo hiểm), thưởng cuối tháng theo đơn và sao, màn kết "Tiền đi đâu?".
-- Cân bằng: hóa đơn 6,5 triệu/tháng, thu nhập đơn đồ ăn 25k-50k và hàng hóa 50k-110k, lãi 0,2%/ngày.
-- Tải lại trang giữa lúc giao hoặc đổ xăng không hoàn lại thể lực, xăng, tiền.
+## Tiếng Việt
 
-## Nền tảng
-- Giao diện retro 8-bit, hồ sơ tài xế, đánh giá khách (56 câu mẫu + Claude viết nếu có).
-- GPS giảm một nửa kẹt xe/hủy đơn; thắng/thua dọn trạng thái; lưu/tải bền (`btd_v2`); kiểm thử Playwright trong `tests/`.
+### Các thay đổi gần nhất
+- **Tối ưu hóa Service Worker & Cập nhật trang**: Trang chính hiện ưu tiên tải từ mạng (kèm kiểm tra phiên bản mới) và chỉ dùng bản lưu ngoại tuyến khi mất mạng hoặc kết nối mạng quá chậm (sau 3 giây). Quá trình cài đặt Service Worker bỏ qua cache HTTP để đảm bảo người dùng luôn nhận bản phát hành mới nhất thay vì bị kẹt bản cũ. Bổ sung thông tin phiên bản ("Phiên bản ...") trong cửa sổ cài đặt Âm thanh.
+- **Sửa lỗi & Nâng cấp Sòng bài Blackjack**:
+  - Cho phép điều chỉnh mức cược giữa các ván (50K - 2TR) linh hoạt bằng chip cược thay vì chỉ đặt được ở ván đầu tiên.
+  - Tự động hạ mức cược xuống chip hợp lệ cao nhất khi hạn mức cược (tối đa 20% tiền mặt) sụt giảm sau ván thua, khắc phục tình trạng nút "VÁN MỚI" bị khóa vô cớ.
+  - Cập nhật nhãn nút rõ ràng: "TÁCH ĐÔI BÀI", "RÚT THÊM", chỉ hiển thị nút Gấp đôi và Tách đôi khi đủ điều kiện thực hiện.
+- **Bổ sung Sòng bài Blackjack vào mục ĐỜI SỐNG**:
+  - Có thể tham gia ngay từ đầu trò chơi.
+  - Áp dụng luật Blackjack tiêu chuẩn: xáo bộ bài 52 lá mới mỗi ván, nhà cái dừng ở 17, trả thưởng Blackjack 3:2, hỗ trợ rút, dằn, gấp đôi và tách bài.
+  - Giới hạn tối đa 5 ván/ngày, mỗi ván tiêu tốn 10 giây thời gian trong ngày và tăng nhẹ chỉ số cờ bạc (+2). Kết quả hoàn toàn ngẫu nhiên và công bằng.
+  - Tích hợp lựa chọn tâm lý sau chuỗi 3 ván thua liên tiếp ("đứng dậy hay gỡ lại"). Nếu cố gỡ và tiếp tục thua sẽ làm giảm chỉ số Gia đình (-3/lần); khi cạn tiền sẽ mở lựa chọn vay nóng. Tiền cược trừ trực tiếp khi chia bài.
+- **Nâng cấp Đồ họa & Cảnh quan**:
+  - Bổ sung cảnh quan đường phố sống động tại màn hình chính: chu kỳ mặt trời và mặt trăng di chuyển theo giờ trong ngày, hiển thị các thời điểm bình minh, ban ngày, hoàng hôn, ban đêm; hiệu ứng mưa rơi trực quan; cảnh quan phố chỉ cuộn khi đang trên đường giao hàng.
+  - Thẻ đơn hàng đang giao tích hợp đường chạy mô phỏng xe máy di chuyển về đích kèm vạch tiến độ và thời gian đếm ngược.
+  - Nhấp nháy viền nổi bật đối với các đơn giao gấp và đánh giá mới nhận được (trong ~3 giây). Hồ sơ tài xế hiển thị 10 đánh giá gần nhất.
+- **Cải tiến luồng giao diện khi giao hàng**:
+  - Người chơi vẫn có thể mở mục Nâng cấp, Đời sống hoặc Hồ sơ trong lúc xe đang chạy giao hàng. Nâng cấp mua giữa chừng sẽ kích hoạt từ đơn kế tiếp.
+  - Khi hoàn thành đơn trong lúc popup đang mở, kết quả sẽ đợi người chơi đóng popup rồi mới tính toán để tránh xung đột giao diện.
+- **Đơn giản hóa cơ chế giao hàng (Bỏ minigame thủ công)**:
+  - Loại bỏ hoàn toàn 3 minigame (bắt hàng, né chướng ngại vật, tìm đường). Nhận đơn sẽ kích hoạt trực tiếp thanh tiến độ và thời gian đếm ngược (gần ~6s, vừa ~10s, xa ~15s; tốc độ lái chậm/nhanh tác động đến thời gian và rủi ro).
+  - Mỗi thời điểm chỉ giao 1 đơn hàng để giữ nhịp độ thực tế; bổ sung loại "ĐƠN GHÉP" (trả x1,75 thù lao, thời gian giao x1,6, tiêu tốn thể lực và xăng x1,5).
+  - Cân bằng lại toàn diện kinh tế trong game: tiền công cơ bản điều chỉnh hệ số x0,55; mốc thưởng cuối tháng nâng lên 240 / 360 / 480 đơn.
+- **Đời sống & Mô phỏng xã hội (Life-Sim)**:
+  - Bổ sung mua vé số trong mục ĐỜI SỐNG (tối đa 40 tờ/ngày), kết quả mở thưởng vào cuối ngày.
+  - Thị trường đầu tư vàng và cổ phiếu biến động giá hàng ngày, bảng tổng kết cuối ngày thể hiện rõ lợi nhuận/thua lỗ trong ngày cũng như so với giá vốn ban đầu.
+  - Cốt truyện 4 chương theo các mốc tháng (tháng 1, 7, 13, 19) cùng sự kiện gia đình định kỳ các tháng 3, 9, 15, 21 (sửa mái nhà dột, học phí cho em, mẹ ốm nhập viện, góp vốn kinh doanh).
+  - Hệ thống vay nợ: vay bạn bè không lãi, vay nóng lãi 15%/tháng, vay ứng dụng lãi 25%/tháng; nợ vượt quá 30 triệu VND sẽ bị siết nợ (thua cuộc). Điều kiện thắng bắt buộc phải thanh toán sạch toàn bộ nợ.
+  - Cơ chế thói quen (rượu bia, cờ bạc) với các tác động phụ khi sa đà và lựa chọn "tự nhủ bớt lại" mỗi tháng một lần.
+  - Nhiều kịch bản kết thúc (Endings) dựa trên sức khỏe, gắn kết gia đình và thói quen tích lũy qua 24 tháng.
+- **Tối ưu hiển thị & Trải nghiệm người dùng (UX)**:
+  - Màn hình khởi đầu thiết kế responsive tự co giãn vừa khít trên mọi kích thước màn hình (PC màn hình thấp, điện thoại xoay ngang, màn hình thu phóng lớn) mà không bị che khuất nút thao tác.
+  - Menu tạm dừng bổ sung nút "VỀ MÀN HÌNH BẮT ĐẦU" có hộp thoại xác nhận.
+  - Nút "KẾT THÚC NGÀY" luôn yêu cầu xác nhận trước khi chốt ngày để tránh bấm nhầm.
+  - Hỗ trợ đa ngôn ngữ Tiếng Việt và Tiếng Anh với nút chuyển đổi nhanh (VI/EN).
+  - Chuyển toàn bộ font chữ sang Nunito (hỗ trợ hiển thị tiếng Việt hoàn chỉnh, sắc nét và hiện đại).
+  - Tách biệt công tắc bật/tắt và thanh trượt âm lượng riêng cho Nhạc nền và Hiệu ứng âm thanh (sử dụng WebAudio tổng hợp, không phát sinh dung lượng tải).
 
-## Cài đặt hiện tại
-- Số trận: 24 tháng x 30 ngày; ngày game 300 giây thật (06:00-22:00).
-- Khóa lưu: `btd_v2` (game), `btd_audio` (nhạc: bật/tắt, âm lượng, bài).
-- Chạy test: `python3 tests/test_gameplay.py`, `test_save_load.py`, `test_features.py`, `test_audio.py` (chạy riêng từng file).
+### Lối chơi cốt lõi (Core Gameplay)
+- **Mục tiêu**: Tích lũy tối thiểu 100 triệu VND tiền tiết kiệm trong vòng 24 tháng trong game và thanh toán đầy đủ sinh hoạt phí cố định 6,5 triệu VND mỗi tháng.
+- **Vòng lặp ngày**: Mỗi ngày kéo dài 300 giây thực (từ 06:00 đến 22:00 trong game) với các khung giờ cao điểm trưa (11:00-13:00) và chiều tối (17:00-19:00).
+- **Hệ thống Nâng cấp & Cột mốc**: Mở khóa nâng cấp độc quyền (động cơ tiết kiệm/tăng tốc, túi giữ nhiệt/thùng hàng lớn), các cột mốc tiền thưởng khi chạm 25 / 50 / 75 triệu VND tiết kiệm. Bảng tổng kết tài chính minh bạch "Tiền đi đâu?" hiển thị cuối ván chơi.
 
-## Pause button
-- Floating pause button (bottom-left) on the main game screen and during mini-games; also P / Esc.
-- Freezes the day clock and the mini-game timers (timestamps are shifted on resume, so no time is lost); settings are reachable from the pause dialog.
-- tests/test_pause.py (16 checks).
+### Nền tảng kỹ thuật
+- Chạy trực tiếp trên trình duyệt bằng HTML5, CSS3 và Vanilla JavaScript đóng gói thành một file duy nhất qua `build.py`.
+- Tích hợp Service Worker cho phép cài đặt Web App (PWA) và chơi ngoại tuyến không cần mạng.
+- Sử dụng đồng hồ game thống nhất (`src/loop.js`), tạm dừng game đóng băng toàn bộ tác vụ.
+- Bộ kiểm thử tự động toàn diện bằng Playwright trong thư mục `tests/`.
 
-## UX / layout pass
-- Mobile shop: price button sits under the description (nothing clipped); wider description text.
-- Cash / savings numbers use the larger VT323 font and stay on one line; extra bottom padding so floating buttons never cover content; floating buttons follow the content column on wide screens.
-- Driving-speed row is a tidy 3-button grid on mobile, with "Đổi đơn" below.
-- First-run tutorial (5 cards, remembered in `btd_tut`), also reachable from the pause dialog ("HƯỚNG DẪN").
-- Reasons shown when saving / withdrawing is unavailable; confirmation before ending a day with more than 90 s left.
-- Day clock follows real elapsed time (a throttled timer cannot slow it); switching to another tab pauses the game.
-- tests/test_ux.py (15 checks); other tests now preset `btd_tut` so the tutorial does not block them.
+---
 
-## Route Rush + compact layouts
-- Third mini-game, Route Rush (reworked): memorise 5 turns shown for 3 s, then steer through each junction (◀ ▲ ▶, arrow keys) before the bike arrives; wrong or missed turn = -2 s; GPS keeps the next 3 turns visible; peak hours and rush orders shorten the approach. Works with pause. (First version was a 5x6 grid map; replaced.)
-- Shop rows: icon | name + price button | description (about half the height).
-- Main screen on phones: three meters in one row, tighter cards, savings and log are collapsible sections (open on desktop).
-- tests/test_route.py (21 checks).
+## English
 
-## Failed orders get no good events
-- A delivery that pays nothing (failed mini-game) can no longer trigger tip / VIP / Be reward events; bad events (breakdown, fine, crash) can still happen. Tests added to test_gameplay.py.
+### Recent Changes
+- **Service Worker & Update Delivery Optimization**: The main page now uses a network-first strategy (revalidating for new versions) and only falls back to cached content when offline or on a slow network connection (after 3 seconds). Service worker installation bypasses the HTTP cache to guarantee users receive updates immediately. Added the version identifier string in the Sound settings modal.
+- **Blackjack Bug Fixes & Refinements**:
+  - Allowed changing chip denominations (50K - 2M) flexibly between hands instead of locking the bet after the initial round.
+  - Fixed an issue where the "NEW HAND" button became locked after a loss because the bet exceeded the 20% cash limit while retaining the old stake; the bet now automatically steps down to the largest valid chip.
+  - Clarified button action labels ("SPLIT PAIR", "HIT"), dynamically hiding Double and Split buttons when conditions are not met.
+- **Blackjack Casino in LIFE Hub**:
+  - Available right from the start of the run inside the LIFE hub.
+  - Standard Blackjack rules: freshly shuffled 52-card deck each hand, dealer stands on soft/hard 17, Blackjack pays 3:2, supports Hit, Stand, Double Down, and Split.
+  - Capped at 5 hands per game day; each hand takes 10 seconds of day time and increases the gambling habit meter (+2). Outcomes are entirely fair and random.
+  - Interactive choice after 3 consecutive losses ("walk away or chase losses"). Chasing and losing further damages Family rating (-3 per loss); running out of cash reveals a quick emergency loan option. Bets are committed immediately upon dealing (reloading the page will not refund bets). Tested via `tests/test_blackjack.py`.
+- **Visual & Atmospheric Details**:
+  - Dynamic street scene on the main dashboard: sun and moon track real game time across dawn, daytime, dusk, and night; animated rain effects during rainy weather; street scenery scrolls exclusively while actively delivering an order.
+  - Active delivery cards feature an animated bike progress road tracking distance towards the destination flag alongside a progress bar and countdown timer.
+  - Pulsing highlight borders for rush orders and newly received customer reviews (~3 seconds). The driver profile displays the 10 most recent reviews.
+- **Non-blocking Delivery Navigation**:
+  - Drivers can browse Upgrades, the Life Hub, and Driver Profile while an order is in transit. Upgrades purchased mid-delivery apply starting from the next order.
+  - Deliveries completing while a modal is open wait until the modal is closed before finalizing payout and events to avoid UI conflicts.
+- **Delivery Flow Streamlining (Minigames Removed)**:
+  - Fully removed the 3 manual mini-games (catch, dodge, route rush). Selecting an offer now directly runs an integrated delivery countdown and progress track (near ~6s, mid ~10s, far ~15s; riding style adjusts speed and hazard rates).
+  - Limited to one active delivery at a time; introduced COMBO ORDERS (pays 1.75x, takes 1.6x longer, costs 1.5x stamina and fuel).
+  - Rebalanced game economy: base delivery payouts adjusted by a 0.55x multiplier; monthly bonus tiers raised to 240 / 360 / 480 deliveries.
+- **Expanded Life Simulation (Life-Sim)**:
+  - Added daily lottery ticket purchases in the LIFE hub (up to 40 tickets/day), drawn every evening.
+  - Daily price fluctuations for gold and stock investments; end-of-day summary breaks down daily returns as well as total profit/loss against cost basis.
+  - 4-chapter narrative progression (months 1, 7, 13, 19) with monthly family story dilemmas at months 3, 9, 15, 21 (leaking roof, sibling tuition, mother's hospital bills, friend's business partnership).
+  - Loan and debt mechanics: interest-free friend loan, hot loan at 15%/month, app loan at 25%/month; exceeding 30 million VND in debt results in bankruptcy and seizure (game over). Debt must be completely cleared to win.
+  - Habit tracking for drinking and gambling with craving/fatigue penalties, alongside a monthly "cut back" self-restraint action.
+  - Diverse run endings depending on final health, family trust, and habits after 24 months.
+- **UX & Responsive Layout Enhancements**:
+  - Start screen adapted to fit within viewports of any aspect ratio (compact desktop heights, landscape phones, high-DPI scaling) without overflowing action buttons.
+  - Added "BACK TO TITLE" button inside the pause menu with double confirmation.
+  - "END DAY" button consistently requires a confirmation dialog before finalizing the day.
+  - Full bilingual localization (Vietnamese and English) with an instant language toggle (VI/EN).
+  - Typography migrated to Nunito font for comprehensive Vietnamese character support and clean legibility.
+  - Independent toggles and volume sliders for background music and synthesized WebAudio sound effects.
 
-## Engineering pass (packaging, game clock, canvas, validation, offline)
-- Music and fonts are separate files: `index.html` went from 5.6 MB to about 400 KB. `python3 build.py --artifact FILE` still builds a one-file embedded version for Claude artifacts.
-- Bundled fonts (VT323 incl. Vietnamese subset, Press Start 2P), no Google Fonts request.
-- Service worker + web manifest + icons: offline play and installable (precaches the shell and fonts, caches music on first play with Range support).
-- `src/loop.js`: a single game clock replaces every setInterval/setTimeout of the game; pause is one switch and now also works during delivery, refuel and sleep animations (light overlay, no re-render). Hidden tab pauses.
-- Dodge and Route Rush road drawn on canvas (smooth frame-by-frame, scrolling road); canvas particle bursts on successful delivery and on winning.
-- `src/state.js`: JSDoc state shape, `stateProblems()` / `repairState()`; `save()` repairs and warns instead of writing a broken state.
-- New tests: test_loop (14), test_state (23), test_offline (20).
+### Core Gameplay
+- **Objective**: Save at least 100 million VND within 24 in-game months while meeting recurring monthly living expenses of 6.5 million VND.
+- **Daily Loop**: Each in-game day represents 300 real seconds (06:00 to 22:00 in-game) with peak rush hours at lunch (11:00-13:00) and evening (17:00-19:00).
+- **Upgrades & Milestones**: Trade-off upgrades (eco vs. turbo engine, insulated bag vs. cargo box), savings milestones at 25M, 50M, and 75M VND, and transparent "Where Did It Go?" financial post-mortem breakdown upon game completion.
 
-## Shop price cells
-- Price / owned / locked cells on the Upgrade page are now all exactly 128x38 on phones and desktop (they used to size by their text, 51-118 px wide and two different heights). Removed the conflicting CSS rules. Test added in test_ux.py (21 checks).
-
-## Audit
-- Removed dead JS/CSS/icons, orphan CSS, stale comments; renamed mgTmr→dlvTmr. All test files pass.
-- bike.png nén 64 màu: 212K → 30K, bản build 458 KB → 217 KB.
-- Thêm tests/test_fuzz.py: bấm nút ngẫu nhiên 6 seed x 300 bước, kiểm tra trạng thái luôn hợp lệ (không lỗi).
-
-## Âm thanh hiệu ứng + thống kê cuối ngày
-- Hiệu ứng âm thanh tổng hợp bằng WebAudio (không thêm file): nhận tiền, mua đồ, sự cố/cảnh báo, chia/rút bài, thắng/thua/hòa blackjack, hết ngày, tiếng bấm nút. Công tắc "Hiệu ứng" riêng trong cài đặt âm thanh, theo thanh âm lượng.
-- Màn KẾT NGÀY thêm: số đơn (và trung bình), đơn cao nhất, số sự cố, đánh giá/độ bền xe, so với hôm qua.
-- tests/test_daystats.py (15 kiểm tra).
-- Tách riêng nhạc nền và hiệu ứng: mỗi loại có công tắc và thanh âm lượng riêng (lưu riêng trong btd_audio: sfx, sfxVol).
-- Ô đơn đang giao chỉ còn tên, tiền công, thời gian và thanh tiến độ (bỏ icon, xe, cờ).
-
-## Đổi tên + tiếng Anh
-- Game đổi tên thành "Một ngày làm shipper" (tiếng Anh: "Shipper Simulator"); bỏ tên "Be", thay bằng "hệ thống".
-- Thêm tiếng Anh (src/i18n.js: `T('vi','en')`). Nút VI/EN ở màn bắt đầu và trong cài đặt; đổi ngôn ngữ sẽ tải lại trang và tự vào lại game đang chơi (không đổi được giữa lúc đang giao đơn). Mặc định tiếng Việt.
-- tests/test_lang.py: quét bản tiếng Anh không lọt chữ Việt.
-
-## Font
-- Thay VT323 và Press Start 2P bằng Nunito (OFL, hỗ trợ đầy đủ tiếng Việt, 2 độ đậm 400/800), chỉnh lại cỡ chữ toàn bộ giao diện; chữ nhỏ hơn nhưng rõ hơn. Không dùng font "Be Vietnam Pro" vì tên và nguồn gốc liên quan đến thương hiệu Be.
-
-- Nút KẾT THÚC NGÀY luôn hỏi xác nhận một lần (trước đây chỉ hỏi khi còn hơn 90 giây).
-
-- Màn đổ xăng đơn giản hơn: chỉ còn tên, icon bơm xăng, phần trăm và thanh xăng (bỏ cảnh xe, vòi bơm và giọt xăng).
+### Technical Architecture
+- Pure client-side application built with HTML5, CSS3, and Vanilla JavaScript, bundled into a single distributable via `build.py`.
+- Service Worker integration for offline caching and Progressive Web App (PWA) installation.
+- Central game loop (`src/loop.js`) synchronizing clocks, deliveries, and pause states.
+- Automated end-to-end regression test suite powered by Playwright in `tests/`.
